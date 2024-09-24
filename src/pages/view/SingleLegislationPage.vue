@@ -1,11 +1,15 @@
 <template>
   <q-page class="row items-center justify-evenly" padding>
     <div v-if="!legislation">查無此法 (或載入中)</div>
-    <div v-if="legislation" style="max-width: 1170px">
+    <div v-if="legislation" ref="content" class="official-font-when-printing" style="max-width: 1170px">
       <div class="text-h4 flex-center q-pb-md text-center">
         {{ legislation.name }}
-        <q-btn dense flat icon="link" size="20px" @click="copyLink()"></q-btn>
+        <q-btn class="no-print" dense flat icon="link" size="20px" @click="copyLink()" />
+        <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
+          <q-tooltip>列印</q-tooltip>
+        </q-btn>
       </div>
+      <div v-if="legislation.preface" class="text-h6 text-bold">{{ legislation.preface }}</div>
       <div v-if="legislation.history.length > 0">
         立法沿革
         <div v-for="history of legislation.history" :key="history.amendedAt.valueOf()">
@@ -24,14 +28,16 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
 import { useLegislation } from 'src/ts/models.ts';
-import { watch } from 'vue';
+import { ref, watch } from 'vue';
 import { event } from 'vue-gtag';
 import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink } from 'src/ts/utils.ts';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
+import { useVueToPrint } from 'vue-to-print';
 
 const route = useRoute();
 const legislation = useLegislation(route.params.id! as string);
+const content = ref();
 
 watch(legislation, () => {
   event('view_legislation', {
@@ -46,6 +52,13 @@ watch(legislation, () => {
     setTimeout(() => document.getElementById(route.hash.substring(1))?.scrollIntoView({ behavior: 'smooth' }), 250);
     console.log(route.hash.substring(1));
   }
+});
+
+const { handlePrint } = useVueToPrint({
+  content: content,
+  documentTitle: legislation.value?.name ?? '',
+  removeAfterPrint: true,
+  pageStyle: '@page { margin: 0.5in 0.5in 0.5in 0.5in !important; }',
 });
 </script>
 

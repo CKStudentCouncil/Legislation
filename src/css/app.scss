@@ -1,1 +1,12 @@
 // app global css in SCSS form
+.no-print {
+  @media print {
+    display: none;
+  }
+}
+
+.official-font-when-printing {
+  @media print {
+    font-family: 'DFKai-sb', Times, serif;
+  }
+}

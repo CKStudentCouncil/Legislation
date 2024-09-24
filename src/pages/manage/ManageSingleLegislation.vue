@@ -6,16 +6,19 @@
         (編輯中)
         {{ legislation.name }}
         <q-btn dense flat icon="link" size="20px" @click="copyLink()"></q-btn>
+        <q-btn dense flat icon="edit" size="20px" @click="edit()"></q-btn>
+        <q-btn color="negative" dense flat icon="delete" size="20px" @click="remove()"></q-btn>
       </div>
+      <div v-if="legislation.preface">{{ legislation.preface }}</div>
       <div class="text-h6">立法沿革</div>
       <q-btn color="positive" flat icon="add" label="新增立法沿革" @click="addHistory"></q-btn>
-      <div v-for="history of legislation.history" :key="history.amendedAt.valueOf()">
+      <div v-for="history of legislation.history.sort((a, b) => a.amendedAt.valueOf() - b.amendedAt.valueOf())" :key="history.amendedAt.valueOf()">
         {{ history.amendedAt.toLocaleDateString() + ' ' + history.brief }}
         <q-btn v-if="history.link" dense flat icon="open_in_new" size="10px">
           <q-tooltip>檢視發布公文</q-tooltip>
         </q-btn>
         <q-btn dense flat icon="edit" size="10px" @click="editHistory(history)" />
-        <q-btn dense color="negative" flat icon="delete" size="10px" @click="removeHistory(history)" />
+        <q-btn color="negative" dense flat icon="delete" size="10px" @click="removeHistory(history)" />
       </div>
       <q-btn color="positive" flat icon="add" label="新增內容" @click="addContent"></q-btn>
       <VueDraggable ref="el" v-model="legislation.content" class="q-gutter-md" style="cursor: move" @update="rearrange">
@@ -52,7 +55,13 @@
         />
         <q-input v-model="targetContent.title" label="標題" />
         <q-input v-model="targetContent.subtitle" :disable="targetContent.deleted" label="副標題 (無須加入中括號)" />
-        <q-input v-model="targetContent.content" :disable="targetContent.deleted" label="內容" type="textarea" />
+        <q-input
+          v-if="targetContent.type.firebase != ContentType.Chapter.firebase"
+          v-model="targetContent.content"
+          :disable="targetContent.deleted"
+          label="內容"
+          type="textarea"
+        />
         <q-checkbox v-model="targetContent.deleted" label="刪除" />
       </q-card-section>
       <q-card-actions align="right">
@@ -88,29 +97,34 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <LegislationDialog v-model="target" :action="action" @submit="submit" />
 </template>
 
 <script lang="ts" setup>
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import * as models from 'src/ts/models.ts';
-import { convertContentToFirebase, legislationDocument, useLegislation } from 'src/ts/models.ts';
+import { ContentType, convertContentToFirebase, LegislationCategory, legislationDocument, LegislationType, useLegislation } from 'src/ts/models.ts';
 import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';
-import { date, Loading, Notify } from 'quasar';
-import { arrayRemove, arrayUnion, updateDoc } from 'firebase/firestore';
+import { date, Dialog, Loading, Notify } from 'quasar';
+import { arrayRemove, arrayUnion, deleteDoc, updateDoc } from 'firebase/firestore';
 import { VueDraggable } from 'vue-draggable-plus';
-import { reactive, ref } from 'vue';
+import { reactive, Ref, ref } from 'vue';
 import ListEditor from 'components/ListEditor.vue';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
+import LegislationDialog from 'components/LegislationDialog.vue';
 
 const route = useRoute();
+const router = useRouter();
 const legislation = useLegislation(route.params.id! as string);
 const targetContent = reactive<models.LegislationContent>({} as any);
 const targetAddendum = reactive({} as { content: string[]; createdAt: string; index: number });
 const targetHistory = reactive({} as { amendedAt: string; brief: string; link: string; recordCurrent: boolean; index: number });
+const target = reactive({} as { name: string; category: LegislationCategory; type: LegislationType; createdAt: string; preface?: string });
 const contentAction = ref<'edit' | 'add' | null>(null);
 const addendumAction = ref<'edit' | 'add' | null>(null);
 const historyAction = ref<'edit' | 'add' | null>(null);
+const action = ref<'edit' | null>(null);
 
 function addContent() {
   targetContent.type = models.ContentType.Clause;
@@ -162,6 +176,15 @@ function editHistory(history: models.History) {
   historyAction.value = 'edit';
 }
 
+function edit() {
+  target.name = legislation.value!.name;
+  target.category = legislation.value!.category;
+  target.type = legislation.value!.type;
+  target.createdAt = date.formatDate(legislation.value!.createdAt, 'YYYY-MM-DD');
+  target.preface = legislation.value!.preface ?? '';
+  action.value = 'edit';
+}
+
 function generateTitle() {
   let last = 0;
   for (const content of legislation.value!.content) {
@@ -178,178 +201,184 @@ function generateTitle() {
   targetContent.title = `第 ${targetContent.type.arabicOrdinal ? last + 1 : translateNumberToChinese(last + 1)} ${targetContent.type.translation}`;
 }
 
-async function submitContent() {
+async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallback: () => void, editCallback: () => void) {
   Loading.show();
-  targetContent.content = targetContent.content?.replaceAll(',', '，').replaceAll(';', '；');
   try {
-    if (contentAction.value == 'add') {
+    if (determinant.value == 'add') {
+      await addCallback();
+    } else if (determinant.value == 'edit') {
+      await editCallback();
+    }
+  } catch (e) {
+    console.error(e);
+    Notify.create({
+      message: '操作失敗',
+      color: 'negative',
+    });
+    Loading.hide();
+    return;
+  }
+  Loading.hide();
+  Notify.create({
+    message: '操作成功',
+    color: 'positive',
+  });
+  determinant.value = null;
+}
+
+async function submitContent() {
+  targetContent.content = targetContent.content?.replaceAll(',', '，').replaceAll(';', '；');
+  targetContent.subtitle = targetContent.subtitle?.replaceAll('【', '').replaceAll('】', '');
+  await submitProperty(
+    contentAction,
+    async () => {
       await updateDoc(legislationDocument(route.params.id! as string), {
         content: arrayUnion(convertContentToFirebase(targetContent)),
       });
-    } else if (contentAction.value == 'edit') {
+    },
+    async () => {
       legislation.value!.content[targetContent.index] = targetContent;
       await updateDoc(legislationDocument(route.params.id! as string), {
         content: legislation.value!.content.map(convertContentToFirebase),
       });
-    }
-  } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '操作失敗',
-      color: 'negative',
-    });
-    Loading.hide();
-    return;
-  }
-  Loading.hide();
-  Notify.create({
-    message: '操作成功',
-    color: 'positive',
-  });
-  contentAction.value = null;
+    },
+  );
 }
 
 async function submitAddendum() {
-  Loading.show();
-  try {
-    const mappedAddendum = {
-      content: targetAddendum.content,
-      createdAt: date.extractDate(targetAddendum.createdAt, 'YYYY-MM-DD'), // already utc
-    };
-    if (addendumAction.value == 'add') {
+  const mappedAddendum = {
+    content: targetAddendum.content,
+    createdAt: date.extractDate(targetAddendum.createdAt, 'YYYY-MM-DD'), // already utc
+  };
+  await submitProperty(
+    addendumAction,
+    async () => {
       await updateDoc(legislationDocument(route.params.id! as string), {
         addendum: arrayUnion(mappedAddendum),
       });
-    } else if (addendumAction.value == 'edit') {
+    },
+    async () => {
       if (!legislation.value!.addendum) {
         legislation.value!.addendum = [];
       }
       legislation.value!.addendum[targetAddendum.index] = mappedAddendum;
-      console.log(legislation.value!.addendum);
       await updateDoc(legislationDocument(route.params.id! as string), {
         addendum: legislation.value!.addendum,
       });
-    }
-  } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '操作失敗',
-      color: 'negative',
-    });
-    return;
-  } finally {
-    Loading.hide();
-  }
-  Notify.create({
-    message: '操作成功',
-    color: 'positive',
-  });
-  addendumAction.value = null;
+    },
+  );
 }
 
 async function submitHistory() {
-  Loading.show();
-  try {
-    const mappedHistory = {
-      amendedAt: date.extractDate(targetHistory.amendedAt, 'YYYY-MM-DD'),
-      brief: targetHistory.brief,
-    } as models.History;
-    if (targetHistory.link) {
-      mappedHistory.link = targetHistory.link;
-    }
-    if (targetHistory.recordCurrent) {
-      mappedHistory.content = legislation.value!.content.map(convertContentToFirebase);
-    }
-    if (historyAction.value == 'add') {
+  const mappedHistory = {
+    amendedAt: date.extractDate(targetHistory.amendedAt, 'YYYY-MM-DD'),
+    brief: targetHistory.brief,
+  } as models.History;
+  if (targetHistory.link) {
+    mappedHistory.link = targetHistory.link;
+  }
+  if (targetHistory.recordCurrent) {
+    mappedHistory.content = legislation.value!.content.map(convertContentToFirebase);
+  }
+  await submitProperty(
+    historyAction,
+    async () => {
       await updateDoc(legislationDocument(route.params.id! as string), {
         history: arrayUnion(mappedHistory),
       });
-    } else if (historyAction.value == 'edit') {
+    },
+    async () => {
       legislation.value!.history[targetHistory.index] = mappedHistory;
       await updateDoc(legislationDocument(route.params.id! as string), {
         history: legislation.value!.history,
       });
+    },
+  );
+}
+
+async function submit() {
+  await submitProperty(
+    action,
+    async () => {},
+    async () => {
+      const data = {
+        name: target.name,
+        category: target.category.firebase,
+        type: target.type.firebase,
+        createdAt: date.extractDate(target.createdAt, 'YYYY-MM-DD'),
+      } as any;
+      if (target.preface) {
+        data.preface = target.preface;
+      }
+      await updateDoc(legislationDocument(route.params.id! as string), data);
+    },
+  );
+}
+
+async function removeProperty(property: string, object: object, translation: string) {
+  Dialog.create({
+    title: `刪除${translation}`,
+    message: `確定要刪除此${translation}嗎？`,
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    Loading.show();
+    try {
+      await updateDoc(legislationDocument(route.params.id! as string), { [property]: arrayRemove(object) });
+    } catch (e) {
+      console.error(e);
+      Notify.create({
+        message: '刪除失敗',
+        color: 'negative',
+      });
+      Loading.hide();
+      return;
     }
-  } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '操作失敗',
-      color: 'negative',
-    });
-    return;
-  } finally {
     Loading.hide();
-  }
-  Notify.create({
-    message: '操作成功',
-    color: 'positive',
+    Notify.create({
+      message: `${translation}已刪除`,
+      color: 'positive',
+    });
   });
-  historyAction.value = null;
 }
 
 async function removeContent(content: models.LegislationContent) {
-  Loading.show();
-  try {
-    await updateDoc(legislationDocument(route.params.id! as string), {
-      content: arrayRemove(convertContentToFirebase(content)),
-    });
-  } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '刪除失敗',
-      color: 'negative',
-    });
-    Loading.hide();
-    return;
-  }
-  Loading.hide();
-  Notify.create({
-    message: '提案已刪除',
-    color: 'positive',
-  });
+  await removeProperty('content', content, '內容');
 }
 
 async function removeAddendum(addendum: models.Addendum) {
-  Loading.show();
-  try {
-    await updateDoc(legislationDocument(route.params.id! as string), {
-      addendum: arrayRemove(addendum),
-    });
-  } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '刪除失敗',
-      color: 'negative',
-    });
-    Loading.hide();
-    return;
-  }
-  Loading.hide();
-  Notify.create({
-    message: '附帶決議已刪除',
-    color: 'positive',
-  });
+  await removeProperty('addendum', addendum, '附帶決議');
 }
 
 async function removeHistory(history: models.History) {
-  Loading.show();
-  try {
-    await updateDoc(legislationDocument(route.params.id! as string), {
-      history: arrayRemove(history),
-    });
-  } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '刪除失敗',
-      color: 'negative',
-    });
+  await removeProperty('history', history, '立法沿革');
+}
+
+async function remove() {
+  Dialog.create({
+    title: '刪除法案',
+    message: '確定要刪除此法案嗎？',
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    Loading.show();
+    try {
+      await deleteDoc(legislationDocument(route.params.id! as string));
+      await router.push('/manage');
+    } catch (e) {
+      console.error(e);
+      Notify.create({
+        message: '刪除失敗',
+        color: 'negative',
+      });
+      Loading.hide();
+      return;
+    }
     Loading.hide();
-    return;
-  }
-  Loading.hide();
-  Notify.create({
-    message: '立法沿革已刪除',
-    color: 'positive',
+    Notify.create({
+      message: '已刪除法案',
+      color: 'positive',
+    });
   });
 }
 

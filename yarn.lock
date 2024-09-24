@@ -4867,6 +4867,11 @@ vue-template-compiler@^2.7.14:
     de-indent "^1.0.2"
     he "^1.2.0"
 
+vue-to-print@^1.2.1:
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/vue-to-print/-/vue-to-print-1.2.1.tgz#4a1a15b704b8f677f3f3cbc5dce4eed3fb94d98d"
+  integrity sha512-FmXjLukIPJKu5HdqlQXL0J7yQtx5OXkUTzXoey4BLBmw5zX0VU6xs1BqnXftaf8FmwMZQS7I8nu0s7+NVxnk/g==
+
 vue-tsc@=2.0.29:
   version "2.0.29"
   resolved "https://registry.yarnpkg.com/vue-tsc/-/vue-tsc-2.0.29.tgz#bf7e9605af9fadec7fd6037d242217f5c6ad2c3b"

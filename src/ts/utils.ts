@@ -1,9 +1,17 @@
 import { Notify } from 'quasar';
 
 export function copyLink(href?: string) {
-  navigator.clipboard.writeText(window.location.href.split('#')[0] + (href ? '#' + href : ''));
+  copyText(window.location.href.split('#')[0] + (href ? '#' + href : ''));
+}
+
+export function copyLawLink(id: string) {
+  copyText(window.location.origin + (window.location.origin.endsWith('/') ? '' : '/') + 'legislation/' + id);
+}
+
+export function copyText(text: string) {
+  navigator.clipboard.writeText(text);
   Notify.create({
-    message: '已複製本條連結',
+    message: '已複製到剪貼簿',
     color: 'positive',
     position: 'top',
   });

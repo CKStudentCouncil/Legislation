@@ -5,6 +5,7 @@ const date = new Date();
 export const timezoneOffset = date.getTimezoneOffset() * 60 * 1000; // -480
 
 export interface Legislation {
+  preface?: string;
   category: LegislationCategory;
   content: LegislationContent[];
   createdAt: Date;
@@ -21,7 +22,6 @@ export function convertContentToFirebase(data: LegislationContent) {
 
 export const legislationConverter: FirestoreDataConverter<Legislation | null> = {
   toFirestore(legislation: Legislation) {
-    console.log(legislation);
     const data: any = {
       category: legislation.category.firebase,
       content: legislation.content.map(convertContentToFirebase).sort((a, b) => a.index - b.index),
@@ -44,29 +44,28 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
     return firestoreDefaultConverter.toFirestore(data);
   },
   fromFirestore(snapshot: any): Legislation {
-    const data = snapshot.data();
-    return {
-      category: LegislationCategory[data.category as keyof typeof LegislationCategory] as any,
-      content: data.content?.map((content: any) => {
-          content.type = ContentType.VALUES[content.type as keyof typeof ContentType.VALUES];
+    const data = firestoreDefaultConverter.fromFirestore(snapshot) as any;
+    if (!data) return data;
+    data.category = LegislationCategory.VALUES[data.category as keyof typeof LegislationCategory.VALUES] as any;
+    data.content = data.content.map((content: any) => {
+      content.type = ContentType.VALUES[content.type as keyof typeof ContentType.VALUES];
+      return content;
+    }).sort((a: any, b: any) => a.index - b.index);
+    data.createdAt = data.createdAt.toDate();
+    data.type = LegislationType.VALUES[data.type as keyof typeof LegislationType.VALUES];
+    data.history = data.history.map((history: any) => {
+      history.content = history.content?.map((content: any) => {
+        content.type = ContentType[content.type as keyof typeof ContentType];
         return content;
-        }).sort((a: any, b: any) => a.index - b.index),
-      createdAt: data.createdAt.toDate(),
-      name: data.name,
-      type: LegislationType[data.type as keyof typeof LegislationType],
-      history: data.history?.map((history: any) => {
-        history.content = history.content?.map((content: any) => {
-          content.type = ContentType[content.type as keyof typeof ContentType];
-          return content;
-        });
-        history.amendedAt = history.amendedAt.toDate();
-        return history;
-      }),
-      addendum: data.addendum?.map((addendum: any) => {
-        addendum.createdAt = addendum.createdAt.toDate();
-        return addendum;
-      }),
-    };
+      });
+      history.amendedAt = history.amendedAt.toDate();
+      return history;
+    });
+    data.addendum = data.addendum?.map((addendum: any) => {
+      addendum.createdAt = addendum.createdAt.toDate();
+      return addendum;
+    });
+    return data;
   },
 };
 
@@ -103,22 +102,26 @@ export interface LegislationContent {
 }
 
 export class LegislationCategory {
-  static Constitution = new LegislationCategory('Consitution', 'CO', '憲章', 'book');
+  static Constitution = new LegislationCategory('Constitution', 'CO', '憲章', 'book');
+  static Chairman = new LegislationCategory('Chairman', 'CH', '主席與副主席', 'settings_accessibility');
   static ExecutiveDepartment = new LegislationCategory('ExecutiveDepartment', 'ED', '行政部門', 'construction');
   static StudentCouncil = new LegislationCategory('StudentCouncil', 'SC', '班代大會', 'groups');
   static JudicialCommittee = new LegislationCategory('JudicialCommittee', 'JC', '評議委員會', 'gavel');
   static ExecutiveOrder = new LegislationCategory('ExecutiveOrder', 'EO', '行政命令', 'hardware');
   static StudentCouncilOrder = new LegislationCategory('StudentCouncilOrder', 'SCO', '班代大會命令', 'connect_without_contact');
   static JudicialCommitteeOrder = new LegislationCategory('JudicialCommitteeOrder', 'JCO', '評議委員會命令', 'local_police');
-  static VALUES = [
-    LegislationCategory.Constitution,
-    LegislationCategory.ExecutiveDepartment,
-    LegislationCategory.StudentCouncil,
-    LegislationCategory.JudicialCommittee,
-    LegislationCategory.ExecutiveOrder,
-    LegislationCategory.StudentCouncilOrder,
-    LegislationCategory.JudicialCommitteeOrder,
-  ];
+  static VotingCommitteeOrder = new LegislationCategory('VotingCommitteeOrder', 'VCO', '選舉委員會命令', 'how_to_vote');
+  static VALUES = {
+    Constitution: LegislationCategory.Constitution,
+    Chairman: LegislationCategory.Chairman,
+    ExecutiveDepartment: LegislationCategory.ExecutiveDepartment,
+    StudentCouncil: LegislationCategory.StudentCouncil,
+    JudicialCommittee: LegislationCategory.JudicialCommittee,
+    ExecutiveOrder: LegislationCategory.ExecutiveOrder,
+    StudentCouncilOrder: LegislationCategory.StudentCouncilOrder,
+    JudicialCommitteeOrder: LegislationCategory.JudicialCommitteeOrder,
+    VotingCommitteeOrder: LegislationCategory.VotingCommitteeOrder,
+  };
 
   constructor(
     public firebase: string,
@@ -129,9 +132,14 @@ export class LegislationCategory {
 }
 
 export class LegislationType {
-  static Constitution = new LegislationType('Consitution', '憲章');
+  static Constitution = new LegislationType('Constitution', '憲章');
   static Law = new LegislationType('Law', '法律');
   static Order = new LegislationType('Order', '命令');
+  static VALUES = {
+    Constitution: LegislationType.Constitution,
+    Law: LegislationType.Law,
+    Order: LegislationType.Order,
+  };
 
   constructor(
     public firebase: string,

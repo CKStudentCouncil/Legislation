@@ -22,7 +22,7 @@
                 點擊以按類別篩選：(再次點擊可取消)
                 <q-list bordered class="rounded-borders q-mr-md q-mt-md" padding>
                   <q-item
-                    v-for="category of LegislationCategory.VALUES"
+                    v-for="category of Object.values(LegislationCategory.VALUES)"
                     :key="category.idPrefix"
                     :active="selected == category.firebase"
                     clickable
@@ -65,7 +65,8 @@
                     </div>
                   </div>
                   <q-btn v-if="$props.manage" :to="`/manage/${item.objectID}`" color="secondary" flat label="編輯" />
-                  <q-btn :to="`/legislation/${item.objectID}`" color="primary" flat label="檢視全文" />
+                  <q-btn :to="`/legislation/${item.objectID}`" color="primary" flat label="檢視全文" icon="visibility" />
+                  <q-btn @click="copyLawLink(item.objectID)" color="primary" flat label="複製連結" icon="link" />
                 </q-card-section>
               </q-card>
             </template>
@@ -80,6 +81,7 @@
 import { LegislationCategory } from 'src/ts/models.ts';
 import { searchClient } from 'boot/algolia.ts';
 import { ref } from 'vue';
+import { copyLawLink } from 'src/ts/utils.ts';
 
 const selected = ref('');
 defineProps({

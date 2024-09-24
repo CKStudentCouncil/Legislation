@@ -7,7 +7,7 @@
       <div v-else>
         <div class="text-bold">
           {{ $props.content.title }} 【{{ $props.content.subtitle }}】
-          <q-btn dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
+          <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
         </div>
         <div v-for="[index, line] of lines.entries()" :key="index" class="row">
           <p class="q-mb-sm">
@@ -22,7 +22,7 @@
     <div v-if="$props.content.type.firebase == ContentType.Chapter.firebase">
       <div class="text-h5 text-bold" style="line-height: 65px">
         {{ $props.content.title }} {{ $props.content.subtitle }}
-        <q-btn dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
+        <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
       </div>
     </div>
   </div>
@@ -37,7 +37,7 @@ const props = defineProps({
   content: {
     type: Object as PropType<LegislationContent>,
     required: true,
-  },
+  }
 });
 
 const lines = computed(() => props.content.content!.split('\n'));
