@@ -11,7 +11,7 @@
         </div>
         <div v-for="[index, line] of lines.entries()" :key="index" class="row">
           <p class="q-mb-sm">
-            <span :style="line.match(/^[一二三四五六七八九十][、 ]/) || (cleanLines.length <= 1) ? 'visibility: hidden' : ''" class="q-mr-sm text-secondary text-italic">
+            <span :style="line.match(/^（?[一二三四五六七八九十]*([）、])/) || (cleanLines.length <= 1) ? 'visibility: hidden' : ''" class="q-mr-sm text-secondary text-italic">
               {{ cleanLines.indexOf(line) + 1 }}
             </span>
             {{ line }}
@@ -21,6 +21,18 @@
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Chapter.firebase">
       <div class="text-h5 text-bold" style="line-height: 65px">
+        {{ $props.content.title }} {{ $props.content.subtitle }}
+        <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
+      </div>
+    </div>
+    <div v-if="$props.content.type.firebase == ContentType.Section.firebase">
+      <div class="text-h6 text-bold" style="line-height: 45px">
+        {{ $props.content.title }} {{ $props.content.subtitle }}
+        <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
+      </div>
+    </div>
+    <div v-if="$props.content.type.firebase == ContentType.Subsection.firebase">
+      <div class="text-h6 text-bold" style="line-height: 30px">
         {{ $props.content.title }} {{ $props.content.subtitle }}
         <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
       </div>
@@ -41,7 +53,7 @@ const props = defineProps({
 });
 
 const lines = computed(() => props.content.content!.split('\n'));
-const cleanLines = computed(() => props.content.content!.split('\n').filter((line) => line.match(/^[一二三四五六七八九十][、 ]/) == null));
+const cleanLines = computed(() => props.content.content!.split('\n').filter((line) => line.match(/^（?[一二三四五六七八九十]*([）、])/) == null));
 </script>
 
 <style scoped></style>
