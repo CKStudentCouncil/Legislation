@@ -1,5 +1,5 @@
 <template>
-  <q-layout view="hHh lpR fFf">
+  <q-layout view="hHh LpR fFf">
     <q-header class="bg-primary text-white" elevated height-hint="98">
       <q-toolbar>
         <q-btn dense flat icon="menu" round @click="toggleLeftDrawer" />
@@ -13,36 +13,12 @@
 
         <q-btn flat icon="brightness" @click="toggleDark" />
         <q-btn flat icon="fullscreen" @click="toggleFullscreen" />
-        <q-btn
-          v-if="!loggedIn"
-          align="right"
-          dense
-          flat
-          icon="login"
-          round
-          @click="login()"
-        >登入</q-btn
-        >
-        <q-btn
-          v-if="loggedIn"
-          align="right"
-          dense
-          flat
-          icon="logout"
-          round
-          @click="logout()"
-        >登出</q-btn
-        >
+        <q-btn v-if="!loggedIn" align="right" dense flat icon="login" round @click="login()">登入</q-btn>
+        <q-btn v-if="loggedIn" align="right" dense flat icon="logout" round @click="logout()">登出</q-btn>
       </q-toolbar>
     </q-header>
 
-    <q-drawer
-      v-model="leftDrawerOpen"
-      bordered
-      show-if-above
-      side="left"
-      style="overflow: hidden"
-    >
+    <q-drawer v-model="leftDrawerOpen" bordered show-if-above side="left" style="overflow: hidden">
       <q-list class="menu-list fit column">
         <div v-for="endpoint of endpoints" :key="endpoint.name">
           <q-item
@@ -71,9 +47,7 @@
             <q-item-label>登入</q-item-label>
           </q-item-section>
         </q-item>
-        <q-item
-          v-if="loggedIn && loggedInUser !== null && loggedInUser !== undefined"
-        >
+        <q-item v-if="loggedIn && loggedInUser !== null && loggedInUser !== undefined">
           <q-item-section v-if="loggedInUser.photoURL !== null" avatar>
             <q-avatar>
               <img :src="loggedInUser.photoURL" alt="profile picture" />
@@ -110,24 +84,11 @@ import { Dark, LocalStorage } from 'quasar';
 init();
 let leftDrawerOpen = ref(false);
 let endpoints = [
-  {
-    name: '檢視法案',
-    url: '/legislation',
-    icon: 'badge',
-    requireAuth: false,
-  },
-  {
-    name: '編輯法案',
-    url: '/manage',
-    icon: 'edit',
-    requireAuth: true,
-  },
-  {
-    name: '關於',
-    url: '/about',
-    icon: 'info',
-    requireAuth: false,
-  },
+  { name: '檢視法案', url: '/legislation', icon: 'description', requireAuth: false },
+  { name: '檢視公文', url: '/document', icon: 'badge', requireAuth: false },
+  { name: '編輯法案', url: '/manage/legislation', icon: 'edit', requireAuth: true },
+  { name: '編輯公文', url: '/manage/document', icon: 'draw', requireAuth: true },
+  { name: '關於', url: '/about', icon: 'info', requireAuth: false },
 ];
 let selected = ref('Account Information');
 const loggedInUser = useCurrentUser();

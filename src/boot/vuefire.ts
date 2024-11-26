@@ -1,7 +1,8 @@
 import { boot } from 'quasar/wrappers';
 import { initializeApp } from 'firebase/app';
-import { VueFire, VueFireAuth } from 'vuefire';
+import { useFirebaseApp, VueFire, VueFireAuth } from 'vuefire';
 import VueGtag from 'vue-gtag';
+import { getFunctions, HttpsCallable, httpsCallable } from '@firebase/functions';
 
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
@@ -30,3 +31,7 @@ export default boot(async ({ app, router }) => {
     router,
   );
 });
+
+export function useFunction(name: string): HttpsCallable {
+  return httpsCallable(getFunctions(useFirebaseApp()!, 'asia-east1'), name);
+}

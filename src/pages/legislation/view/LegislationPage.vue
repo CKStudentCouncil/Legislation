@@ -64,7 +64,7 @@
                       <ais-highlight :attribute="`content.${i}.content`" :hit="item" highlightedTagName="mark" />
                     </div>
                   </div>
-                  <q-btn v-if="$props.manage" :to="`/manage/${item.objectID}`" color="secondary" flat label="編輯" />
+                  <q-btn v-if="$props.manage" :to="`/manage/legislation/${item.objectID}`" color="secondary" flat label="編輯" />
                   <q-btn :to="`/legislation/${item.objectID}`" color="primary" flat label="檢視全文" icon="visibility" />
                   <q-btn @click="copyLawLink(item.objectID)" color="primary" flat label="複製連結" icon="link" />
                 </q-card-section>

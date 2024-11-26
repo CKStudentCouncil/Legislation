@@ -1,4 +1,5 @@
 import { Notify } from 'quasar';
+import * as models from './models';
 
 export function copyLink(href?: string) {
   copyText(window.location.href.split('#')[0] + (href ? '#' + href : ''));
@@ -69,4 +70,23 @@ export function translateNumberToChinese(num: number) {
   }
   if (temp.startsWith('一十')) temp = temp.slice(1);
   return temp;
+}
+
+export function getCurrentReign() {
+  const date = new Date();
+  return `${date.getFullYear() - 1945}-${date.getMonth() > 7 || date.getMonth() < 1 ? '1' : '2'}`; // August to January
+}
+
+export function getReadableTo(doc: models.Document) {
+  let s = '';
+  if (!doc) {
+    return s;
+  }
+  for (let i = 0; i < doc.to.length; i++) {
+    s = s.concat(doc.to[i].translation.concat(doc.toSpecific[i].translation));
+    if (i < doc.to.length - 1) {
+      s += '、';
+    }
+  }
+  return s;
 }

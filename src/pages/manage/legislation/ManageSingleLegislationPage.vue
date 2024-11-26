@@ -21,9 +21,17 @@
         <q-btn color="negative" dense flat icon="delete" size="10px" @click="removeHistory(history)" />
       </div>
       <q-btn color="positive" flat icon="add" label="新增內容" @click="addContent"></q-btn>
-      <VueDraggable ref="el" v-model="legislation.content" class="q-gutter-md" style="cursor: move" @update="rearrange">
+      <q-toggle v-model="draggable.content" label="拖曳排序" />
+      <VueDraggable
+        ref="el"
+        v-model="legislation.content"
+        :disabled="!draggable.content"
+        :style="draggable.content ? 'cursor: move' : ''"
+        class="q-gutter-md"
+        @update="rearrange"
+      >
         <div v-for="content of legislation.content" :id="content.index.toString()" :key="content.index" class="row">
-          <q-icon class="col self-center q-mr-sm" name="drag_indicator" style="max-width: 10px">
+          <q-icon v-if="draggable.content" class="col self-center q-mr-sm" name="drag_indicator" style="max-width: 10px">
             <q-tooltip>拖曳以重新排序</q-tooltip>
           </q-icon>
           <LegislationContent :content="content" class="col" />
@@ -40,6 +48,29 @@
         >
           <LegislationAddendum :addendum="addendum" editable @edit="editAddendum" @remove="removeAddendum" />
         </div>
+      </div>
+      <div>
+        <div class="text-h5">附件</div>
+        <q-btn color="positive" flat icon="add" label="新增附件" @click="addAttachment"></q-btn>
+        <q-toggle v-model="draggable.attachment" label="拖曳排序" />
+        <VueDraggable
+          v-if="legislation.attachments"
+          ref="el"
+          v-model="legislation.attachments!"
+          :disabled="!draggable.attachment"
+          :style="draggable.attachment ? 'cursor: move' : ''"
+          class="q-gutter-md"
+          @update="rearrangeAttachment"
+        >
+          <div v-for="(attachment, index) of legislation.attachments" :key="attachment.description + attachment.urls.toString()" class="row">
+            <q-icon v-if="draggable.attachment" class="col self-center q-mr-sm" name="drag_indicator" style="max-width: 10px">
+              <q-tooltip>拖曳以重新排序</q-tooltip>
+            </q-icon>
+            <LegislationAttachment :attachment="attachment" :order="index + 1" class="col" />
+            <q-btn flat icon="edit" size="10px" @click="editAttachment(attachment)" />
+            <q-btn color="negative" flat icon="delete" size="10px" @click="removeAttachment(attachment)" />
+          </div>
+        </VueDraggable>
       </div>
     </div>
   </q-page>
@@ -97,6 +128,19 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog :model-value="attachmentAction != null" persistent>
+    <q-card style="min-width: 30vw">
+      <q-card-section>
+        <q-input v-model="targetAttachment.description" label="說明" type="textarea" />
+        <ListEditor v-model="targetAttachment.urls" />
+        <AttachmentUploader :filename-prefix="legislation?.name + '_附件_'" @uploaded="(s) => targetAttachment.urls.push(...s)" />
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn v-close-popup color="negative" flat label="取消" @click="attachmentAction = null" />
+        <q-btn v-close-popup color="positive" flat label="確定" @click="submitAttachment" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
   <LegislationDialog v-model="target" :action="action" @submit="submit" />
 </template>
 
@@ -113,6 +157,8 @@ import { reactive, Ref, ref } from 'vue';
 import ListEditor from 'components/ListEditor.vue';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
 import LegislationDialog from 'components/LegislationDialog.vue';
+import LegislationAttachment from 'components/LegislationAttachment.vue';
+import AttachmentUploader from 'components/AttachmentUploader.vue';
 
 const route = useRoute();
 const router = useRouter();
@@ -120,11 +166,14 @@ const legislation = useLegislation(route.params.id! as string);
 const targetContent = reactive<models.LegislationContent>({} as any);
 const targetAddendum = reactive({} as { content: string[]; createdAt: string; index: number });
 const targetHistory = reactive({} as { amendedAt: string; brief: string; link: string; recordCurrent: boolean; index: number });
+const targetAttachment = reactive({} as { description: string; urls: string[]; index: number });
 const target = reactive({} as { name: string; category: LegislationCategory; type: LegislationType; createdAt: string; preface?: string });
 const contentAction = ref<'edit' | 'add' | null>(null);
 const addendumAction = ref<'edit' | 'add' | null>(null);
 const historyAction = ref<'edit' | 'add' | null>(null);
+const attachmentAction = ref<'edit' | 'add' | null>(null);
 const action = ref<'edit' | null>(null);
+const draggable = reactive({ content: true, attachment: true });
 
 function addContent() {
   targetContent.type = models.ContentType.Clause;
@@ -148,6 +197,12 @@ function addHistory() {
   targetHistory.link = '';
   targetHistory.recordCurrent = true;
   historyAction.value = 'add';
+}
+
+function addAttachment() {
+  targetAttachment.description = '';
+  targetAttachment.urls = [];
+  attachmentAction.value = 'add';
 }
 
 function editContent(legislationContent: models.LegislationContent) {
@@ -174,6 +229,13 @@ function editHistory(history: models.History) {
   targetHistory.recordCurrent = false;
   targetHistory.index = legislation.value!.history.indexOf(history);
   historyAction.value = 'edit';
+}
+
+function editAttachment(attachment: models.Attachment) {
+  targetAttachment.description = attachment.description;
+  targetAttachment.urls = attachment.urls.slice(); // Clone
+  targetAttachment.index = legislation.value!.attachments!.indexOf(attachment);
+  attachmentAction.value = 'edit';
 }
 
 function edit() {
@@ -296,6 +358,26 @@ async function submitHistory() {
   );
 }
 
+async function submitAttachment() {
+  await submitProperty(
+    attachmentAction,
+    async () => {
+      await updateDoc(legislationDocument(route.params.id! as string), {
+        attachments: arrayUnion(targetAttachment),
+      });
+    },
+    async () => {
+      if (!legislation.value!.attachments) {
+        legislation.value!.attachments = [];
+      }
+      legislation.value!.attachments[targetAttachment.index] = targetAttachment;
+      await updateDoc(legislationDocument(route.params.id! as string), {
+        attachments: legislation.value!.attachments,
+      });
+    },
+  );
+}
+
 async function submit() {
   await submitProperty(
     action,
@@ -354,6 +436,10 @@ async function removeHistory(history: models.History) {
   await removeProperty('history', history, '立法沿革');
 }
 
+async function removeAttachment(attachment: models.Attachment) {
+  await removeProperty('attachments', attachment, '附件');
+}
+
 async function remove() {
   Dialog.create({
     title: '刪除法案',
@@ -364,7 +450,7 @@ async function remove() {
     Loading.show();
     try {
       await deleteDoc(legislationDocument(route.params.id! as string));
-      await router.push('/manage');
+      await router.push('/manage/legislation');
     } catch (e) {
       console.error(e);
       Notify.create({
@@ -402,7 +488,29 @@ async function rearrange() {
   }
   Loading.hide();
   Notify.create({
-    message: '提案已重新排序',
+    message: '條文已重新排序',
+    color: 'positive',
+  });
+}
+
+async function rearrangeAttachment() {
+  Loading.show();
+  try {
+    await updateDoc(legislationDocument(route.params.id! as string), {
+      attachments: legislation.value!.attachments,
+    });
+  } catch (e) {
+    console.error(e);
+    Notify.create({
+      message: '重新排序失敗',
+      color: 'negative',
+    });
+    Loading.hide();
+    return;
+  }
+  Loading.hide();
+  Notify.create({
+    message: '附件已重新排序',
     color: 'positive',
   });
 }

@@ -5,7 +5,7 @@
 </template>
 
 <script lang="ts" setup>
-import LegislationPage from 'pages/view/LegislationPage.vue';
+import LegislationPage from 'pages/legislation/view/LegislationPage.vue';
 import { reactive, ref } from 'vue';
 import {
   Addendum,
@@ -55,10 +55,11 @@ async function submit() {
       history: [] as History[],
       content: [] as LegislationContent[],
       addendum: [] as Addendum[],
+      attachments: [] as string[],
     } as unknown as Legislation);
     action.value = null;
     Notify.create({ type: 'positive', message: '新增法案成功' });
-    await router.push(`/manage/${id}`);
+    await router.push(`/manage/legislation/${id}`);
   } catch (e) {
     console.error(e);
     Notify.create({ type: 'negative', message: '新增法案失敗' });

@@ -5,16 +5,36 @@ const routes: RouteRecordRaw[] = [
     path: '/legislation',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/view/LegislationPage.vue') },
-      { path: ':id', component: () => import('pages/view/SingleLegislationPage.vue') }
+      { path: '', component: () => import('pages/legislation/view/LegislationPage.vue') },
+      { path: ':id', component: () => import('pages/legislation/view/SingleLegislationPage.vue') },
     ],
   },
   {
     path: '/manage',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/manage/ManageLegislationPage.vue') },
-      { path: ':id', component: () => import('pages/manage/ManageSingleLegislation.vue') }
+      {
+        path: 'legislation',
+        children: [
+          { path: '', component: () => import('pages/manage/legislation/ManageLegislationPage.vue') },
+          { path: ':id', component: () => import('pages/manage/legislation/ManageSingleLegislationPage.vue') }
+        ],
+      },
+      {
+        path: 'document',
+        children: [
+          { path: '', component: () => import('pages/manage/document/ManageDocumentsPage.vue') },
+          { path: ':id', component: () => import('pages/manage/document/ManageSingleDocumentPage.vue') }
+        ],
+      }
+    ],
+  },
+  {
+    path: '/document',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      { path: '', component: () => import('pages/documents/DocumentsPage.vue') },
+      { path: ':id', component: () => import('pages/documents/SingleDocumentPage.vue') },
     ],
   },
   {

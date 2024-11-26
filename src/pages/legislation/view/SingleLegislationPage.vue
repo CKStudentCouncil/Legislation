@@ -21,6 +21,12 @@
       </div>
       <LegislationContent v-for="content of legislation.content" :id="content.index.toString()" :key="content.title" :content="content" />
       <LegislationAddendum v-for="addendum of legislation.addendum" :key="addendum.createdAt.valueOf()" :addendum="addendum" />
+      <LegislationAttachment
+        v-for="(attachment, index) of legislation.attachments"
+        :key="attachment.description + attachment.urls.toString()"
+        :attachment="attachment"
+        :order="index + 1"
+      />
     </div>
   </q-page>
 </template>
@@ -34,6 +40,7 @@ import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink } from 'src/ts/utils.ts';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
 import { useVueToPrint } from 'vue-to-print';
+import LegislationAttachment from 'components/LegislationAttachment.vue';
 
 const route = useRoute();
 const legislation = useLegislation(route.params.id! as string);
