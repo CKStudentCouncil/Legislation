@@ -1,5 +1,6 @@
 import { Notify } from 'quasar';
-import * as models from './models';
+import { DocumentGeneralIdentity, documentsCollection, DocumentSpecificIdentity } from './models';
+import { getDocs, orderBy, query, where, limit } from 'firebase/firestore';
 
 export function copyLink(href?: string) {
   copyText(window.location.href.split('#')[0] + (href ? '#' + href : ''));
@@ -21,21 +22,21 @@ export function copyText(text: string) {
 export function translateNumber(str: string) {
   //@formatter:off
   const numChar = {
-    '零': 0,
-    '一': 1,
-    '二': 2,
-    '三': 3,
-    '四': 4,
-    '五': 5,
-    '六': 6,
-    '七': 7,
-    '八': 8,
-    '九': 9,
+    零: 0,
+    一: 1,
+    二: 2,
+    三: 3,
+    四: 4,
+    五: 5,
+    六: 6,
+    七: 7,
+    八: 8,
+    九: 9,
   } as Record<string, number>;
   const levelChar = {
-    '十': 10,
-    '百': 100,
-    '千': 1000,
+    十: 10,
+    百: 100,
+    千: 1000,
   } as Record<string, number>;
   //@formatter:on
   if (str.startsWith('十')) str = '一' + str;
@@ -77,16 +78,38 @@ export function getCurrentReign() {
   return `${date.getFullYear() - 1945}-${date.getMonth() > 7 || date.getMonth() < 1 ? '1' : '2'}`; // August to January
 }
 
-export function getReadableTo(doc: models.Document) {
+export function getReadableRecipient(general: DocumentGeneralIdentity[], specific: DocumentSpecificIdentity[], others: string[]) {
   let s = '';
-  if (!doc) {
-    return s;
-  }
-  for (let i = 0; i < doc.to.length; i++) {
-    s = s.concat(doc.to[i].translation.concat(doc.toSpecific[i].translation));
-    if (i < doc.to.length - 1) {
+  for (let i = 0; i < general.length; i++) {
+    if (specific[i].firebase == DocumentSpecificIdentity.Other.firebase) {
+      s += others.join('、');
+    } else{
+      s = s.concat(specific[i].translation);
+    }
+    if (i < general.length - 1) {
       s += '、';
     }
+  }
+  return s;
+}
+
+export async function generateDocumentIdNumber(specific: DocumentSpecificIdentity) {
+  //e.g. 07620000001，1.公文之文號,由十二碼組成,前三碼為屆次,第四碼為期間次,第五碼為部門碼,第六、七碼為機關碼,第八碼為該公文類型,後四碼為流水號。
+  let r = getCurrentReign().replace('-', '');
+  if (r.length === 3) {
+    r = '0' + r;
+  }
+  let s = r + specific.generic.code + specific.code;
+  const lastDoc = await getDocs(query(documentsCollection(),
+    orderBy('createdAt', 'desc'),
+    where('fromSpecific', '==', specific.firebase),
+    limit(1)));
+  if (lastDoc.docs.length > 0 && lastDoc.docs[0].exists() && lastDoc.docs[0].data()?.idNumber.startsWith(r)) {
+    const lastDocId = lastDoc.docs[0].id;
+    const lastDocIdNumber = parseInt(lastDocId.slice(-4));
+    s += (lastDocIdNumber + 1).toString().padStart(4, '0');
+  } else {
+    s += '0001';
   }
   return s;
 }

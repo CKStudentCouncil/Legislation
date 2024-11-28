@@ -18,7 +18,7 @@
         <q-date v-model="parentValue.createdAt" mask="YYYY-MM-DD" />
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn color="negative" flat label="取消" @click="$emit('cancel')" />
+        <q-btn color="negative" flat label="取消" @click="$emit('canceled')" />
         <q-btn color="positive" flat label="確定" @click="$emit('submit')" />
       </q-card-actions>
     </q-card>
@@ -35,7 +35,7 @@ const props = defineProps<{
 }>();
 const emits = defineEmits({
   submit: null,
-  cancel: null,
+  canceled: null,
   'update:modelValue': null,
 });
 

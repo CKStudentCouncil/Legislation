@@ -3,7 +3,7 @@
     <p class="text-h6 text-bold">附件{{ translateNumberToChinese(props.order) }}</p>
     <p>{{ props.attachment.description }}</p>
     <div v-for="url of props.attachment.urls" :key="url">
-      <iframe v-if="getGoogleFileEmbed(url)" :src="getGoogleFileEmbed(url)" width="100%" height="600" allow="autoplay"></iframe>
+      <iframe class="no-print" v-if="!(noEmbed)&&getGoogleFileEmbed(url)" :src="getGoogleFileEmbed(url)" width="100%" height="600" allow="autoplay"></iframe>
       <a v-else :href="url" target="_blank">{{ url }}</a>
     </div>
   </div>
@@ -16,6 +16,7 @@ import { translateNumberToChinese } from '../ts/utils.ts';
 const props = defineProps<{
   attachment: Attachment;
   order: number;
+  noEmbed?: boolean;
 }>();
 
 function getGoogleFileEmbed(input: string) {

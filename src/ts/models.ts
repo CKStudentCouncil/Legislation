@@ -1,5 +1,5 @@
 import { firestoreDefaultConverter, useCollection, useDocument, useFirestore } from 'vuefire';
-import { and, collection, doc, FirestoreDataConverter, query, Timestamp, where } from 'firebase/firestore';
+import { collection, doc, FirestoreDataConverter, query, Timestamp, where } from 'firebase/firestore';
 
 const date = new Date();
 export const timezoneOffset = date.getTimezoneOffset() * 60 * 1000; // -480
@@ -25,15 +25,18 @@ export interface Document {
   fromSpecific: DocumentSpecificIdentity;
   to: DocumentGeneralIdentity[];
   toSpecific: DocumentSpecificIdentity[];
+  toOther: string[];
   type: DocumentType;
   content: string;
   createdAt: Date;
-  attachments: string[];
+  attachments: Attachment[];
   cc: DocumentGeneralIdentity[];
   ccSpecific: DocumentSpecificIdentity[];
+  ccOther: string[];
   confidentiality: DocumentConfidentiality;
   read: string[];
   published: boolean;
+  publishedAt?: Date;
 }
 
 export class DocumentConfidentiality {
@@ -76,33 +79,112 @@ export class DocumentSpecificIdentity {
   static Chairman = new DocumentSpecificIdentity('Chairman', '主席', '', '00', DocumentGeneralIdentity.Chairman);
   static ViceChairman = new DocumentSpecificIdentity('ViceChairman', '副主席', '', '00', DocumentGeneralIdentity.ViceChairman);
   // Student Council
-  static Chair = new DocumentSpecificIdentity('Chair', '議長', '議', '00', DocumentGeneralIdentity.StudentCouncil);
-  static ViceChair = new DocumentSpecificIdentity('ViceChair', '副議長', '副議', '07', DocumentGeneralIdentity.StudentCouncil);
-  static DisciplinaryCommittee = new DocumentSpecificIdentity('DisciplinaryCommittee', '紀律委員會', '紀', '04', DocumentGeneralIdentity.StudentCouncil);
+  static Speaker = new DocumentSpecificIdentity('Speaker', '議長', '議', '00', DocumentGeneralIdentity.StudentCouncil);
+  static DeputySpeaker = new DocumentSpecificIdentity('DeputySpeaker', '副議長', '副議', '07', DocumentGeneralIdentity.StudentCouncil);
+  static DisciplinaryCommittee = new DocumentSpecificIdentity(
+    'DisciplinaryCommittee',
+    '紀律委員會',
+    '紀',
+    '04',
+    DocumentGeneralIdentity.StudentCouncil,
+  );
   static FinancialCommittee = new DocumentSpecificIdentity('FinancialComittee', '財政委員會', '財', '01', DocumentGeneralIdentity.StudentCouncil);
-  static LegislationCommittee = new DocumentSpecificIdentity('LegislationCommittee', '法制委員會', '法', '02', DocumentGeneralIdentity.StudentCouncil);
+  static LegislationCommittee = new DocumentSpecificIdentity(
+    'LegislationCommittee',
+    '法制委員會',
+    '法',
+    '02',
+    DocumentGeneralIdentity.StudentCouncil,
+  );
   static ExecutiveCommittee = new DocumentSpecificIdentity('ExecutiveCommittee', '行政委員會', '行', '06', DocumentGeneralIdentity.StudentCouncil);
-  static InvestigationCommittee = new DocumentSpecificIdentity('InvestigationCommittee', '調查委員會', '調', '03', DocumentGeneralIdentity.StudentCouncil);
-  static ElectionSupervisionCommittee = new DocumentSpecificIdentity('ElectionSupervisionCommittee', '選舉監督委員會', '選', '05', DocumentGeneralIdentity.StudentCouncil);
-  static StudentCouncilRepresentative = new DocumentSpecificIdentity('StudentCouncilRepresentative', '班級代表', '班代', '08', DocumentGeneralIdentity.StudentCouncil);
+  static InvestigationCommittee = new DocumentSpecificIdentity(
+    'InvestigationCommittee',
+    '調查委員會',
+    '調',
+    '03',
+    DocumentGeneralIdentity.StudentCouncil,
+  );
+  static ElectionSupervisionCommittee = new DocumentSpecificIdentity(
+    'ElectionSupervisionCommittee',
+    '選舉監督委員會',
+    '選',
+    '05',
+    DocumentGeneralIdentity.StudentCouncil,
+  );
+  static StudentCouncilRepresentative = new DocumentSpecificIdentity(
+    'StudentCouncilRepresentative',
+    '班級代表',
+    '班代',
+    '08',
+    DocumentGeneralIdentity.StudentCouncil,
+  );
   // Executive Department
-  static StudentRightsDivision = new DocumentSpecificIdentity('StudentRightsGroup', '學生權益股', '權', '01', DocumentGeneralIdentity.ExecutiveDepartment);
-  static PublicRelationsDivision = new DocumentSpecificIdentity('PublicRelationsGroup', '公關股', '關', '02', DocumentGeneralIdentity.ExecutiveDepartment);
-  static ServiceDivision = new DocumentSpecificIdentity('ServiceGroup', '服務股', '服', '03', DocumentGeneralIdentity.ExecutiveDepartment);
-  static EventsDivision = new DocumentSpecificIdentity('EventsGroup', '活動股', '活', '04', DocumentGeneralIdentity.ExecutiveDepartment);
-  static DocumentationDivision = new DocumentSpecificIdentity('DocumentationGroup', '文宣股', '文', '05', DocumentGeneralIdentity.ExecutiveDepartment);
-  static GeneralAffairsDivision = new DocumentSpecificIdentity('GeneralAffairsGroup', '總務股', '總', '06', DocumentGeneralIdentity.ExecutiveDepartment);
-  static ElectoralCommission = new DocumentSpecificIdentity('ElectoralCommission', '選舉委員會', '選舉', '07', DocumentGeneralIdentity.ExecutiveDepartment);
+  static StudentRightsDivision = new DocumentSpecificIdentity(
+    'StudentRightsDivision',
+    '學生權益股',
+    '權',
+    '01',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+  );
+  static PublicRelationsDivision = new DocumentSpecificIdentity(
+    'PublicRelationsDivision',
+    '公關股',
+    '關',
+    '02',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+  );
+  static ServiceDivision = new DocumentSpecificIdentity('ServiceDivision', '服務股', '服', '03', DocumentGeneralIdentity.ExecutiveDepartment);
+  static EventsDivision = new DocumentSpecificIdentity('EventsDivision', '活動股', '活', '04', DocumentGeneralIdentity.ExecutiveDepartment);
+  static DocumentationDivision = new DocumentSpecificIdentity(
+    'DocumentationDivision',
+    '文宣股',
+    '文',
+    '05',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+  );
+  static GeneralAffairsDivision = new DocumentSpecificIdentity(
+    'GeneralAffairsDivision',
+    '總務股',
+    '總',
+    '06',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+  );
+  static ElectoralCommission = new DocumentSpecificIdentity(
+    'ElectoralCommission',
+    '選舉委員會',
+    '選舉',
+    '07',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+  );
   // Judicial Committee
-  static JudicialCommitteeChairman = new DocumentSpecificIdentity('JudicialCommitteeChairman', '評議委員會主任委員', '主', '00', DocumentGeneralIdentity.JudicialCommittee);
-  static JudicialCommitteeViceChairman = new DocumentSpecificIdentity('JudicialCommitteeViceChairman', '評議委員會副主任委員', '副', '00', DocumentGeneralIdentity.JudicialCommittee);
+  static JudicialCommitteeChairman = new DocumentSpecificIdentity(
+    'JudicialCommitteeChairman',
+    '評議委員會主任委員',
+    '主',
+    '00',
+    DocumentGeneralIdentity.JudicialCommittee,
+  );
+  static JudicialCommitteeViceChairman = new DocumentSpecificIdentity(
+    'JudicialCommitteeViceChairman',
+    '評議委員會副主任委員',
+    '副',
+    '00',
+    DocumentGeneralIdentity.JudicialCommittee,
+  );
   static OccupationalCourt = new DocumentSpecificIdentity('OccupationalCourt', '職務法庭', '職', '01', DocumentGeneralIdentity.JudicialCommittee);
+  static JudicialCommitteeMember = new DocumentSpecificIdentity(
+    'JudicialCommitteeMember',
+    '評議委員',
+    '評委',
+    '02',
+    DocumentGeneralIdentity.JudicialCommittee,
+  );
   static Other = new DocumentSpecificIdentity('Other', '其他', '', '99', DocumentGeneralIdentity.StudentCouncil);
   static VALUES = {
     Chairman: DocumentSpecificIdentity.Chairman,
     ViceChairman: DocumentSpecificIdentity.ViceChairman,
-    Chair: DocumentSpecificIdentity.Chair,
-    ViceChair: DocumentSpecificIdentity.ViceChair,
+    Speaker: DocumentSpecificIdentity.Speaker,
+    DeputySpeaker: DocumentSpecificIdentity.DeputySpeaker,
     DisciplinaryCommittee: DocumentSpecificIdentity.DisciplinaryCommittee,
     FinancialCommittee: DocumentSpecificIdentity.FinancialCommittee,
     LegislationCommittee: DocumentSpecificIdentity.LegislationCommittee,
@@ -117,6 +199,10 @@ export class DocumentSpecificIdentity {
     DocumentationDivision: DocumentSpecificIdentity.DocumentationDivision,
     GeneralAffairsDivision: DocumentSpecificIdentity.GeneralAffairsDivision,
     ElectoralCommission: DocumentSpecificIdentity.ElectoralCommission,
+    JudicialCommitteeChairman: DocumentSpecificIdentity.JudicialCommitteeChairman,
+    JudicialCommitteeViceChairman: DocumentSpecificIdentity.JudicialCommitteeViceChairman,
+    OccupationalCourt: DocumentSpecificIdentity.OccupationalCourt,
+    JudicialCommitteeMember: DocumentSpecificIdentity.JudicialCommitteeMember,
     Other: DocumentSpecificIdentity.Other,
   };
 
@@ -130,9 +216,9 @@ export class DocumentSpecificIdentity {
 }
 
 export class DocumentType {
-  static Announcement = new DocumentType('Announcement', '公告', '告', '2');
+  static Announcement = new DocumentType('Announcement', '公告', '公', '2');
   static Order = new DocumentType('Order', '命令', '令', '0');
-  static Advisory = new DocumentType('Report', '函', '函', '1');
+  static Advisory = new DocumentType('Advisory', '函', '函', '1');
   static Record = new DocumentType('Record', '會議記錄', '錄', '3');
   static MeetingNotice = new DocumentType('MeetingNotice', '開會通知', '通', '4');
   static VALUES = {
@@ -171,6 +257,7 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     const data = firestoreDefaultConverter.fromFirestore(snapshot, options);
     if (!data) return null;
     data.createdAt = new Date(data.createdAt.toMillis());
+    data.publishedAt = data.publishedAt ? new Date(data.publishedAt.toMillis()) : null;
     data.confidentiality = DocumentConfidentiality.VALUES[data.confidentiality as keyof typeof DocumentConfidentiality.VALUES];
     data.from = DocumentGeneralIdentity.VALUES[data.from as keyof typeof DocumentGeneralIdentity.VALUES];
     data.fromSpecific = DocumentSpecificIdentity.VALUES[data.fromSpecific as keyof typeof DocumentSpecificIdentity.VALUES];
@@ -201,7 +288,7 @@ export function useSpecificDocument(id: string) {
 
 export function usePublicDocuments() {
   return useCollection(
-    query(documentsCollection(), and(where('published', '==', true), where('confidentiality', '==', DocumentConfidentiality.Public.firebase))),
+    query(documentsCollection(), where('published', '==', true), where('confidentiality', '==', DocumentConfidentiality.Public.firebase)),
   );
 }
 

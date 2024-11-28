@@ -66,7 +66,7 @@
             <q-icon v-if="draggable.attachment" class="col self-center q-mr-sm" name="drag_indicator" style="max-width: 10px">
               <q-tooltip>拖曳以重新排序</q-tooltip>
             </q-icon>
-            <LegislationAttachment :attachment="attachment" :order="index + 1" class="col" />
+            <AttachmentDisplay :attachment="attachment" :order="index + 1" class="col" />
             <q-btn flat icon="edit" size="10px" @click="editAttachment(attachment)" />
             <q-btn color="negative" flat icon="delete" size="10px" @click="removeAttachment(attachment)" />
           </div>
@@ -141,7 +141,7 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
-  <LegislationDialog v-model="target" :action="action" @submit="submit" />
+  <LegislationDialog v-model="target" :action="action" @submit="submit" @canceled="action=null" />
 </template>
 
 <script lang="ts" setup>
@@ -157,7 +157,7 @@ import { reactive, Ref, ref } from 'vue';
 import ListEditor from 'components/ListEditor.vue';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
 import LegislationDialog from 'components/LegislationDialog.vue';
-import LegislationAttachment from 'components/LegislationAttachment.vue';
+import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import AttachmentUploader from 'components/AttachmentUploader.vue';
 
 const route = useRoute();

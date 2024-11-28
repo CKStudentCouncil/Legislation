@@ -21,11 +21,12 @@
       </div>
       <LegislationContent v-for="content of legislation.content" :id="content.index.toString()" :key="content.title" :content="content" />
       <LegislationAddendum v-for="addendum of legislation.addendum" :key="addendum.createdAt.valueOf()" :addendum="addendum" />
-      <LegislationAttachment
+      <AttachmentDisplay
         v-for="(attachment, index) of legislation.attachments"
         :key="attachment.description + attachment.urls.toString()"
         :attachment="attachment"
         :order="index + 1"
+        :no-embed="!embed"
       />
     </div>
   </q-page>
@@ -40,11 +41,12 @@ import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink } from 'src/ts/utils.ts';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
 import { useVueToPrint } from 'vue-to-print';
-import LegislationAttachment from 'components/LegislationAttachment.vue';
+import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 
 const route = useRoute();
 const legislation = useLegislation(route.params.id! as string);
 const content = ref();
+const embed = ref(true);
 
 watch(legislation, () => {
   event('view_legislation', {
@@ -66,6 +68,19 @@ const { handlePrint } = useVueToPrint({
   documentTitle: legislation.value?.name ?? '',
   removeAfterPrint: true,
   pageStyle: '@page { margin: 0.5in 0.5in 0.5in 0.5in !important; }',
+  onBeforeGetContent: () => {
+    return new Promise((resolve) => {
+      embed.value = false;
+      setTimeout(() => {
+        resolve();
+      }, 300);
+    });
+  },
+  onAfterPrint: () => {
+    setTimeout(()=>{
+      embed.value = true;
+    }, 300);
+  },
 });
 </script>
 

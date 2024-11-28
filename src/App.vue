@@ -2,11 +2,12 @@
   <router-view />
 </template>
 
-<script setup lang="ts">
-import { Dark, LocalStorage } from 'quasar';
+<script lang="ts" setup>
+import { Dark, LocalStorage, useMeta } from 'quasar';
+import { useRoute } from 'vue-router';
 
 defineOptions({
-  name: 'App'
+  name: 'App',
 });
 if (LocalStorage.has('dark')) {
   if (LocalStorage.getItem<boolean>('dark')) {
@@ -16,5 +17,18 @@ if (LocalStorage.has('dark')) {
   }
 } else {
   Dark.set('auto');
+}
+
+const route = useRoute();
+if (route.path.includes('/document/')) {
+  console.log('ok')
+  useMeta({
+    meta: {
+      description: {
+        name: 'description',
+        content: route.params.id,
+      },
+    },
+  });
 }
 </script>

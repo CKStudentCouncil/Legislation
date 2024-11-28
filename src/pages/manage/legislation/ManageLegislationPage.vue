@@ -1,7 +1,7 @@
 <template>
   <q-btn color="positive" icon="add" label="新增法案" @click="add" class="q-ma-md" />
   <LegislationPage manage />
-  <LegislationDialog v-model="target" :action="action" @submit="submit" />
+  <LegislationDialog v-model="target" :action="action" @submit="submit" @canceled="action=null" />
 </template>
 
 <script lang="ts" setup>

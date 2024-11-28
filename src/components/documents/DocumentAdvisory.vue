@@ -1,14 +1,16 @@
 <template>
   <div v-if="!doc">載入中...(或查無此公文)</div>
   <div v-else style="max-width: 1170px">
-    <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">臺北市立建國中學班聯會 {{ doc.from.translation }} 開會通知單</div>
+    <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">臺北市立建國中學班聯會</div>
+    <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">{{ doc.fromSpecific.translation }} 函</div>
     <div class="text-right">{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
-    <div class="text-h6">發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : "尚未發布" }}</div>
+    <div class="text-h6">受文者：{{ readableTo }}</div>
+    <div class="text-h6" v-if="doc.cc.length > 0">副本：{{ readableCC }}</div>
+    <div class="text-h6">發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : '尚未發布' }}</div>
     <div class="text-h6">密等：{{ doc.confidentiality.translation }}</div>
-    <q-separator color="black" class="q-mt-sm q-mb-sm"/>
-    <div class="text-h6">出席人：{{ readableTo }}</div>
-    <div class="text-h6" v-if="doc.cc.length > 0">列席人：{{ readableCC }}</div>
-    <div class="text-h6">會議名稱：{{ doc.subject }}</div>
+    <div class="text-h6">主旨：{{ doc.subject }}</div>
+    <q-separator color="black" class="q-mt-sm q-mb-sm" />
+    <div class="text-h6">說明：</div>
     <div v-html="sanitize(doc.content)"></div>
   </div>
 </template>
