@@ -21,22 +21,28 @@ export interface Document {
   idPrefix: string; //e.g. 建班主公字
   reign: string; //e.g. 79-1
   subject: string;
-  from: DocumentGeneralIdentity;
+  location?: string;
   fromSpecific: DocumentSpecificIdentity;
-  to: DocumentGeneralIdentity[];
+  fromName?: string;
+  secretarySpecific?: DocumentSpecificIdentity;
+  secretaryName?: string;
   toSpecific: DocumentSpecificIdentity[];
   toOther: string[];
   type: DocumentType;
   content: string;
   createdAt: Date;
   attachments: Attachment[];
-  cc: DocumentGeneralIdentity[];
   ccSpecific: DocumentSpecificIdentity[];
   ccOther: string[];
   confidentiality: DocumentConfidentiality;
   read: string[];
   published: boolean;
   publishedAt?: Date;
+}
+
+export interface MailingList {
+  email: string;
+  identities: DocumentSpecificIdentity[];
 }
 
 export class DocumentConfidentiality {
@@ -65,7 +71,7 @@ export class DocumentGeneralIdentity {
     ExecutiveDepartment: DocumentGeneralIdentity.ExecutiveDepartment,
     StudentCouncil: DocumentGeneralIdentity.StudentCouncil,
     JudicialCommittee: DocumentGeneralIdentity.JudicialCommittee,
-  };
+  } as Record<string, DocumentGeneralIdentity>;
 
   constructor(
     public firebase: string,
@@ -81,6 +87,7 @@ export class DocumentSpecificIdentity {
   // Student Council
   static Speaker = new DocumentSpecificIdentity('Speaker', '議長', '議', '00', DocumentGeneralIdentity.StudentCouncil);
   static DeputySpeaker = new DocumentSpecificIdentity('DeputySpeaker', '副議長', '副議', '07', DocumentGeneralIdentity.StudentCouncil);
+  static StudentCouncilSecretary = new DocumentSpecificIdentity('StudentCouncilSecretary', '班代大會秘書', '秘', '09', DocumentGeneralIdentity.StudentCouncil);
   static DisciplinaryCommittee = new DocumentSpecificIdentity(
     'DisciplinaryCommittee',
     '紀律委員會',
@@ -88,7 +95,7 @@ export class DocumentSpecificIdentity {
     '04',
     DocumentGeneralIdentity.StudentCouncil,
   );
-  static FinancialCommittee = new DocumentSpecificIdentity('FinancialComittee', '財政委員會', '財', '01', DocumentGeneralIdentity.StudentCouncil);
+  static FinancialCommittee = new DocumentSpecificIdentity('FinancialCommittee', '財政委員會', '財', '01', DocumentGeneralIdentity.StudentCouncil);
   static LegislationCommittee = new DocumentSpecificIdentity(
     'LegislationCommittee',
     '法制委員會',
@@ -185,6 +192,7 @@ export class DocumentSpecificIdentity {
     ViceChairman: DocumentSpecificIdentity.ViceChairman,
     Speaker: DocumentSpecificIdentity.Speaker,
     DeputySpeaker: DocumentSpecificIdentity.DeputySpeaker,
+    StudentCouncilSecretary: DocumentSpecificIdentity.StudentCouncilSecretary,
     DisciplinaryCommittee: DocumentSpecificIdentity.DisciplinaryCommittee,
     FinancialCommittee: DocumentSpecificIdentity.FinancialCommittee,
     LegislationCommittee: DocumentSpecificIdentity.LegislationCommittee,
@@ -204,7 +212,7 @@ export class DocumentSpecificIdentity {
     OccupationalCourt: DocumentSpecificIdentity.OccupationalCourt,
     JudicialCommitteeMember: DocumentSpecificIdentity.JudicialCommitteeMember,
     Other: DocumentSpecificIdentity.Other,
-  };
+  } as Record<string, DocumentSpecificIdentity>;
 
   constructor(
     public firebase: string,
@@ -239,12 +247,10 @@ export class DocumentType {
 
 export function convertDocumentToFirebase(data: Document) {
   data.confidentiality = data.confidentiality.firebase as any;
-  data.from = data.from.firebase as any;
   data.fromSpecific = data.fromSpecific.firebase as any;
-  data.to = data.to.map((to) => to.firebase as any);
   data.toSpecific = data.toSpecific.map((toSpecific) => toSpecific.firebase as any);
+  data.secretarySpecific = data.secretarySpecific?.firebase as any;
   data.type = data.type.firebase as any;
-  data.cc = data.cc.map((cc) => cc.firebase as any);
   data.ccSpecific = data.ccSpecific.map((ccSpecific) => ccSpecific.firebase as any);
   return data;
 }
@@ -259,17 +265,15 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     data.createdAt = new Date(data.createdAt.toMillis());
     data.publishedAt = data.publishedAt ? new Date(data.publishedAt.toMillis()) : null;
     data.confidentiality = DocumentConfidentiality.VALUES[data.confidentiality as keyof typeof DocumentConfidentiality.VALUES];
-    data.from = DocumentGeneralIdentity.VALUES[data.from as keyof typeof DocumentGeneralIdentity.VALUES];
-    data.fromSpecific = DocumentSpecificIdentity.VALUES[data.fromSpecific as keyof typeof DocumentSpecificIdentity.VALUES];
-    data.to = data.to.map((to: any) => DocumentGeneralIdentity.VALUES[to as keyof typeof DocumentGeneralIdentity.VALUES]);
+    data.fromSpecific = DocumentSpecificIdentity.VALUES[data.fromSpecific];
     data.toSpecific = data.toSpecific.map(
-      (toSpecific: any) => DocumentSpecificIdentity.VALUES[toSpecific as keyof typeof DocumentSpecificIdentity.VALUES],
+      (toSpecific: any) => DocumentSpecificIdentity.VALUES[toSpecific],
     );
     data.type = DocumentType.VALUES[data.type as keyof typeof DocumentType.VALUES];
-    data.cc = data.cc.map((cc: any) => DocumentGeneralIdentity.VALUES[cc as keyof typeof DocumentGeneralIdentity.VALUES]);
     data.ccSpecific = data.ccSpecific.map(
-      (ccSpecific: any) => DocumentSpecificIdentity.VALUES[ccSpecific as keyof typeof DocumentSpecificIdentity.VALUES],
+      (ccSpecific: any) => DocumentSpecificIdentity.VALUES[ccSpecific],
     );
+    data.secretarySpecific = data.secretarySpecific ? DocumentSpecificIdentity.VALUES[data.secretarySpecific] : null;
     return data as unknown as Document;
   },
 };
@@ -428,17 +432,17 @@ export class LegislationType {
 }
 
 export class ContentType {
+  static Volume = new ContentType('Volume', '編', false);
   static Chapter = new ContentType('Chapter', '章', false);
   static Section = new ContentType('Section', '節', false);
   static Subsection = new ContentType('Subsection', '款', false);
   static Clause = new ContentType('Clause', '條', true);
-  static Item = new ContentType('Item', '項', true);
   static VALUES = {
+    Volume: ContentType.Volume,
     Chapter: ContentType.Chapter,
     Section: ContentType.Section,
     Subsection: ContentType.Subsection,
     Clause: ContentType.Clause,
-    Item: ContentType.Item,
   };
 
   constructor(
@@ -456,4 +460,11 @@ export interface Addendum {
 export interface Attachment {
   urls: string[];
   description: string;
+}
+
+export interface User {
+  uid: string;
+  name: string;
+  email: string;
+  roles: string[];
 }

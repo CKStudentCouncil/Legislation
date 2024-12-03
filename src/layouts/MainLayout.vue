@@ -22,7 +22,7 @@
       <q-list class="menu-list fit column">
         <div v-for="endpoint of endpoints" :key="endpoint.name">
           <q-item
-            v-if="!endpoint.requireAuth || loggedIn"
+            v-if="(!endpoint.requireAuth || loggedIn) && (endpoint.requireRole === undefined || hasRole(endpoint.requireRole))"
             v-ripple
             :active="selected === endpoint.name"
             :to="endpoint.url"
@@ -54,7 +54,10 @@
             </q-avatar>
           </q-item-section>
           <q-item-section>
-            <q-item-label>{{ loggedInUser.displayName }}</q-item-label>
+            <q-item-label
+              >{{ loggedInUser.displayName }}
+              {{ loggedInUserClaims.roles?.map((r) => DocumentSpecificIdentity.VALUES[r]?.translation).join('、') }}
+            </q-item-label>
           </q-item-section>
         </q-item>
         <q-item v-if="loggedIn" clickable @click="logout()">
@@ -78,8 +81,9 @@
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
 import { useCurrentUser } from 'vuefire';
-import { init, login, logout } from 'src/ts/auth.ts';
+import { init, loggedInUserClaims, login, logout } from 'src/ts/auth.ts';
 import { Dark, LocalStorage } from 'quasar';
+import { DocumentSpecificIdentity } from '../ts/models.ts';
 
 init();
 let leftDrawerOpen = ref(false);
@@ -88,6 +92,7 @@ let endpoints = [
   { name: '檢視公文', url: '/document', icon: 'badge', requireAuth: false },
   { name: '編輯法案', url: '/manage/legislation', icon: 'edit', requireAuth: true },
   { name: '編輯公文', url: '/manage/document', icon: 'draw', requireAuth: true },
+  { name: '管理帳號', url: '/manage/accounts', icon: 'badge', requireAuth: true, requireRole: DocumentSpecificIdentity.Chairman },
   { name: '關於', url: '/about', icon: 'info', requireAuth: false },
 ];
 let selected = ref('Account Information');
@@ -113,5 +118,9 @@ function toggleFullscreen() {
   } else {
     document.documentElement.requestFullscreen();
   }
+}
+
+function hasRole(role: DocumentSpecificIdentity) {
+  return loggedInUserClaims.roles?.includes(role.firebase) || loggedInUser.value?.uid === '5MK7Kr4O9GVg76lHCsy6ex45kP03';
 }
 </script>

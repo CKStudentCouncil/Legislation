@@ -95,7 +95,7 @@ export default configure((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['Dialog', 'Notify', 'Dark', 'LocalStorage', 'Loading', 'Screen', 'Meta'],
+      plugins: ['Dialog', 'Notify', 'Dark', 'LocalStorage', 'Loading', 'Screen'],
     },
 
     // animations: 'all', // --- includes all animations

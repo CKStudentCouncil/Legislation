@@ -26,7 +26,13 @@ const routes: RouteRecordRaw[] = [
           { path: '', component: () => import('pages/manage/document/ManageDocumentsPage.vue') },
           { path: ':id', component: () => import('pages/manage/document/ManageSingleDocumentPage.vue') }
         ],
-      }
+      },
+      {
+        path: 'accounts',
+        children: [
+          { path: '', component: () => import('pages/manage/ManageAccountsPage.vue') },
+        ],
+      },
     ],
   },
   {
@@ -36,6 +42,11 @@ const routes: RouteRecordRaw[] = [
       { path: '', component: () => import('pages/documents/DocumentsPage.vue') },
       { path: ':id', component: () => import('pages/documents/SingleDocumentPage.vue') },
     ],
+  },
+  {
+    path: '/about',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [{ path: '', component: () => import('pages/AboutPage.vue') }],
   },
   {
     path: '/',

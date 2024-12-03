@@ -5,42 +5,63 @@
         <h6 class="q-ma-none">{{ action == 'edit' ? '編輯' : '新建' }}公文</h6>
       </q-card-section>
       <q-card-section>
-        <q-select v-model="parentValue.type" :option-label="(o) => o.translation" :options="Object.values(DocumentType.VALUES)" label="公文類別" />
-        <q-input v-model="parentValue.subject" :label="isMeetingNotice ? '會議名稱' : '主旨'" />
+        <q-select v-model="parentValue.type" :option-label="(o) => o.translation" :options="Object.values(DocumentType.VALUES)" label="公文類別" :disable="action == 'edit'" />
+        <q-input v-model="parentValue.subject" :label="isMeetingNotice || isMeetingRecord ? '會議名稱' : '主旨'" />
         <q-select
           v-model="parentValue.fromSpecific"
           :option-label="(o) => o.translation"
           :options="Object.values(DocumentSpecificIdentity.VALUES)"
-          label="發文者"
-          @update:modelValue="parentValue.from = parentValue.fromSpecific.generic"
+          :label="isMeetingRecord ? '會議主席' : '發文者'"
         />
+        <q-input
+          v-if="parentValue.type.firebase==DocumentType.Order.firebase || isMeetingRecord"
+          v-model="parentValue.fromName"
+          :label="isMeetingRecord ? '會議主席姓名': '發文者姓名'"
+        />
+        <div v-if="isMeetingRecord">
+          <q-select
+            v-model="parentValue.secretarySpecific"
+            :option-label="(o) => o.translation"
+            :options="Object.values(DocumentSpecificIdentity.VALUES)"
+            label="會議紀錄"
+          />
+          <q-input
+            v-model="parentValue.secretaryName"
+            label="會議紀錄姓名"
+          />
+          <q-input
+            v-model="parentValue.location"
+            label="會議地點"
+          />
+        </div>
         <q-select
+          v-if="parentValue.type.firebase!=DocumentType.Order.firebase&&!isMeetingRecord"
           v-model="parentValue.toSpecific"
           :label="`${isMeetingNotice ? '出席人' : '受文者'} (可多選)`"
           :option-label="(o) => o.translation"
           :options="Object.values(DocumentSpecificIdentity.VALUES)"
           multiple
           use-chips
-          @update:modelValue="parentValue.to = getGenerics(parentValue.toSpecific)"
         />
-        <div v-if="parentValue.toSpecific.map((s) => s.firebase).includes(DocumentSpecificIdentity.Other.firebase)">
+        <div v-if="parentValue.toSpecific.map((s) => s.firebase).includes(DocumentSpecificIdentity.Other.firebase)&&!isMeetingRecord">
           <div class="q-mt-sm q-mb-sm">其他{{ isMeetingNotice ? '出席人' : '受文者' }}</div>
           <ListEditor v-model="parentValue.toOther" />
         </div>
         <q-select
+          v-if="parentValue.type.firebase!=DocumentType.Order.firebase&&!isMeetingRecord"
           v-model="parentValue.ccSpecific"
           :label="`${isMeetingNotice ? '列席人' : '副本受文者'} (可多選)`"
           :option-label="(o) => o.translation"
           :options="Object.values(DocumentSpecificIdentity.VALUES)"
           multiple
           use-chips
-          @update:modelValue="parentValue.cc = getGenerics(parentValue.ccSpecific)"
         />
-        <div v-if="parentValue.ccSpecific.map((s) => s.firebase).includes(DocumentSpecificIdentity.Other.firebase)">
+        <div v-if="parentValue.ccSpecific.map((s) => s.firebase).includes(DocumentSpecificIdentity.Other.firebase)&&!isMeetingRecord">
           <div class="q-mt-sm q-mb-sm">其他{{ isMeetingNotice ? '列席人' : '副本受文者' }}</div>
           <ListEditor v-model="parentValue.ccOther" />
         </div>
         <q-select
+          v-if="parentValue.type.firebase!=DocumentType.Order.firebase&&!isMeetingRecord"
           v-model="parentValue.confidentiality"
           :option-label="(o) => o.translation"
           :options="Object.values(DocumentConfidentiality.VALUES)"
@@ -81,17 +102,7 @@ const parentValue = computed({
 });
 
 const isMeetingNotice = computed(() => parentValue.value.type.firebase == DocumentType.MeetingNotice.firebase);
-
-function getGenerics(specifics: DocumentSpecificIdentity[]) {
-  const generics: DocumentType[] = [];
-  for (const specific of specifics) {
-    console.log(specific.generic);
-    if (!generics.includes(specific.generic)) {
-      generics.push(specific.generic);
-    }
-  }
-  return generics;
-}
+const isMeetingRecord = computed(() => parentValue.value.type.firebase == DocumentType.Record.firebase);
 </script>
 
 <style scoped></style>

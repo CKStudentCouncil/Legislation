@@ -19,6 +19,12 @@
         </div>
       </div>
     </div>
+    <div v-if="$props.content.type.firebase == ContentType.Volume.firebase">
+      <div class="text-h4 text-bold" style="line-height: 65px">
+        {{ $props.content.title }} {{ $props.content.subtitle }}
+        <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
+      </div>
+    </div>
     <div v-if="$props.content.type.firebase == ContentType.Chapter.firebase">
       <div class="text-h5 text-bold" style="line-height: 65px">
         {{ $props.content.title }} {{ $props.content.subtitle }}

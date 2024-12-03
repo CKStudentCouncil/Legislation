@@ -8,16 +8,50 @@
  */
 
 import * as admin from "firebase-admin";
+admin.initializeApp(); // This is required to run before everything else
 import {HttpsError, onCall} from "firebase-functions/v2/https";
 // eslint-disable-next-line camelcase
 import {drive_v3, google} from "googleapis";
 import * as Stream from "stream";
-admin.initializeApp(); // This is required to run before everything else
+import {addUserWithRole, checkRole, editUserClaims} from "./auth";
+import {User} from "./models";
 
 const globalFunctionOptions = {region: "asia-east1"};
 const auth = new google.auth.GoogleAuth({keyFile: "src/credential.json", scopes: ["https://www.googleapis.com/auth/drive.file"]});
 // eslint-disable-next-line camelcase
 const driveAPI = google.drive({version: "v3", auth}) as drive_v3.Drive;
+
+export const addUser = onCall(globalFunctionOptions, async (request) => {
+  await checkRole(request, "Chairman");
+  const user = request.data as User;
+  await addUserWithRole(user);
+  return {success: true};
+});
+
+export const deleteUser = onCall(globalFunctionOptions, async (request) => {
+  await checkRole(request, "Chairman");
+  await admin.auth().deleteUser(request.data.uid);
+  return {success: true};
+});
+
+export const editUser = onCall(globalFunctionOptions, async (request) => {
+  await checkRole(request, "Chairman");
+  await editUserClaims(request.data.uid, request.data.claims);
+  return {success: true};
+});
+
+export const getAllUsers = onCall(globalFunctionOptions, async (request) => {
+  await checkRole(request, "Chairman");
+  const users = await admin.auth().listUsers();
+  return users.users.map((user) => {
+    return {
+      uid: user.uid,
+      email: user.email,
+      roles: user.customClaims?.roles,
+      name: user.displayName,
+    };
+  });
+});
 
 export const uploadAttachment = onCall(globalFunctionOptions, async (request) => {
   if (request.auth == null) {

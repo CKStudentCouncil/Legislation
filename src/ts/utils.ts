@@ -1,6 +1,7 @@
 import { Notify } from 'quasar';
-import { DocumentGeneralIdentity, documentsCollection, DocumentSpecificIdentity } from './models';
-import { getDocs, orderBy, query, where, limit } from 'firebase/firestore';
+import { documentsCollection, DocumentSpecificIdentity, DocumentType } from './models';
+import { getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import sanitize from 'sanitize-html';
 
 export function copyLink(href?: string) {
   copyText(window.location.href.split('#')[0] + (href ? '#' + href : ''));
@@ -15,28 +16,28 @@ export function copyText(text: string) {
   Notify.create({
     message: '已複製到剪貼簿',
     color: 'positive',
-    position: 'top',
+    position: 'top'
   });
 }
 
 export function translateNumber(str: string) {
   //@formatter:off
   const numChar = {
-    零: 0,
-    一: 1,
-    二: 2,
-    三: 3,
-    四: 4,
-    五: 5,
-    六: 6,
-    七: 7,
-    八: 8,
-    九: 9,
+    '零': 0,
+    '一': 1,
+    '二': 2,
+    '三': 3,
+    '四': 4,
+    '五': 5,
+    '六': 6,
+    '七': 7,
+    '八': 8,
+    '九': 9,
   } as Record<string, number>;
   const levelChar = {
-    十: 10,
-    百: 100,
-    千: 1000,
+    '十': 10,
+    '百': 100,
+    '千': 1000,
   } as Record<string, number>;
   //@formatter:on
   if (str.startsWith('十')) str = '一' + str;
@@ -69,7 +70,8 @@ export function translateNumberToChinese(num: number) {
     }
     temp += numChar[parseInt(char)] + levelChar[ary.length - i - 1];
   }
-  if (temp.startsWith('一十')) temp = temp.slice(1);
+  if (temp.startsWith('一十')) temp = temp.slice(1)
+  if (temp.length > 1 && temp.endsWith('零')) temp = temp.slice(0, -1);
   return temp;
 }
 
@@ -78,22 +80,22 @@ export function getCurrentReign() {
   return `${date.getFullYear() - 1945}-${date.getMonth() > 7 || date.getMonth() < 1 ? '1' : '2'}`; // August to January
 }
 
-export function getReadableRecipient(general: DocumentGeneralIdentity[], specific: DocumentSpecificIdentity[], others: string[]) {
+export function getReadableRecipient(specific: DocumentSpecificIdentity[], others: string[]) {
   let s = '';
-  for (let i = 0; i < general.length; i++) {
+  for (let i = 0; i < specific.length; i++) {
     if (specific[i].firebase == DocumentSpecificIdentity.Other.firebase) {
       s += others.join('、');
-    } else{
+    } else {
       s = s.concat(specific[i].translation);
     }
-    if (i < general.length - 1) {
+    if (i < specific.length - 1) {
       s += '、';
     }
   }
   return s;
 }
 
-export async function generateDocumentIdNumber(specific: DocumentSpecificIdentity) {
+export async function generateDocumentIdNumber(specific: DocumentSpecificIdentity, type: DocumentType) {
   //e.g. 07620000001，1.公文之文號,由十二碼組成,前三碼為屆次,第四碼為期間次,第五碼為部門碼,第六、七碼為機關碼,第八碼為該公文類型,後四碼為流水號。
   let r = getCurrentReign().replace('-', '');
   if (r.length === 3) {
@@ -103,6 +105,7 @@ export async function generateDocumentIdNumber(specific: DocumentSpecificIdentit
   const lastDoc = await getDocs(query(documentsCollection(),
     orderBy('createdAt', 'desc'),
     where('fromSpecific', '==', specific.firebase),
+    where('type', '==', type.firebase),
     limit(1)));
   if (lastDoc.docs.length > 0 && lastDoc.docs[0].exists() && lastDoc.docs[0].data()?.idNumber.startsWith(r)) {
     const lastDocId = lastDoc.docs[0].id;
@@ -112,4 +115,13 @@ export async function generateDocumentIdNumber(specific: DocumentSpecificIdentit
     s += '0001';
   }
   return s;
+}
+
+export function customSanitize(text: string) {
+  return sanitize(text, {
+    allowedTags: sanitize.defaults.allowedTags.concat(['font']),
+    allowedAttributes: Object.assign(sanitize.defaults.allowedAttributes, {
+      font: ['color', 'size']
+    })
+  })
 }

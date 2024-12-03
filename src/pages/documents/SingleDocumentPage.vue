@@ -33,7 +33,6 @@ import { useVueToPrint } from 'vue-to-print';
 import { ref } from 'vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
-import { useMeta } from 'quasar';
 
 const route = useRoute();
 const doc = useSpecificDocument(route.params.id as string);
@@ -41,14 +40,6 @@ const content = ref();
 const size = ref(100); // %
 const embed = ref(true);
 
-useMeta({
-  meta: {
-    description: {
-      name: 'description',
-      content: route.params.id,
-    },
-  },
-});
 const { handlePrint } = useVueToPrint({
   content: content,
   documentTitle: (route.params.id as string) ?? '',
