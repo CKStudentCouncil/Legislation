@@ -13,6 +13,7 @@ import { generateDocumentIdNumber, getCurrentReign } from 'src/ts/utils.ts';
 import { doc, setDoc } from 'firebase/firestore';
 import { Loading, Notify } from 'quasar';
 import { useRouter } from 'vue-router';
+import { meetingNoticeTemplate, meetingRecordTemplate } from 'src/ts/template.ts';
 
 const action = ref<'add' | null>(null);
 const adding = reactive({} as models.Document);
@@ -42,19 +43,19 @@ async function submit() {
     adding.idPrefix = adding.fromSpecific.generic.prefix + adding.fromSpecific.prefix + adding.type.prefix + '字';
     adding.idNumber = await generateDocumentIdNumber(adding.fromSpecific, adding.type);
     adding.createdAt = new Date();
-    switch (adding.type) {
-      case models.DocumentType.MeetingNotice:
-        const date = new Date();
-        adding.content = `<div>一、___案</div><div>二、___案</div><div>開會時間：中華民國${date.getFullYear() - 1911}年${date.getMonth()+1}月日（星期）中午12時20分</div><div>開會地點：夢紅樓五樓 公民審議論壇教室</div><div>主持人：議長</div><div><br></div><div>備註：</div><div>一、請尚未加入本期間班級代表LINE社群的班代盡快加入，以便聯繫及接收最新開會資訊。</div><div>二、班代大會為本校重要學生自治機關，請各位班級代表務必出席，不勝感激。不克出席者請請假或由同班同學代理。</div><div>三、任何會議資料及會議相關事宜的更動皆會發布在本會社群。</div>`;
+    switch (adding.type.firebase) {
+      case models.DocumentType.MeetingNotice.firebase:
+        adding.content = meetingNoticeTemplate();
         break;
-      case models.DocumentType.Record:
+      case models.DocumentType.Record.firebase:
         adding.toSpecific = [];
         adding.toOther = [];
         adding.ccSpecific = [];
         adding.ccOther = [];
         adding.confidentiality = DocumentConfidentiality.Public;
+        adding.content = meetingRecordTemplate();
         break;
-      case models.DocumentType.Order:
+      case models.DocumentType.Order.firebase:
         adding.toSpecific = [];
         adding.toOther = [];
         adding.ccSpecific = [];
