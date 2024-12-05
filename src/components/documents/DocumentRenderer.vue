@@ -3,6 +3,7 @@
   <DocumentAdvisory v-if="doc.type.firebase == DocumentType.Advisory.firebase" :doc="doc" />
   <DocumentOrder v-if="doc.type.firebase == DocumentType.Order.firebase" :doc="doc" />
   <DocumentMeetingRecord v-if="doc.type.firebase == DocumentType.Record.firebase" :doc="doc" />
+  <DocumentCourt v-if="doc.type.firebase.startsWith('Court')" :doc="doc" />
 </template>
 
 <script setup lang="ts">
@@ -12,6 +13,7 @@ import * as models from 'src/ts/models.ts';
 import DocumentAdvisory from 'components/documents/DocumentAdvisory.vue';
 import DocumentOrder from 'components/documents/DocumentOrder.vue';
 import DocumentMeetingRecord from 'components/documents/DocumentMeetingRecord.vue';
+import DocumentCourt from 'components/documents/DocumentCourt.vue';
 
 defineProps<{
   doc: models.Document;

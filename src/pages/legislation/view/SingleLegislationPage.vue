@@ -8,6 +8,12 @@
         <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
           <q-tooltip>列印</q-tooltip>
         </q-btn>
+        <q-btn class="no-print" dense flat icon="unfold_less" v-if="Object.entries(expanded).length > 0" size="20px" @click="collapseAll">
+          <q-tooltip>折疊所有條文</q-tooltip>
+        </q-btn>
+        <q-btn class="no-print" dense flat icon="unfold_more" v-if="Object.entries(expanded).length > 0" size="20px" @click="expandAll">
+          <q-tooltip>展開所有條文</q-tooltip>
+        </q-btn>
       </div>
       <div v-if="legislation.preface" class="text-h6 text-bold">{{ legislation.preface }}</div>
       <div v-if="legislation.history.length > 0">
@@ -24,6 +30,9 @@
         :id="content.index.toString()"
         :key="content.title"
         :content="content"
+        :printing="printing"
+        :expanded="expanded[content.index]"
+        @update:expanded="expanded[content.index] = $event"
         :class="content.index.toString() === route.hash.substring(1) ? (Dark.isActive ? 'bg-teal-10' : 'bg-yellow-3') : ''"
       />
       <LegislationAddendum v-for="addendum of legislation.addendum" :key="addendum.createdAt.valueOf()" :addendum="addendum" />
@@ -31,7 +40,7 @@
         v-for="(attachment, index) of legislation.attachments"
         :key="attachment.description + attachment.urls.toString()"
         :attachment="attachment"
-        :no-embed="!embed"
+        :no-embed="printing"
         :order="index + 1"
       />
     </div>
@@ -40,8 +49,8 @@
 
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { useLegislation } from 'src/ts/models.ts';
-import { ref, watch } from 'vue';
+import { ContentType, useLegislation } from 'src/ts/models.ts';
+import { reactive, ref, watch } from 'vue';
 import { event } from 'vue-gtag';
 import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink } from 'src/ts/utils.ts';
@@ -53,7 +62,8 @@ import { Dark } from 'quasar';
 const route = useRoute();
 const legislation = useLegislation(route.params.id! as string);
 const content = ref();
-const embed = ref(true);
+const printing = ref(false);
+const expanded = reactive({} as Record<number, boolean>);
 
 watch(legislation, () => {
   event('view_legislation', {
@@ -63,6 +73,11 @@ watch(legislation, () => {
     type: legislation.value?.category.type.translation,
   });
   document.title = legislation.value?.name + ' - 建中班聯會法律資料庫';
+  for (const content of legislation.value?.content ?? []) {
+    if (content.type.firebase === ContentType.SpecialClause.firebase) {
+      expanded[content.index] = true;
+    }
+  }
   if (route.hash) {
     // wait for the content to load
     setTimeout(() => {
@@ -85,7 +100,7 @@ const { handlePrint } = useVueToPrint({
   pageStyle: '@page { margin: 0.5in 0.5in 0.5in 0.5in !important; }',
   onBeforeGetContent: () => {
     return new Promise((resolve) => {
-      embed.value = false;
+      printing.value = true;
       setTimeout(() => {
         resolve();
       }, 300);
@@ -93,10 +108,22 @@ const { handlePrint } = useVueToPrint({
   },
   onAfterPrint: () => {
     setTimeout(() => {
-      embed.value = true;
+      printing.value = false;
     }, 300);
   },
 });
+
+function collapseAll() {
+  for (const key in expanded) {
+    expanded[key] = false;
+  }
+}
+
+function expandAll() {
+  for (const key in expanded) {
+    expanded[key] = true;
+  }
+}
 </script>
 
 <style scoped></style>

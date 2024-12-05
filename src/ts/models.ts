@@ -166,25 +166,25 @@ export class DocumentSpecificIdentity {
   static JudicialCommitteeChairman = new DocumentSpecificIdentity(
     'JudicialCommitteeChairman',
     '評議委員會主任委員',
-    '主',
+    '評',
     '00',
     DocumentGeneralIdentity.JudicialCommittee,
   );
   static JudicialCommitteeViceChairman = new DocumentSpecificIdentity(
     'JudicialCommitteeViceChairman',
     '評議委員會副主任委員',
-    '副',
+    '評',
     '00',
     DocumentGeneralIdentity.JudicialCommittee,
   );
-  static GeneralCourt = new DocumentSpecificIdentity('GeneralCourt', '一般法庭', '庭', '01', DocumentGeneralIdentity.JudicialCommittee);
+  static GeneralCourt = new DocumentSpecificIdentity('GeneralCourt', '一般法庭', '政', '01', DocumentGeneralIdentity.JudicialCommittee);
   static ConstitutionalCourt = new DocumentSpecificIdentity('ConstitutionalCourt', '憲章法庭', '憲', '02', DocumentGeneralIdentity.JudicialCommittee);
   static SupremeCourt = new DocumentSpecificIdentity('SupremeCourt', '大法庭', '大', '03', DocumentGeneralIdentity.JudicialCommittee);
   static JudicialCommitteeMember = new DocumentSpecificIdentity(
     'JudicialCommitteeMember',
     '評議委員',
-    '評委',
-    '02',
+    '評',
+    '00',
     DocumentGeneralIdentity.JudicialCommittee,
   );
   static Other = new DocumentSpecificIdentity('Other', '其他', '', '99', DocumentGeneralIdentity.StudentCouncil);
@@ -233,14 +233,14 @@ export class DocumentType {
   static Record = new DocumentType('Record', '會議記錄', '錄', '3');
   static MeetingNotice = new DocumentType('MeetingNotice', '開會通知', '通', '4');
   // Judicial Committee only
-  static JudicialCommitteeDecision = new DocumentType('JudicialCommitteeDecision', '評議委員會決議', '決議', '', true);
+  static JudicialCommitteeDecision = new DocumentType('JudicialCommitteeDecision', '評議委員會決議', '決', '', true);
   static JudicialCommitteeExplanation = new DocumentType('JudicialCommitteeExplanation', '評議委員會釋字', '釋', '', true);
   static Verdict = new DocumentType('Verdict', '裁判書', '判', '5', true);
   static CourtNotification = new DocumentType('CourtNotification', '法庭文書-通', '通', '5', true);
   static CourtDocuments = new DocumentType('CourtNotification', '法庭文書-通', '文', '5', true);
   static CourtScrolls = new DocumentType('CourtNotification', '法庭文書-卷', '卷', '5', true);
   static CourtAppeals = new DocumentType('CourtNotification', '法庭文書-上', '上', '5', true);
-  static CourtProsecutions = new DocumentType('CourtNotification', '法庭文書-起', '起', '5', true);
+  static CourtProsecutions = new DocumentType('CourtNotification', '法庭文書-啟', '啟', '5', true);
   static VALUES = {
     Announcement: DocumentType.Announcement,
     Order: DocumentType.Order,

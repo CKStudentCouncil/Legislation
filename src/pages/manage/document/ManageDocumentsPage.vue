@@ -14,6 +14,7 @@ import { doc, setDoc } from 'firebase/firestore';
 import { Loading, Notify } from 'quasar';
 import { useRouter } from 'vue-router';
 import { meetingNoticeTemplate, meetingRecordTemplate } from 'src/ts/template.ts';
+import { DocumentType } from 'src/ts/models.ts';
 
 const action = ref<'add' | null>(null);
 const adding = reactive({} as models.Document);
@@ -40,7 +41,15 @@ function add() {
 async function submit() {
   try {
     Loading.show();
-    adding.idPrefix = adding.fromSpecific.generic.prefix + adding.fromSpecific.prefix + adding.type.prefix + '字';
+    if (adding.type.judicialCommitteeOnly) {
+      if (adding.type.firebase == DocumentType.JudicialCommitteeExplanation.firebase) {
+        adding.idPrefix = adding.type.prefix + '字';
+      } else {
+        adding.idPrefix = adding.fromSpecific.prefix + adding.type.prefix + '字';
+      }
+    } else {
+      adding.idPrefix = adding.fromSpecific.generic.prefix + adding.fromSpecific.prefix + adding.type.prefix + '字';
+    }
     adding.idNumber = await generateDocumentIdNumber(adding.fromSpecific, adding.type);
     adding.createdAt = new Date();
     switch (adding.type.firebase) {

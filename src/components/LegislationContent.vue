@@ -23,15 +23,39 @@
       </div>
     </div>
     <div v-if="$props.content.type.firebase == ContentType.SpecialClause.firebase">
-      <div v-if="$props.content.deleted" class="text-bold text-strike">
-        {{ $props.content.title }}<span style="font-weight: normal"> (刪除)</span>
-      </div>
+      <q-expansion-item
+        v-if="!printing"
+        :model-value="expanded"
+        default-opened
+        dense
+        dense-toggle
+        switch-toggle-side
+        @update:model-value="(v) => $emit('update:expanded', v)"
+      >
+        <template v-slot:header>
+          <div v-if="$props.content.deleted" class="text-bold text-strike">
+            {{ $props.content.title }}<span style="font-weight: normal"> (刪除)</span>
+          </div>
+          <div v-else>
+            <div class="text-bold">
+              {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
+              <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
+            </div>
+          </div>
+        </template>
+        <p v-if="!$props.content.deleted" style="white-space: break-spaces">{{ $props.content.content }}</p>
+      </q-expansion-item>
       <div v-else>
-        <div class="text-bold">
-          {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
-          <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
+        <div v-if="$props.content.deleted" class="text-bold text-strike">
+          {{ $props.content.title }}<span style="font-weight: normal"> (刪除)</span>
         </div>
-        <p style="white-space: break-spaces;">{{$props.content.content}}</p>
+        <div v-else>
+          <div class="text-bold">
+            {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
+            <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
+          </div>
+          <p style="white-space: break-spaces">{{ $props.content.content }}</p>
+        </div>
       </div>
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Volume.firebase">
@@ -71,6 +95,17 @@ const props = defineProps({
     type: Object as PropType<LegislationContent>,
     required: true,
   },
+  printing: {
+    type: Boolean,
+    default: false,
+  },
+  expanded: {
+    type: Boolean,
+    default: true,
+  },
+});
+defineEmits({
+  'update:expanded': (value: boolean) => true,
 });
 
 const lines = computed(() => props.content.content!.split('\n'));

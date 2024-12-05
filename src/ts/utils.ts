@@ -23,21 +23,21 @@ export function copyText(text: string) {
 export function translateNumber(str: string) {
   //@formatter:off
   const numChar = {
-    '零': 0,
-    '一': 1,
-    '二': 2,
-    '三': 3,
-    '四': 4,
-    '五': 5,
-    '六': 6,
-    '七': 7,
-    '八': 8,
-    '九': 9,
+    零: 0,
+    一: 1,
+    二: 2,
+    三: 3,
+    四: 4,
+    五: 5,
+    六: 6,
+    七: 7,
+    八: 8,
+    九: 9,
   } as Record<string, number>;
   const levelChar = {
-    '十': 10,
-    '百': 100,
-    '千': 1000,
+    十: 10,
+    百: 100,
+    千: 1000,
   } as Record<string, number>;
   //@formatter:on
   if (str.startsWith('十')) str = '一' + str;
@@ -121,7 +121,20 @@ export function customSanitize(text: string) {
   return sanitize(text, {
     allowedTags: sanitize.defaults.allowedTags.concat(['font']),
     allowedAttributes: Object.assign(sanitize.defaults.allowedAttributes, {
-      font: ['color', 'size']
-    })
+      font: ['color', 'size'],
+      div: ['style']
+    }),
+    allowedStyles: {
+      '*': {
+        // Match HEX and RGB
+        'color': [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
+        'text-align': [/^left$/, /^right$/, /^center$/],
+        // Match any number with px, em, or %
+        'font-size': [/^\d+(?:px|em|%)$/]
+      },
+      'p': {
+        'font-size': [/^\d+rem$/]
+      }
+    }
   })
 }

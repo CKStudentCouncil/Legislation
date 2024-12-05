@@ -14,7 +14,7 @@
     "build": "quasar build"
   },
   "dependencies": {
-    "@quasar/extras": "^1.16.4",
+    "@quasar/extras": "^1.16.15",
     "@types/sanitize-html": "^2.13.0",
     "algoliasearch": "^5.4.1",
     "firebase": "^10.13.1",
