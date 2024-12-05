@@ -6,6 +6,7 @@
         <q-btn color="positive" icon="edit" label="編輯資訊" @click="edit" />
         <q-btn color="primary" icon="edit" label="編輯內文" @click="editContent" />
         <q-btn color="accent" icon="attachment" label="上傳附件" @click="uploadAttachment()" />
+        <q-btn color="warning" icon="schedule" label="發布時間" @click="editPublishedAt()" />
         <q-btn v-if="!docu.published" color="secondary" icon="send" label="發布公文">
           <q-popup-proxy>
             <div class="q-ma-lg">
@@ -86,6 +87,21 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog v-model="editingPublishedAt" persistent>
+    <q-card>
+      <q-card-section>
+        <div class="text-h5 q-ma-none">編輯發布時間 (屆數將自動連動)</div>
+        <div class="row q-gutter-md q-ml-none">
+          <q-date v-model="publishedDate" class="col" mask="YYYY-MM-DD" />
+          <q-time v-model="publishedTime" class="col" format24h mask="HH:mm" />
+        </div>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn color="negative" flat label="取消" @click="editingPublishedAt = false" />
+        <q-btn color="positive" flat label="確定" @click="submitPublishedAt()" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
   <DocumentDialog v-model="editing" :action="action" @canceled="action = null" @submit="update" />
 </template>
 
@@ -93,7 +109,7 @@
 import { useRoute, useRouter } from 'vue-router';
 import { Attachment, documentsCollection, useSpecificDocument } from 'src/ts/models.ts';
 import { arrayRemove, arrayUnion, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { Loading, Notify } from 'quasar';
+import { date, Loading, Notify } from 'quasar';
 import ProEditor from 'components/ProEditor.vue';
 import { computed, reactive, ref } from 'vue';
 import DocumentDialog from 'components/DocumentDialog.vue';
@@ -103,6 +119,7 @@ import ListEditor from 'components/ListEditor.vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
+import { getReign } from 'src/ts/utils.ts';
 
 const route = useRoute();
 const router = useRouter();
@@ -115,6 +132,9 @@ const attachmentAction = ref<'add' | 'edit' | null>(null);
 const attachmentUploading = computed(() => attachmentAction.value !== null);
 const attachment = reactive({} as { description: string; urls: string[]; index: number });
 const attachmentDraggable = ref(true);
+const editingPublishedAt = ref(false);
+const publishedDate = ref('');
+const publishedTime = ref('');
 
 async function update() {
   Loading.show();
@@ -137,14 +157,20 @@ async function update() {
   });
 }
 
-async function edit() {
+function edit() {
   Object.assign(editing, docu.value);
   action.value = 'edit';
 }
 
-async function editContent() {
+function editContent() {
   content.value = (docu.value as any).content;
   editingContent.value = true;
+}
+
+function editPublishedAt() {
+  publishedDate.value = date.formatDate(docu.value?.publishedAt, 'YYYY-MM-DD');
+  publishedTime.value = date.formatDate(docu.value?.publishedAt, 'HH:mm');
+  editingPublishedAt.value = true;
 }
 
 async function submitContent() {
@@ -322,6 +348,31 @@ async function rearrangeAttachment() {
     message: '附件已重新排序',
     color: 'positive',
   });
+}
+
+async function submitPublishedAt() {
+  Loading.show();
+  try {
+    const date = new Date(`${publishedDate.value}T${publishedTime.value}`);
+    await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
+      publishedAt: date,
+      reign: getReign(date),
+    });
+  } catch (e) {
+    console.error(e);
+    Notify.create({
+      message: '編輯失敗',
+      color: 'negative',
+    });
+    Loading.hide();
+    return;
+  }
+  Loading.hide();
+  Notify.create({
+    message: '編輯成功',
+    color: 'positive',
+  });
+  editingPublishedAt.value = false;
 }
 </script>
 

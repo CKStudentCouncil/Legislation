@@ -50,7 +50,6 @@ async function submit() {
     } else {
       adding.idPrefix = adding.fromSpecific.generic.prefix + adding.fromSpecific.prefix + adding.type.prefix + '字';
     }
-    adding.idNumber = await generateDocumentIdNumber(adding.fromSpecific, adding.type);
     adding.createdAt = new Date();
     switch (adding.type.firebase) {
       case models.DocumentType.MeetingNotice.firebase:
@@ -65,6 +64,8 @@ async function submit() {
         adding.content = meetingRecordTemplate();
         break;
       case models.DocumentType.Order.firebase:
+      case models.DocumentType.JudicialCommitteeExplanation.firebase:
+      case models.DocumentType.JudicialCommitteeDecision.firebase:
         adding.toSpecific = [];
         adding.toOther = [];
         adding.ccSpecific = [];
@@ -72,6 +73,8 @@ async function submit() {
         adding.confidentiality = DocumentConfidentiality.Public;
         break;
     }
+    if (!adding.idNumber)
+      adding.idNumber = await generateDocumentIdNumber(adding.fromSpecific, adding.type);
     const id = adding.idPrefix + '第' + adding.idNumber + '號';
     await setDoc(doc(documentsCollection(), id), adding);
     action.value = null;

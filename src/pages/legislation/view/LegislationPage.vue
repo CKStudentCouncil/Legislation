@@ -3,7 +3,7 @@
     <ais-instant-search :search-client="searchClient" index-name="legislation">
       <ais-search-box>
         <template v-slot="{ currentRefinement, isSearchStalled, refine }">
-          <q-input :model-value="currentRefinement" type="search" @update:model-value="refine($event)" placeholder="以關鍵字搜尋法律">
+          <q-input :model-value="currentRefinement" placeholder="以關鍵字搜尋法律" type="search" @update:model-value="refine($event)">
             <template v-slot:prepend>
               <q-icon name="search" />
             </template>
@@ -27,9 +27,9 @@
                     :active="selected == category.firebase"
                     clickable
                     @click="
-                  selected = selected == category.firebase ? '' : category.firebase;
-                  refine(selected);
-                "
+                      selected = selected == category.firebase ? '' : category.firebase;
+                      refine(selected);
+                    "
                   >
                     <q-item-section avatar>
                       <q-icon :name="category.icon" />
@@ -59,14 +59,17 @@
                 <q-separator />
                 <q-card-section>
                   <div v-for="i in Object.keys(item.content)" :key="i">
-                    <div v-if="item._highlightResult.content[i].content && item._highlightResult.content[i].content.matchedWords.length > 0">
-                      <span>{{ `${item.content[i].title}：` }}</span>
+                    <!-- prettier-ignore -->
+                    <div v-if="(item._highlightResult.content[i].content && item._highlightResult.content[i].content.matchedWords.length > 0) ||
+                        (item._highlightResult.content[i].subtitle && item._highlightResult.content[i].subtitle.matchedWords.length > 0)">
+                      <span>{{ `${item.content[i].title}` }}<span v-if="item._highlightResult.content[i].subtitle.value.length>0">
+                        【<ais-highlight :attribute="`content.${i}.subtitle`" :hit="item" highlightedTagName="mark" />】</span>：</span>
                       <ais-highlight :attribute="`content.${i}.content`" :hit="item" highlightedTagName="mark" />
                     </div>
                   </div>
                   <q-btn v-if="$props.manage" :to="`/manage/legislation/${item.objectID}`" color="secondary" flat label="編輯" />
-                  <q-btn :to="`/legislation/${item.objectID}`" color="primary" flat label="檢視全文" icon="visibility" />
-                  <q-btn @click="copyLawLink(item.objectID)" color="primary" flat label="複製連結" icon="link" />
+                  <q-btn :to="`/legislation/${item.objectID}`" color="primary" flat icon="visibility" label="檢視全文" />
+                  <q-btn color="primary" flat icon="link" label="複製連結" @click="copyLawLink(item.objectID)" />
                 </q-card-section>
               </q-card>
             </template>

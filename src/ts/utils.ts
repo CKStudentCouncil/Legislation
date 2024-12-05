@@ -75,9 +75,12 @@ export function translateNumberToChinese(num: number) {
   return temp;
 }
 
-export function getCurrentReign() {
-  const date = new Date();
+export function getReign(date: Date) {
   return `${date.getFullYear() - 1945}-${date.getMonth() > 7 || date.getMonth() < 1 ? '1' : '2'}`; // August to January
+}
+
+export function getCurrentReign() {
+  return getReign(new Date());
 }
 
 export function getReadableRecipient(specific: DocumentSpecificIdentity[], others: string[]) {

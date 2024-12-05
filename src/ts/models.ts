@@ -233,14 +233,16 @@ export class DocumentType {
   static Record = new DocumentType('Record', '會議記錄', '錄', '3');
   static MeetingNotice = new DocumentType('MeetingNotice', '開會通知', '通', '4');
   // Judicial Committee only
+  // Prefix JudicialCommittee: customizable ID, rendered with DocumentJudicialCommittee.vue
   static JudicialCommitteeDecision = new DocumentType('JudicialCommitteeDecision', '評議委員會決議', '決', '', true);
   static JudicialCommitteeExplanation = new DocumentType('JudicialCommitteeExplanation', '評議委員會釋字', '釋', '', true);
-  static Verdict = new DocumentType('Verdict', '裁判書', '判', '5', true);
+  // Prefix Court: rendered with DocumentCourt.vue
+  static CourtVerdict = new DocumentType('CourtVerdict', '裁判書', '判', '5', true);
   static CourtNotification = new DocumentType('CourtNotification', '法庭文書-通', '通', '5', true);
-  static CourtDocuments = new DocumentType('CourtNotification', '法庭文書-通', '文', '5', true);
-  static CourtScrolls = new DocumentType('CourtNotification', '法庭文書-卷', '卷', '5', true);
-  static CourtAppeals = new DocumentType('CourtNotification', '法庭文書-上', '上', '5', true);
-  static CourtProsecutions = new DocumentType('CourtNotification', '法庭文書-啟', '啟', '5', true);
+  static CourtDocuments = new DocumentType('CourtDocuments', '法庭文書-通', '文', '5', true);
+  static CourtScrolls = new DocumentType('CourtScrolls', '法庭文書-卷', '卷', '5', true);
+  static CourtAppeals = new DocumentType('CourtAppeals', '法庭文書-上', '上', '5', true);
+  static CourtProsecutions = new DocumentType('CourtProsecutions', '法庭文書-啟', '啟', '5', true);
   static VALUES = {
     Announcement: DocumentType.Announcement,
     Order: DocumentType.Order,
@@ -249,7 +251,7 @@ export class DocumentType {
     MeetingNotice: DocumentType.MeetingNotice,
     JudicialCommitteeDecision: DocumentType.JudicialCommitteeDecision,
     JudicialCommitteeExplanation: DocumentType.JudicialCommitteeExplanation,
-    Verdict: DocumentType.Verdict,
+    CourtVerdict: DocumentType.CourtVerdict,
     CourtNotification: DocumentType.CourtNotification,
     CourtDocuments: DocumentType.CourtDocuments,
     CourtScrolls: DocumentType.CourtScrolls,
