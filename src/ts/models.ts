@@ -10,7 +10,6 @@ export interface Legislation {
   content: LegislationContent[];
   createdAt: Date;
   name: string;
-  type: LegislationType;
   history: History[];
   addendum?: Addendum[];
   attachments?: Attachment[];
@@ -178,7 +177,9 @@ export class DocumentSpecificIdentity {
     '00',
     DocumentGeneralIdentity.JudicialCommittee,
   );
-  static OccupationalCourt = new DocumentSpecificIdentity('OccupationalCourt', '職務法庭', '職', '01', DocumentGeneralIdentity.JudicialCommittee);
+  static GeneralCourt = new DocumentSpecificIdentity('GeneralCourt', '一般法庭', '庭', '01', DocumentGeneralIdentity.JudicialCommittee);
+  static ConstitutionalCourt = new DocumentSpecificIdentity('ConstitutionalCourt', '憲章法庭', '憲', '02', DocumentGeneralIdentity.JudicialCommittee);
+  static SupremeCourt = new DocumentSpecificIdentity('SupremeCourt', '大法庭', '大', '03', DocumentGeneralIdentity.JudicialCommittee);
   static JudicialCommitteeMember = new DocumentSpecificIdentity(
     'JudicialCommitteeMember',
     '評議委員',
@@ -209,7 +210,9 @@ export class DocumentSpecificIdentity {
     ElectoralCommission: DocumentSpecificIdentity.ElectoralCommission,
     JudicialCommitteeChairman: DocumentSpecificIdentity.JudicialCommitteeChairman,
     JudicialCommitteeViceChairman: DocumentSpecificIdentity.JudicialCommitteeViceChairman,
-    OccupationalCourt: DocumentSpecificIdentity.OccupationalCourt,
+    GeneralCourt: DocumentSpecificIdentity.GeneralCourt,
+    ConstitutionalCourt: DocumentSpecificIdentity.ConstitutionalCourt,
+    SupremeCourt: DocumentSpecificIdentity.SupremeCourt,
     JudicialCommitteeMember: DocumentSpecificIdentity.JudicialCommitteeMember,
     Other: DocumentSpecificIdentity.Other,
   } as Record<string, DocumentSpecificIdentity>;
@@ -229,12 +232,29 @@ export class DocumentType {
   static Advisory = new DocumentType('Advisory', '函', '函', '1');
   static Record = new DocumentType('Record', '會議記錄', '錄', '3');
   static MeetingNotice = new DocumentType('MeetingNotice', '開會通知', '通', '4');
+  // Judicial Committee only
+  static JudicialCommitteeDecision = new DocumentType('JudicialCommitteeDecision', '評議委員會決議', '決議', '', true);
+  static JudicialCommitteeExplanation = new DocumentType('JudicialCommitteeExplanation', '評議委員會釋字', '釋', '', true);
+  static Verdict = new DocumentType('Verdict', '裁判書', '判', '5', true);
+  static CourtNotification = new DocumentType('CourtNotification', '法庭文書-通', '通', '5', true);
+  static CourtDocuments = new DocumentType('CourtNotification', '法庭文書-通', '文', '5', true);
+  static CourtScrolls = new DocumentType('CourtNotification', '法庭文書-卷', '卷', '5', true);
+  static CourtAppeals = new DocumentType('CourtNotification', '法庭文書-上', '上', '5', true);
+  static CourtProsecutions = new DocumentType('CourtNotification', '法庭文書-起', '起', '5', true);
   static VALUES = {
     Announcement: DocumentType.Announcement,
     Order: DocumentType.Order,
     Advisory: DocumentType.Advisory,
     Record: DocumentType.Record,
     MeetingNotice: DocumentType.MeetingNotice,
+    JudicialCommitteeDecision: DocumentType.JudicialCommitteeDecision,
+    JudicialCommitteeExplanation: DocumentType.JudicialCommitteeExplanation,
+    Verdict: DocumentType.Verdict,
+    CourtNotification: DocumentType.CourtNotification,
+    CourtDocuments: DocumentType.CourtDocuments,
+    CourtScrolls: DocumentType.CourtScrolls,
+    CourtAppeals: DocumentType.CourtAppeals,
+    CourtProsecutions: DocumentType.CourtProsecutions,
   };
 
   constructor(
@@ -242,6 +262,7 @@ export class DocumentType {
     public translation: string,
     public prefix: string,
     public code: string,
+    public judicialCommitteeOnly: boolean = false,
   ) {}
 }
 
@@ -308,7 +329,6 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
       content: legislation.content.map(convertContentToFirebase).sort((a, b) => a.index - b.index),
       createdAt: Timestamp.fromMillis(legislation.createdAt.valueOf() - timezoneOffset),
       name: legislation.name,
-      type: legislation.type.firebase,
       history: legislation.history.map((history) => {
         history.content = history.content?.map((content: any) => {
           content.type = content.type.firebase;
@@ -385,16 +405,32 @@ export interface LegislationContent {
   index: number;
 }
 
+export class LegislationType {
+  static Constitution = new LegislationType('Constitution', '憲章');
+  static Law = new LegislationType('Law', '法律');
+  static Order = new LegislationType('Order', '命令');
+  static VALUES = {
+    Constitution: LegislationType.Constitution,
+    Law: LegislationType.Law,
+    Order: LegislationType.Order,
+  };
+
+  constructor(
+    public firebase: string,
+    public translation: string,
+  ) {}
+}
+
 export class LegislationCategory {
-  static Constitution = new LegislationCategory('Constitution', 'CO', '憲章', 'book');
+  static Constitution = new LegislationCategory('Constitution', 'CO', '憲章', 'book', LegislationType.Constitution);
   static Chairman = new LegislationCategory('Chairman', 'CH', '主席與副主席', 'settings_accessibility');
   static ExecutiveDepartment = new LegislationCategory('ExecutiveDepartment', 'ED', '行政部門', 'construction');
   static StudentCouncil = new LegislationCategory('StudentCouncil', 'SC', '班代大會', 'groups');
   static JudicialCommittee = new LegislationCategory('JudicialCommittee', 'JC', '評議委員會', 'gavel');
-  static ExecutiveOrder = new LegislationCategory('ExecutiveOrder', 'EO', '行政命令', 'hardware');
-  static StudentCouncilOrder = new LegislationCategory('StudentCouncilOrder', 'SCO', '班代大會命令', 'connect_without_contact');
-  static JudicialCommitteeOrder = new LegislationCategory('JudicialCommitteeOrder', 'JCO', '評議委員會命令', 'local_police');
-  static VotingCommitteeOrder = new LegislationCategory('VotingCommitteeOrder', 'VCO', '選舉委員會命令', 'how_to_vote');
+  static ExecutiveOrder = new LegislationCategory('ExecutiveOrder', 'EO', '行政命令', 'hardware', LegislationType.Order);
+  static StudentCouncilOrder = new LegislationCategory('StudentCouncilOrder', 'SCO', '班代大會命令', 'connect_without_contact', LegislationType.Order);
+  static JudicialCommitteeOrder = new LegislationCategory('JudicialCommitteeOrder', 'JCO', '評議委員會命令', 'local_police', LegislationType.Order);
+  static VotingCommitteeOrder = new LegislationCategory('VotingCommitteeOrder', 'VCO', '選舉委員會命令', 'how_to_vote', LegislationType.Order);
   static VALUES = {
     Constitution: LegislationCategory.Constitution,
     Chairman: LegislationCategory.Chairman,
@@ -412,22 +448,7 @@ export class LegislationCategory {
     public idPrefix: string,
     public translation: string,
     public icon: string,
-  ) {}
-}
-
-export class LegislationType {
-  static Constitution = new LegislationType('Constitution', '憲章');
-  static Law = new LegislationType('Law', '法律');
-  static Order = new LegislationType('Order', '命令');
-  static VALUES = {
-    Constitution: LegislationType.Constitution,
-    Law: LegislationType.Law,
-    Order: LegislationType.Order,
-  };
-
-  constructor(
-    public firebase: string,
-    public translation: string,
+    public type: LegislationType = LegislationType.Law,
   ) {}
 }
 
@@ -437,12 +458,14 @@ export class ContentType {
   static Section = new ContentType('Section', '節', false);
   static Subsection = new ContentType('Subsection', '款', false);
   static Clause = new ContentType('Clause', '條', true);
+  static SpecialClause = new ContentType('SpecialClause', '條', true);
   static VALUES = {
     Volume: ContentType.Volume,
     Chapter: ContentType.Chapter,
     Section: ContentType.Section,
     Subsection: ContentType.Subsection,
     Clause: ContentType.Clause,
+    SpecialClause: ContentType.SpecialClause,
   };
 
   constructor(

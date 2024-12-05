@@ -5,7 +5,7 @@
         <h6 class="q-ma-none">{{ action == 'edit' ? '編輯' : '新建' }}公文</h6>
       </q-card-section>
       <q-card-section>
-        <q-select v-model="parentValue.type" :option-label="(o) => o.translation" :options="Object.values(DocumentType.VALUES)" label="公文類別" :disable="action == 'edit'" />
+        <q-select v-model="parentValue.type" :option-label="(o) => o.translation" :options="types" label="公文類別" :disable="action == 'edit'" />
         <q-input v-model="parentValue.subject" :label="isMeetingNotice || isMeetingRecord ? '會議名稱' : '主旨'" />
         <q-select
           v-model="parentValue.fromSpecific"
@@ -79,7 +79,7 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
 import * as models from '../ts/models';
-import { DocumentConfidentiality, DocumentSpecificIdentity, DocumentType } from '../ts/models';
+import { DocumentConfidentiality, DocumentGeneralIdentity, DocumentSpecificIdentity, DocumentType } from '../ts/models';
 import ListEditor from 'components/ListEditor.vue';
 
 const props = defineProps<{
@@ -100,6 +100,9 @@ const parentValue = computed({
     emits('update:modelValue', val);
   },
 });
+
+const types = computed(() => Object.values(models.DocumentType.VALUES)
+  .filter((t) => parentValue.value.fromSpecific.generic.firebase === DocumentGeneralIdentity.JudicialCommittee.firebase || !t.judicialCommitteeOnly));
 
 const isMeetingNotice = computed(() => parentValue.value.type.firebase == DocumentType.MeetingNotice.firebase);
 const isMeetingRecord = computed(() => parentValue.value.type.firebase == DocumentType.Record.firebase);

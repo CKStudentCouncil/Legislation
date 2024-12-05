@@ -14,7 +14,6 @@ import {
   LegislationCategory,
   LegislationContent,
   legislationDocument,
-  LegislationType,
   useLegislations
 } from 'src/ts/models.ts';
 import { date, Loading, Notify } from 'quasar';
@@ -23,14 +22,13 @@ import { useRouter } from 'vue-router';
 import { setDoc } from 'firebase/firestore';
 
 const action = ref<'add' | null>(null);
-const target = reactive({} as { name: string; category: LegislationCategory; type: LegislationType; createdAt: string; preface?: string });
+const target = reactive({} as { name: string; category: LegislationCategory; createdAt: string; preface?: string });
 const router = useRouter();
 const legislations = useLegislations();
 
 function add() {
   target.name = '';
   target.category = LegislationCategory.StudentCouncil;
-  target.type = LegislationType.Law;
   target.createdAt = date.formatDate(new Date(), 'YYYY-MM-DD');
   action.value = 'add';
 }

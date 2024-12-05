@@ -79,7 +79,7 @@
       <q-card-section>
         <q-select
           v-model="targetContent.type"
-          :option-label="(o) => o.translation"
+          :option-label="(o) => o.translation + (o.firebase == ContentType.SpecialClause.firebase ? ' (訴訟典)' : '')"
           :options="Object.values(models.ContentType.VALUES)"
           label="類型"
           @update:model-value="generateTitle"
@@ -141,13 +141,13 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
-  <LegislationDialog v-model="target" :action="action" @submit="submit" @canceled="action=null" />
+  <LegislationDialog v-model="target" :action="action" @canceled="action = null" @submit="submit" />
 </template>
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
 import * as models from 'src/ts/models.ts';
-import { ContentType, convertContentToFirebase, LegislationCategory, legislationDocument, LegislationType, useLegislation } from 'src/ts/models.ts';
+import { ContentType, convertContentToFirebase, LegislationCategory, legislationDocument, useLegislation } from 'src/ts/models.ts';
 import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';
 import { date, Dialog, Loading, Notify } from 'quasar';
@@ -167,7 +167,7 @@ const targetContent = reactive<models.LegislationContent>({} as any);
 const targetAddendum = reactive({} as { content: string[]; createdAt: string; index: number });
 const targetHistory = reactive({} as { amendedAt: string; brief: string; link: string; recordCurrent: boolean; index: number });
 const targetAttachment = reactive({} as { description: string; urls: string[]; index: number });
-const target = reactive({} as { name: string; category: LegislationCategory; type: LegislationType; createdAt: string; preface?: string });
+const target = reactive({} as { name: string; category: LegislationCategory; createdAt: string; preface?: string });
 const contentAction = ref<'edit' | 'add' | null>(null);
 const addendumAction = ref<'edit' | 'add' | null>(null);
 const historyAction = ref<'edit' | 'add' | null>(null);
@@ -241,7 +241,6 @@ function editAttachment(attachment: models.Attachment) {
 function edit() {
   target.name = legislation.value!.name;
   target.category = legislation.value!.category;
-  target.type = legislation.value!.type;
   target.createdAt = date.formatDate(legislation.value!.createdAt, 'YYYY-MM-DD');
   target.preface = legislation.value!.preface ?? '';
   action.value = 'edit';
@@ -289,7 +288,7 @@ async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallba
 }
 
 async function submitContent() {
-  targetContent.content = targetContent.content?.replaceAll(',', '，').replaceAll(';', '；');
+  targetContent.content = targetContent.content?.replaceAll(',', '，').replaceAll(';', '；').trim();
   targetContent.subtitle = targetContent.subtitle?.replaceAll('【', '').replaceAll('】', '');
   await submitProperty(
     contentAction,
@@ -386,7 +385,6 @@ async function submit() {
       const data = {
         name: target.name,
         category: target.category.firebase,
-        type: target.type.firebase,
         createdAt: date.extractDate(target.createdAt, 'YYYY-MM-DD'),
       } as any;
       if (target.preface) {

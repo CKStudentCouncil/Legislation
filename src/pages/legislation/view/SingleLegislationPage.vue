@@ -19,14 +19,20 @@
           </q-btn>
         </div>
       </div>
-      <LegislationContent v-for="content of legislation.content" :id="content.index.toString()" :key="content.title" :content="content" />
+      <LegislationContent
+        v-for="content of legislation.content"
+        :id="content.index.toString()"
+        :key="content.title"
+        :content="content"
+        :class="content.index.toString() === route.hash.substring(1) ? (Dark.isActive ? 'bg-teal-10' : 'bg-yellow-3') : ''"
+      />
       <LegislationAddendum v-for="addendum of legislation.addendum" :key="addendum.createdAt.valueOf()" :addendum="addendum" />
       <AttachmentDisplay
         v-for="(attachment, index) of legislation.attachments"
         :key="attachment.description + attachment.urls.toString()"
         :attachment="attachment"
-        :order="index + 1"
         :no-embed="!embed"
+        :order="index + 1"
       />
     </div>
   </q-page>
@@ -42,6 +48,7 @@ import { copyLink } from 'src/ts/utils.ts';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
 import { useVueToPrint } from 'vue-to-print';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
+import { Dark } from 'quasar';
 
 const route = useRoute();
 const legislation = useLegislation(route.params.id! as string);
@@ -53,12 +60,20 @@ watch(legislation, () => {
     id: route.params.id! as string,
     name: legislation.value?.name,
     category: legislation.value?.category.translation,
-    type: legislation.value?.type.translation,
+    type: legislation.value?.category.type.translation,
   });
   document.title = legislation.value?.name + ' - 建中班聯會法律資料庫';
   if (route.hash) {
     // wait for the content to load
-    setTimeout(() => document.getElementById(route.hash.substring(1))?.scrollIntoView({ behavior: 'smooth' }), 250);
+    setTimeout(() => {
+      const el = document.getElementById(route.hash.substring(1));
+      if (el) {
+        window.scrollTo({
+          top: el.offsetTop - 100,
+          behavior: 'smooth',
+        });
+      }
+    }, 250);
     console.log(route.hash.substring(1));
   }
 });
@@ -77,7 +92,7 @@ const { handlePrint } = useVueToPrint({
     });
   },
   onAfterPrint: () => {
-    setTimeout(()=>{
+    setTimeout(() => {
       embed.value = true;
     }, 300);
   },

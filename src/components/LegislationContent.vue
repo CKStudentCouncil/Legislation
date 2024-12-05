@@ -6,17 +6,32 @@
       </div>
       <div v-else>
         <div class="text-bold">
-          {{ $props.content.title }} 【{{ $props.content.subtitle }}】
+          {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
           <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
         </div>
         <div v-for="[index, line] of lines.entries()" :key="index" class="row">
           <p class="q-mb-sm">
-            <span :style="line.match(/^（?[一二三四五六七八九十]*([）、])/) || (cleanLines.length <= 1) ? 'visibility: hidden' : ''" class="q-mr-sm text-secondary text-italic">
+            <span
+              :style="line.match(/^（?[一二三四五六七八九十]*([）、])/) || cleanLines.length <= 1 ? 'visibility: hidden' : ''"
+              class="q-mr-sm text-secondary text-italic"
+            >
               {{ cleanLines.indexOf(line) + 1 }}
             </span>
             {{ line }}
           </p>
         </div>
+      </div>
+    </div>
+    <div v-if="$props.content.type.firebase == ContentType.SpecialClause.firebase">
+      <div v-if="$props.content.deleted" class="text-bold text-strike">
+        {{ $props.content.title }}<span style="font-weight: normal"> (刪除)</span>
+      </div>
+      <div v-else>
+        <div class="text-bold">
+          {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
+          <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
+        </div>
+        <p style="white-space: break-spaces;">{{$props.content.content}}</p>
       </div>
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Volume.firebase">
@@ -55,7 +70,7 @@ const props = defineProps({
   content: {
     type: Object as PropType<LegislationContent>,
     required: true,
-  }
+  },
 });
 
 const lines = computed(() => props.content.content!.split('\n'));

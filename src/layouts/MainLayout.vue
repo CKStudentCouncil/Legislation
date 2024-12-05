@@ -11,7 +11,7 @@
           建國中學班聯會法律與公文系統
         </q-toolbar-title>
 
-        <q-btn flat icon="brightness" @click="toggleDark" />
+        <q-btn flat :icon="Dark.isActive ? 'dark_mode' : 'nights_stay'" @click="toggleDark" />
         <q-btn flat icon="fullscreen" @click="toggleFullscreen" />
         <q-btn v-if="!loggedIn" align="right" dense flat icon="login" round @click="login()">登入</q-btn>
         <q-btn v-if="loggedIn" align="right" dense flat icon="logout" round @click="logout()">登出</q-btn>

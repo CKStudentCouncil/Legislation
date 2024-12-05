@@ -13,7 +13,6 @@
           :options="Object.values(LegislationCategory.VALUES)"
           label="法案類別"
         />
-        <q-select v-model="parentValue.type" :option-label="(o) => o.translation" :options="Object.values(LegislationType.VALUES)" label="法案類型" />
         <div class="q-pt-md q-pb-sm">立法日期：</div>
         <q-date v-model="parentValue.createdAt" mask="YYYY-MM-DD" />
       </q-card-section>
@@ -26,12 +25,12 @@
 </template>
 
 <script lang="ts" setup>
-import { LegislationCategory, LegislationType } from 'src/ts/models.ts';
+import { LegislationCategory } from 'src/ts/models.ts';
 import { computed } from 'vue';
 
 const props = defineProps<{
   action: 'edit' | 'add' | null;
-  modelValue: { name: string; category: LegislationCategory; type: LegislationType; createdAt: string; preface?: string };
+  modelValue: { name: string; category: LegislationCategory; createdAt: string; preface?: string };
 }>();
 const emits = defineEmits({
   submit: null,
