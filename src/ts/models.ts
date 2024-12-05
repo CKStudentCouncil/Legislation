@@ -270,7 +270,8 @@ export function convertDocumentToFirebase(data: Document) {
   data.confidentiality = data.confidentiality.firebase as any;
   data.fromSpecific = data.fromSpecific.firebase as any;
   data.toSpecific = data.toSpecific.map((toSpecific) => toSpecific.firebase as any);
-  data.secretarySpecific = data.secretarySpecific?.firebase as any;
+  if (data.secretarySpecific)
+    data.secretarySpecific = data.secretarySpecific.firebase as any;
   data.type = data.type.firebase as any;
   data.ccSpecific = data.ccSpecific.map((ccSpecific) => ccSpecific.firebase as any);
   return data;
