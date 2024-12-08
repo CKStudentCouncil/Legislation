@@ -23,7 +23,7 @@ export function getEmptyDocument() {
   return adding;
 }
 
-export async function create(adding: models.Document) {
+export async function create(adding: models.Document, template = true) {
   if (adding.type.judicialCommitteeOnly) {
     if (adding.type.firebase == DocumentType.JudicialCommitteeExplanation.firebase) {
       adding.idPrefix = adding.type.prefix + '字';
@@ -36,7 +36,7 @@ export async function create(adding: models.Document) {
   adding.createdAt = new Date();
   switch (adding.type.firebase) {
     case models.DocumentType.MeetingNotice.firebase:
-      adding.content = meetingNoticeTemplate();
+      if (template) adding.content = meetingNoticeTemplate();
       break;
     case models.DocumentType.Record.firebase:
       adding.toSpecific = [];
@@ -44,7 +44,7 @@ export async function create(adding: models.Document) {
       adding.ccSpecific = [];
       adding.ccOther = [];
       adding.confidentiality = DocumentConfidentiality.Public;
-      adding.content = meetingRecordTemplate();
+      if (template) adding.content = meetingRecordTemplate();
       break;
     case models.DocumentType.Order.firebase:
     case models.DocumentType.JudicialCommitteeExplanation.firebase:
