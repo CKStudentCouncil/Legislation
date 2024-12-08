@@ -50,7 +50,7 @@ export class DocumentConfidentiality {
   static VALUES = {
     Public: DocumentConfidentiality.Public,
     Confidential: DocumentConfidentiality.Confidential,
-  };
+  } as Record<string, DocumentConfidentiality>;
 
   constructor(
     public firebase: string,
@@ -257,7 +257,7 @@ export class DocumentType {
     CourtScrolls: DocumentType.CourtScrolls,
     CourtAppeals: DocumentType.CourtAppeals,
     CourtProsecutions: DocumentType.CourtProsecutions,
-  };
+  } as Record<string, DocumentType>;
 
   constructor(
     public firebase: string,

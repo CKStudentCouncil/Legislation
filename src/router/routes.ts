@@ -24,6 +24,7 @@ const routes: RouteRecordRaw[] = [
         path: 'document',
         children: [
           { path: '', component: () => import('pages/manage/document/ManageDocumentsPage.vue') },
+          { path: 'from_template', component: () => import('pages/manage/document/ManageCreateDocumentFromTemplatePage.vue') },
           { path: ':id', component: () => import('pages/manage/document/ManageSingleDocumentPage.vue') }
         ],
       },
