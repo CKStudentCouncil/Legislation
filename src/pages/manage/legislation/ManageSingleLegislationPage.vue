@@ -423,6 +423,8 @@ async function removeProperty(property: string, object: object, translation: str
 }
 
 async function removeContent(content: models.LegislationContent) {
+  const copy = { ...content };
+  copy.type = content.type.firebase as any;
   await removeProperty('content', content, '內容');
 }
 
@@ -431,6 +433,8 @@ async function removeAddendum(addendum: models.Addendum) {
 }
 
 async function removeHistory(history: models.History) {
+  const copy = { ...history };
+  copy.content?.map((c) => (c.type = c.type.firebase as any));
   await removeProperty('history', history, '立法沿革');
 }
 
