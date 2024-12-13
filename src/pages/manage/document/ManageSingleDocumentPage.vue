@@ -10,7 +10,7 @@
         <q-btn v-if="!docu.published" color="secondary" icon="send" label="發布公文">
           <q-popup-proxy>
             <div class="q-ma-lg">
-              確認發布公文？
+              確認發布公文？發布後將自動導向至檢視頁面
               <q-btn class="q-ml-md" color="primary" label="確認" @click="publish" />
             </div>
           </q-popup-proxy>
@@ -217,6 +217,7 @@ async function publish() {
     message: '發布成功',
     color: 'positive',
   });
+  await router.push(`/document/${(docu.value as any).id}`);
 }
 
 async function retract() {
