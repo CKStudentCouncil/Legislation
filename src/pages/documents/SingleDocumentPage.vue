@@ -65,8 +65,8 @@ const { handlePrint } = useVueToPrint({
 
 function share() {
   navigator.share({
-    title: (route.params.id as string) + doc.value?.subject ?? '',
-    text: (route.params.id as string) + doc.value?.subject ?? '',
+    title: (route.params.id as string) + '：' + doc.value?.subject ?? '',
+    text: (route.params.id as string) + '：' + doc.value?.subject ?? '',
     url: window.location.href,
   });
 }
