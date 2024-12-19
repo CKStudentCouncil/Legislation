@@ -6,6 +6,9 @@
         <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
           <q-tooltip>列印</q-tooltip>
         </q-btn>
+        <q-btn class="no-print" dense flat icon="share" size="20px" @click="share">
+          <q-tooltip>分享</q-tooltip>
+        </q-btn>
         <q-btn class="no-print" dense flat icon="zoom_in" size="20px" @click="size += 10">
           <q-tooltip>放大</q-tooltip>
         </q-btn>
@@ -18,8 +21,8 @@
           v-for="(attachment, index) of doc.attachments"
           :key="attachment.description + attachment.urls.toString()"
           :attachment="attachment"
-          :order="index + 1"
           :no-embed="!embed"
+          :order="index + 1"
         />
       </div>
     </div>
@@ -54,11 +57,19 @@ const { handlePrint } = useVueToPrint({
     });
   },
   onAfterPrint: () => {
-    setTimeout(()=>{
+    setTimeout(() => {
       embed.value = true;
     }, 300);
   },
 });
+
+function share() {
+  navigator.share({
+    title: (route.params.id as string) + doc.value?.subject ?? '',
+    text: (route.params.id as string) + doc.value?.subject ?? '',
+    url: window.location.href,
+  });
+}
 </script>
 
 <style scoped></style>
