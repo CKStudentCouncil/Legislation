@@ -20,7 +20,7 @@
         立法沿革
         <div v-for="history of legislation.history" :key="history.amendedAt.valueOf()">
           {{ history.amendedAt.toLocaleDateString() + ' ' + history.brief }}
-          <q-btn v-if="history.link" dense flat icon="open_in_new" size="10px">
+          <q-btn v-if="history.link" dense flat icon="open_in_new" size="10px" :to="history.link">
             <q-tooltip>檢視發布公文</q-tooltip>
           </q-btn>
         </div>
