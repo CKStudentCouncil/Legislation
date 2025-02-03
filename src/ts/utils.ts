@@ -76,7 +76,10 @@ export function translateNumberToChinese(num: number) {
 }
 
 export function getReign(date: Date) {
-  return `${date.getFullYear() - 1945}-${date.getMonth() > 7 || date.getMonth() < 1 ? '1' : '2'}`; // August to January
+  if (date.getMonth() > 7 || date.getMonth() < 1) { // -1
+    return `${date.getFullYear() - 1945}-1`
+  }
+  return `${date.getFullYear() - 1945 - 1}-2`;
 }
 
 export function getCurrentReign() {
