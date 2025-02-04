@@ -6,7 +6,12 @@
         <q-btn color="positive" icon="edit" label="編輯資訊" @click="edit" />
         <q-btn color="primary" icon="edit" label="編輯內文" @click="editContent" />
         <q-btn color="accent" icon="attachment" label="上傳附件" @click="uploadAttachment()" />
-        <q-btn color="warning" icon="schedule" label="發布時間" @click="editPublishedAt()" />
+        <q-btn-dropdown color="warning" icon="settings" label="進階功能">
+          <div class="q-gutter-sm col">
+            <q-btn class="bg-amber-8 row" icon="schedule" label="發布時間" @click="editPublishedAt()" />
+            <q-btn class="bg-green-8 row" icon="123" label="公文字號" @click="editId()" />
+          </div>
+        </q-btn-dropdown>
         <q-btn v-if="!docu.published" color="secondary" icon="send" label="發布公文">
           <q-popup-proxy>
             <div class="q-ma-lg">
@@ -102,12 +107,29 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog v-model="editingId">
+    <q-card>
+      <q-card-section>
+        <div class="text-h5 q-ma-none">編輯公文字號</div>
+      </q-card-section>
+      <q-card-section>
+        <q-input v-model="editingIdPrefix" label="新公文字首 (例：建班主令字)" />
+        <q-input v-model="editingIdNumber" label="新公文字號 (例：07910000001)" />
+        <div>新公文字號預覽：</div>
+        <div class="text-h6">{{ editingIdPrefix }}第{{ editingIdNumber }}號</div>
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn color="negative" flat label="取消" @click="editingId = false" />
+        <q-btn color="positive" flat label="確定" @click="submitId()" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
   <DocumentDialog v-model="editing" :action="action" @canceled="action = null" @submit="update" />
 </template>
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
-import { Attachment, documentsCollection, useSpecificDocument } from 'src/ts/models.ts';
+import { Attachment, documentsCollection } from 'src/ts/models.ts';
 import { arrayRemove, arrayUnion, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { date, Loading, Notify } from 'quasar';
 import ProEditor from 'components/ProEditor.vue';
@@ -120,10 +142,12 @@ import { VueDraggable } from 'vue-draggable-plus';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { getReign } from 'src/ts/utils.ts';
+import { useDocument } from 'vuefire';
 
 const route = useRoute();
 const router = useRouter();
-const docu = useSpecificDocument(route.params.id as string);
+const docuId = computed(() => doc(documentsCollection(), route.params.id! as string)); // dynamic id so we can auto reload during an id change
+const docu = useDocument(docuId);
 const content = ref('');
 const editingContent = ref(false);
 const editing = reactive({} as models.Document);
@@ -135,6 +159,9 @@ const attachmentDraggable = ref(true);
 const editingPublishedAt = ref(false);
 const publishedDate = ref('');
 const publishedTime = ref('');
+const editingId = ref(false);
+const editingIdPrefix = ref('');
+const editingIdNumber = ref('');
 
 async function update() {
   Loading.show();
@@ -374,6 +401,39 @@ async function submitPublishedAt() {
     color: 'positive',
   });
   editingPublishedAt.value = false;
+}
+
+function editId() {
+  editingIdPrefix.value = (docu.value as any).idPrefix;
+  editingIdNumber.value = (docu.value as any).idNumber;
+  editingId.value = true;
+}
+
+async function submitId() {
+  Loading.show();
+  const oldId = (docu.value as any).id;
+  docu.value!.idPrefix = editingIdPrefix.value;
+  docu.value!.idNumber = editingIdNumber.value;
+  const newId = `${editingIdPrefix.value}第${editingIdNumber.value}號`;
+  try {
+    await setDoc(doc(documentsCollection(), newId), docu.value);
+    await router.push(newId);
+    await deleteDoc(doc(documentsCollection(), oldId));
+  } catch (e) {
+    console.error(e);
+    Notify.create({
+      message: '編輯失敗',
+      color: 'negative',
+    });
+    Loading.hide();
+    return;
+  }
+  Loading.hide();
+  Notify.create({
+    message: '編輯成功',
+    color: 'positive',
+  });
+  editingId.value = false;
 }
 </script>
 
