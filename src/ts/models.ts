@@ -318,7 +318,9 @@ export function usePublicDocuments() {
 }
 
 export function convertContentToFirebase(data: LegislationContent) {
-  data.type = data.type.firebase as any;
+  if (!((data.type as any) instanceof String)) {
+    data.type = data.type.firebase as any;
+  }
   return data;
 }
 
@@ -330,10 +332,7 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
       createdAt: Timestamp.fromDate(legislation.createdAt),
       name: legislation.name,
       history: legislation.history.map((history) => {
-        history.content = history.content?.map((content: any) => {
-          content.type = content.type.firebase;
-          return content;
-        });
+        history.content?.map(convertContentToFirebase).sort((a, b) => a.index - b.index);
         history.amendedAt = Timestamp.fromDate(history.amendedAt) as any;
         return history;
       }),

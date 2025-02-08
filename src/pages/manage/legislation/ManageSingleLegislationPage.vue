@@ -165,7 +165,7 @@ const router = useRouter();
 const legislation = useLegislation(route.params.id! as string);
 const targetContent = reactive<models.LegislationContent>({} as any);
 const targetAddendum = reactive({} as { content: string[]; createdAt: string; index: number });
-const targetHistory = reactive({} as { amendedAt: string; brief: string; link: string; recordCurrent: boolean; index: number });
+const targetHistory = reactive({} as { amendedAt: string; brief: string; link: string; recordCurrent: boolean; index: number; content: models.LegislationContent[]});
 const targetAttachment = reactive({} as { description: string; urls: string[]; index: number });
 const target = reactive({} as { name: string; category: LegislationCategory; createdAt: string; preface?: string });
 const contentAction = ref<'edit' | 'add' | null>(null);
@@ -196,6 +196,7 @@ function addHistory() {
   targetHistory.brief = '';
   targetHistory.link = '';
   targetHistory.recordCurrent = true;
+  targetHistory.content = [];
   historyAction.value = 'add';
 }
 
@@ -228,6 +229,7 @@ function editHistory(history: models.History) {
   targetHistory.link = history.link ?? '';
   targetHistory.recordCurrent = false;
   targetHistory.index = legislation.value!.history.indexOf(history);
+  targetHistory.content = history.content?.slice() ?? []; // Clone
   historyAction.value = 'edit';
 }
 
@@ -334,6 +336,7 @@ async function submitHistory() {
   const mappedHistory = {
     amendedAt: date.extractDate(targetHistory.amendedAt, 'YYYY-MM-DD'),
     brief: targetHistory.brief,
+    content: targetHistory.content?.map(convertContentToFirebase),
   } as models.History;
   if (targetHistory.link) {
     mappedHistory.link = targetHistory.link;
@@ -351,7 +354,11 @@ async function submitHistory() {
     async () => {
       legislation.value!.history[targetHistory.index] = mappedHistory;
       await updateDoc(legislationDocument(route.params.id! as string), {
-        history: legislation.value!.history,
+        history: legislation.value!.history.map((h) => {
+          const copy = { ...h };
+          copy.content?.map((c) => (c.type = c.type.firebase as any));
+          return copy;
+        }),
       });
     },
   );
