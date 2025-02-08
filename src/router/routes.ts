@@ -40,7 +40,7 @@ const routes: RouteRecordRaw[] = [
     path: '/document',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/documents/DocumentsPage.vue') },
+      { path: '', component: () => import('pages/documents/DocumentsPageV2.vue') },
       { path: ':id', component: () => import('pages/documents/SingleDocumentPage.vue') },
     ],
   },
@@ -52,7 +52,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/IndexPage.vue') }],
+    children: [{ path: '', component: () => import('pages/legislation/view/LegislationPage.vue') }],
   },
 
   // Always leave this as last one,

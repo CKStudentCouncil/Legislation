@@ -2,6 +2,7 @@ import { Notify } from 'quasar';
 import { documentsCollection, DocumentSpecificIdentity, DocumentType } from './models';
 import { getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import sanitize from 'sanitize-html';
+import { event } from 'vue-gtag';
 
 export function copyLink(href?: string) {
   copyText(window.location.href.split('#')[0] + (href ? '#' + href : ''));
@@ -9,6 +10,10 @@ export function copyLink(href?: string) {
 
 export function copyLawLink(id: string) {
   copyText(window.location.origin + (window.location.origin.endsWith('/') ? '' : '/') + 'legislation/' + id);
+}
+
+export function copyDocLink(id: string) {
+  copyText(window.location.origin + (window.location.origin.endsWith('/') ? '' : '/') + 'document/' + id);
 }
 
 export function copyText(text: string) {
@@ -142,5 +147,28 @@ export function customSanitize(text: string) {
         'font-size': [/^\d+(px|em|%)$/, /^(small|medium|large)$/]
       }
     }
+  })
+}
+
+export function notifySuccess(message: string): void {
+  Notify.create({
+    message,
+    color: 'positive',
+    icon: 'check_circle',
+    position: 'top',
+  });
+}
+
+export function notifyError(message: string, exception: any): void {
+  Notify.create({
+    message,
+    color: 'negative',
+    icon: 'report_problem',
+    position: 'top',
+  });
+  event('exception', {
+    description: message + ': ' +  exception?.message,
+    stack: exception?.stack,
+    fatal: false,
   })
 }

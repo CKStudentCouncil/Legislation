@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <ais-instant-search :search-client="searchClient" index-name="legislation">
+    <ais-instant-search :search-client="searchClient" index-name="legislation" :insights="true">
       <ais-search-box>
         <template v-slot="{ currentRefinement, isSearchStalled, refine }">
           <q-input :model-value="currentRefinement" placeholder="以關鍵字搜尋法律" type="search" @update:model-value="refine($event)">
@@ -47,7 +47,7 @@
         </div>
         <div class="col" style="min-width: 350px">
           <ais-hits class="q-pa-none">
-            <template v-slot:item="{ item }">
+            <template v-slot:item="{ item, sendEvent }">
               <q-card class="q-mb-md">
                 <q-card-section>
                   <ais-panel>
@@ -68,8 +68,8 @@
                     </div>
                   </div>
                   <q-btn v-if="$props.manage" :to="`/manage/legislation/${item.objectID}`" color="secondary" flat label="編輯" />
-                  <q-btn :to="`/legislation/${item.objectID}`" color="primary" flat icon="visibility" label="檢視全文" />
-                  <q-btn color="primary" flat icon="link" label="複製連結" @click="copyLawLink(item.objectID)" />
+                  <q-btn @click="sendEvent('view', item, 'Legislation viewed')" :to="`/legislation/${item.objectID}`" color="primary" flat icon="visibility" label="檢視全文" />
+                  <q-btn color="primary" flat icon="link" label="複製連結" @click="sendEvent('click', item, 'Legislation link copied');copyLawLink(item.objectID)" />
                 </q-card-section>
               </q-card>
             </template>

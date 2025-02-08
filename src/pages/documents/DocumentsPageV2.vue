@@ -1,0 +1,205 @@
+<template>
+  <q-page padding>
+    <div :class="$q.screen.gt.xs ? 'row' : ''">
+      <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" class="col q-pr-sm" clearable debounce="500" />
+      <q-select
+        v-model="fromGeneric"
+        :option-label="(i) => i.translation"
+        :options="Object.values(DocumentGeneralIdentity.VALUES)"
+        class="col q-pr-sm"
+        clearable
+        label="發文部門"
+      />
+      <q-select
+        v-model="fromSpecific"
+        :option-label="(i) => i.translation"
+        :options="Object.values(DocumentSpecificIdentity.VALUES).filter((i) => !fromGeneric || i.generic.firebase === fromGeneric.firebase)"
+        class="col q-pr-sm"
+        label="發文者"
+        multiple
+        use-chips
+      />
+      <q-select
+        v-model="toGeneric"
+        :option-label="(i) => i.translation"
+        :options="Object.values(DocumentGeneralIdentity.VALUES)"
+        class="col q-pr-sm"
+        clearable
+        label="受文部門"
+      />
+      <q-select
+        v-model="toSpecific"
+        :option-label="(i) => i.translation"
+        :options="Object.values(DocumentSpecificIdentity.VALUES).filter((i) => !toGeneric || i.generic.firebase === toGeneric.firebase)"
+        class="col q-pr-sm"
+        label="受文者"
+        multiple
+        use-chips
+      />
+      <q-select
+        v-model="type"
+        :option-label="(i) => i.translation"
+        :options="Object.values(DocumentType.VALUES)"
+        class="col q-pr-sm"
+        clearable
+        label="公文類型"
+      />
+      <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" />
+    </div>
+    <q-infinite-scroll ref="scroll" :class="$q.screen.gt.sm ? 'row' : ''" @load="loadMore">
+      <div v-for="doc of allDocs" :key="doc!.idPrefix + doc!.idNumber" :class="'q-mb-md ' + ($q.screen.gt.sm ? 'q-pr-md col-6' : '')">
+        <q-card>
+          <div v-if="doc !== null">
+            <q-card-section>
+              <div>{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
+              <div>{{ doc.publishedAt?.toLocaleDateString() }}</div>
+              <div class="text-h6">{{ doc.subject }}</div>
+            </q-card-section>
+            <q-separator />
+            <q-card-actions>
+              <q-btn v-if="manage" :to="`/manage/document/${doc.idPrefix}第${doc.idNumber}號`" color="secondary" flat label="編輯" />
+              <q-btn :to="`/document/${doc.idPrefix}第${doc.idNumber}號`" color="primary" flat icon="visibility" label="檢視" />
+              <q-btn color="primary" flat icon="link" label="複製連結" @click="copyDocLink(`${doc.idPrefix}第${doc.idNumber}號`)" />
+            </q-card-actions>
+          </div>
+        </q-card>
+      </div>
+    </q-infinite-scroll>
+  </q-page>
+</template>
+
+<script lang="ts" setup>
+import { copyDocLink, getCurrentReign, notifyError } from 'src/ts/utils.ts';
+import { computed, Ref, ref, watch } from 'vue';
+import {
+  Document,
+  DocumentConfidentiality,
+  DocumentGeneralIdentity,
+  documentsCollection,
+  DocumentSpecificIdentity,
+  DocumentType,
+} from 'src/ts/models.ts';
+import { useCollection } from 'vuefire';
+import { endBefore, getCountFromServer, limit, orderBy, query, where } from 'firebase/firestore';
+
+const props = defineProps({
+  manage: {
+    type: Boolean,
+    default: false,
+  },
+});
+const reign = ref(getCurrentReign());
+const fromGeneric = ref(null) as Ref<DocumentGeneralIdentity | null>;
+const fromSpecific = ref([]) as Ref<DocumentSpecificIdentity[]>;
+const toGeneric = ref(null) as Ref<DocumentGeneralIdentity | null>;
+const toSpecific = ref([]) as Ref<DocumentSpecificIdentity[]>;
+const type = ref(null) as Ref<DocumentType | null>;
+const published = ref(null) as Ref<boolean | null>;
+const searching = ref(false);
+const q = computed(() => {
+  return query(
+    documentsCollection(),
+    ...([
+      reign.value ? where('reign', '==', reign.value) : null,
+      fromGeneric.value && fromSpecific.value.length === 0
+        ? where(
+            'fromSpecific',
+            'in',
+            Object.values(DocumentSpecificIdentity.VALUES)
+              .filter((i) => i.generic.firebase === fromGeneric.value?.firebase)
+              .map((i) => i.firebase),
+          )
+        : null,
+      fromSpecific.value.length > 0
+        ? where(
+            'fromSpecific',
+            'in',
+            fromSpecific.value.map((i) => i.firebase),
+          )
+        : null,
+      toGeneric.value && toSpecific.value.length === 0
+        ? where(
+            'toSpecific',
+            'array-contains-any',
+            Object.values(DocumentSpecificIdentity.VALUES)
+              .filter((i) => i.generic.firebase === toGeneric.value?.firebase)
+              .map((i) => i.firebase),
+          )
+        : null,
+      toSpecific.value.length > 0
+        ? where(
+            'toSpecific',
+            'array-contains-any',
+            toSpecific.value.map((i) => i.firebase),
+          )
+        : null,
+      type.value ? where('type', '==', type.value.firebase) : null,
+      published.value === null ? null : where('published', '==', published.value),
+      props.manage ? null : where('published', '==', true),
+      props.manage ? null : where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
+      orderBy('publishedAt', 'desc'),
+    ].filter((i) => i !== null) as any[]),
+  );
+});
+const lastItem = ref(null) as Ref<Document | null>;
+const totalDocs = ref(0);
+const scroll = ref();
+let doneFunc = null as (() => void) | null;
+const paginatedQ = computed(() => {
+  if (lastItem.value) {
+    return query(q.value, limit(10), endBefore(lastItem.value.publishedAt));
+  } else {
+    return query(q.value, limit(10));
+  }
+});
+const docs = useCollection(paginatedQ);
+const allDocs = ref([] as Document[]);
+watch(
+  // vuefire does not offer a way to do pagination or read document count, so we're on our own
+  docs,
+  async () => {
+    allDocs.value.push(...(docs.value as Document[]));
+    if (doneFunc) {
+      doneFunc();
+      doneFunc = null;
+    }
+  },
+  { deep: true },
+);
+const updateTotal = async () => {
+  try {
+    allDocs.value = [];
+    totalDocs.value = (await getCountFromServer(q.value)).data().count;
+    scroll.value.updateScrollTarget();
+  } catch (e) {
+    console.error(e);
+    notifyError('無法以此條件搜尋公文', e);
+  }
+};
+watch(q, updateTotal, { deep: true });
+
+function loadMore(i: number, done: () => void) {
+  if (searching.value) {
+    return;
+  }
+  if (allDocs.value.length >= totalDocs.value) {
+    done();
+  } else {
+    console.log('loading more', searching.value, allDocs.value.length, totalDocs.value);
+    doneFunc = () => {
+      searching.value = false;
+      done();
+    };
+    searching.value = true;
+    lastItem.value = docs.value[docs.value.length - 1]!;
+  }
+}
+
+updateTotal();
+</script>
+
+<style scoped>
+.col {
+  min-width: 150px;
+}
+</style>

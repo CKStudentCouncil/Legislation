@@ -9,7 +9,7 @@ import { DocumentConfidentiality, DocumentSpecificIdentity, DocumentType } from 
 const router = useRouter();
 Dialog.create({
   title: '自動起草公文',
-  message: '是否從模板自動起草公文？請只使用受信賴的模板(即：議事系統的自動生成議事錄功能)。也請確保已經登入！',
+  message: '是否從模板自動起草公文？請只使用受信賴的模板(例：議事系統的自動生成議事錄功能)。也請確保已經登入！',
   persistent: true,
   seamless: true,
   ok: {

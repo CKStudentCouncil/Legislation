@@ -1,16 +1,16 @@
 <template>
   <q-btn class="q-ma-md" color="positive" icon="add" label="起草公文" @click="add" />
-  <DocumentsPage manage />
+  <DocumentsPageV2 manage />
   <DocumentDialog v-model="adding" :action="action" @canceled="action = null" @submit="submit" />
 </template>
 <script lang="ts" setup>
-import DocumentsPage from 'pages/documents/DocumentsPage.vue';
 import DocumentDialog from 'components/DocumentDialog.vue';
 import { reactive, ref } from 'vue';
 import * as models from '../../../ts/models';
 import { Loading, Notify } from 'quasar';
 import { useRouter } from 'vue-router';
 import { create, getEmptyDocument } from 'pages/manage/document/common.ts';
+import DocumentsPageV2 from 'pages/documents/DocumentsPageV2.vue';
 
 const action = ref<'add' | null>(null);
 const adding = reactive({} as models.Document);

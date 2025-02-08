@@ -1,5 +1,6 @@
 import { boot } from 'quasar/wrappers';
 import { initializeApp } from 'firebase/app';
+import { CACHE_SIZE_UNLIMITED, initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { useFirebaseApp, VueFire, VueFireAuth } from 'vuefire';
 import VueGtag from 'vue-gtag';
 import { getFunctions, HttpsCallable, httpsCallable } from '@firebase/functions';
@@ -16,6 +17,9 @@ export default boot(async ({ app, router }) => {
     messagingSenderId: '872443717491',
     appId: '1:872443717491:web:7ea49ba1403de4928b0706',
     measurementId: 'G-0ZLXJZG30T',
+  });
+  initializeFirestore(firebaseApp, {
+    localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager(), cacheSizeBytes: CACHE_SIZE_UNLIMITED }),
   });
   app.use(VueFire, {
     firebaseApp,

@@ -1,9 +1,6 @@
 import { firestoreDefaultConverter, useCollection, useDocument, useFirestore } from 'vuefire';
 import { collection, doc, FirestoreDataConverter, query, Timestamp, where } from 'firebase/firestore';
 
-const date = new Date();
-export const timezoneOffset = date.getTimezoneOffset() * 60 * 1000; // -480
-
 export interface Legislation {
   preface?: string;
   category: LegislationCategory;
@@ -330,18 +327,18 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
     const data: any = {
       category: legislation.category.firebase,
       content: legislation.content.map(convertContentToFirebase).sort((a, b) => a.index - b.index),
-      createdAt: Timestamp.fromMillis(legislation.createdAt.valueOf() - timezoneOffset),
+      createdAt: Timestamp.fromDate(legislation.createdAt),
       name: legislation.name,
       history: legislation.history.map((history) => {
         history.content = history.content?.map((content: any) => {
           content.type = content.type.firebase;
           return content;
         });
-        history.amendedAt = Timestamp.fromMillis(history.amendedAt.valueOf() - timezoneOffset) as any;
+        history.amendedAt = Timestamp.fromDate(history.amendedAt) as any;
         return history;
       }),
       addendum: legislation.addendum?.map((addendum) => {
-        addendum.createdAt = Timestamp.fromMillis(addendum.createdAt.valueOf() - timezoneOffset) as any;
+        addendum.createdAt = Timestamp.fromDate(addendum.createdAt) as any;
         return addendum;
       }),
       attachments: legislation.attachments,

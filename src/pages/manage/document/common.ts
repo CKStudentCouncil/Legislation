@@ -6,7 +6,7 @@ import { doc, setDoc } from 'firebase/firestore';
 
 export function getEmptyDocument() {
   const adding = {} as models.Document;
-  adding.type = models.DocumentType.MeetingNotice;
+  adding.type = models.DocumentType.Advisory;
   adding.reign = getCurrentReign();
   adding.fromSpecific = DocumentSpecificIdentity.Speaker;
   adding.toSpecific = [DocumentSpecificIdentity.StudentCouncilRepresentative];
