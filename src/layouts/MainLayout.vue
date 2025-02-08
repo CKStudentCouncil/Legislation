@@ -8,13 +8,14 @@
           <q-avatar>
             <img alt="favicon" src="/icon.png" />
           </q-avatar>
-          建國中學班聯會法律與公文系統
+          <span class="q-pl-sm" v-if="$q.screen.gt.xs">建國中學班聯會法律與公文系統</span>
+          <span class="q-pl-sm" v-else>建中班聯會法律與公文系統</span>
         </q-toolbar-title>
 
-        <q-btn flat :icon="Dark.isActive ? 'dark_mode' : 'nights_stay'" @click="toggleDark" />
-        <q-btn flat icon="fullscreen" @click="toggleFullscreen" />
-        <q-btn v-if="!loggedIn" align="right" dense flat icon="login" round @click="login()">登入</q-btn>
-        <q-btn v-if="loggedIn" align="right" dense flat icon="logout" round @click="logout()">登出</q-btn>
+        <q-btn v-if="$q.screen.gt.xs" :icon="Dark.isActive ? 'dark_mode' : 'nights_stay'" flat @click="toggleDark" />
+        <q-btn v-if="$q.screen.gt.xs" flat icon="fullscreen" @click="toggleFullscreen" />
+        <q-btn v-if="$q.screen.gt.xs && !loggedIn" align="right" dense flat icon="login" @click="login()">登入</q-btn>
+        <q-btn v-if="$q.screen.gt.xs && loggedIn" align="right" dense flat icon="logout" @click="logout()">登出</q-btn>
       </q-toolbar>
     </q-header>
 
