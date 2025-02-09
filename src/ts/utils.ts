@@ -159,16 +159,19 @@ export function notifySuccess(message: string): void {
   });
 }
 
-export function notifyError(message: string, exception: any): void {
+export function notifyError(message: string, exception?: any): void {
   Notify.create({
     message,
     color: 'negative',
     icon: 'report_problem',
     position: 'top',
   });
-  event('exception', {
-    description: message + ': ' +  exception?.message,
-    stack: exception?.stack,
-    fatal: false,
-  })
+  if (exception) {
+    console.error(exception);
+    event('exception', {
+      description: message + ': ' +  exception?.message,
+      stack: exception?.stack,
+      fatal: false,
+    })
+  }
 }

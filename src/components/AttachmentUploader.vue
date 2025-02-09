@@ -13,6 +13,7 @@
 import { ref } from 'vue';
 import { useFunction } from 'boot/vuefire.ts';
 import { Loading, Notify } from 'quasar';
+import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
 const files = ref<File[]>([]);
 const emits = defineEmits<{
@@ -46,10 +47,9 @@ async function upload() {
           ).data as any
         ).url;
         results.push(url);
-        Notify.create({ type: 'positive', message: '上傳成功' });
+        notifySuccess('上傳成功');
       } catch (e) {
-        console.error(e);
-        Notify.create({ type: 'negative', message: '上傳失敗' });
+        notifyError('上傳失敗', e);
       }
       completed++;
     };

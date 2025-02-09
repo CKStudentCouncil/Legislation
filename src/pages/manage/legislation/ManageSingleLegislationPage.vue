@@ -149,7 +149,7 @@ import { useRoute, useRouter } from 'vue-router';
 import * as models from 'src/ts/models.ts';
 import { ContentType, convertContentToFirebase, LegislationCategory, legislationDocument, useLegislation } from 'src/ts/models.ts';
 import LegislationContent from 'components/LegislationContent.vue';
-import { copyLink, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';
+import { copyLink, notifyError, notifySuccess, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';
 import { date, Dialog, Loading, Notify } from 'quasar';
 import { arrayRemove, arrayUnion, deleteDoc, updateDoc } from 'firebase/firestore';
 import { VueDraggable } from 'vue-draggable-plus';
@@ -165,7 +165,16 @@ const router = useRouter();
 const legislation = useLegislation(route.params.id! as string);
 const targetContent = reactive<models.LegislationContent>({} as any);
 const targetAddendum = reactive({} as { content: string[]; createdAt: string; index: number });
-const targetHistory = reactive({} as { amendedAt: string; brief: string; link: string; recordCurrent: boolean; index: number; content: models.LegislationContent[]});
+const targetHistory = reactive(
+  {} as {
+    amendedAt: string;
+    brief: string;
+    link: string;
+    recordCurrent: boolean;
+    index: number;
+    content: models.LegislationContent[];
+  },
+);
 const targetAttachment = reactive({} as { description: string; urls: string[]; index: number });
 const target = reactive({} as { name: string; category: LegislationCategory; createdAt: string; preface?: string });
 const contentAction = ref<'edit' | 'add' | null>(null);
@@ -273,19 +282,12 @@ async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallba
       await editCallback();
     }
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '操作失敗',
-      color: 'negative',
-    });
+    notifyError('操作失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '操作成功',
-    color: 'positive',
-  });
+  notifySuccess('操作成功');
   determinant.value = null;
 }
 
@@ -356,7 +358,7 @@ async function submitHistory() {
       await updateDoc(legislationDocument(route.params.id! as string), {
         history: legislation.value!.history.map((h) => {
           const copy = { ...h };
-          copy.content?.map((c) => (c.type = c.type.firebase as any));
+          copy.content?.map(convertContentToFirebase);
           return copy;
         }),
       });
@@ -413,19 +415,12 @@ async function removeProperty(property: string, object: object, translation: str
     try {
       await updateDoc(legislationDocument(route.params.id! as string), { [property]: arrayRemove(object) });
     } catch (e) {
-      console.error(e);
-      Notify.create({
-        message: '刪除失敗',
-        color: 'negative',
-      });
+      notifyError('刪除失敗', e);
       Loading.hide();
       return;
     }
     Loading.hide();
-    Notify.create({
-      message: `${translation}已刪除`,
-      color: 'positive',
-    });
+    notifySuccess(`成功刪除${translation}`);
   });
 }
 
@@ -461,19 +456,12 @@ async function remove() {
       await deleteDoc(legislationDocument(route.params.id! as string));
       await router.push('/manage/legislation');
     } catch (e) {
-      console.error(e);
-      Notify.create({
-        message: '刪除失敗',
-        color: 'negative',
-      });
+      notifyError('刪除失敗', e);
       Loading.hide();
       return;
     }
     Loading.hide();
-    Notify.create({
-      message: '已刪除法案',
-      color: 'positive',
-    });
+    notifySuccess('成功刪除法案');
   });
 }
 
@@ -487,19 +475,12 @@ async function rearrange() {
       content: legislation.value!.content.map(convertContentToFirebase),
     });
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '重新排序失敗',
-      color: 'negative',
-    });
+    notifyError('重新排序失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '條文已重新排序',
-    color: 'positive',
-  });
+  notifySuccess('內容已重新排序');
 }
 
 async function rearrangeAttachment() {
@@ -509,19 +490,12 @@ async function rearrangeAttachment() {
       attachments: legislation.value!.attachments,
     });
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '重新排序失敗',
-      color: 'negative',
-    });
+    notifyError('重新排序失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '附件已重新排序',
-    color: 'positive',
-  });
+  notifySuccess('成功重新排序附件');
 }
 </script>
 

@@ -177,7 +177,6 @@ const updateTotal = async () => {
     totalDocs.value = (await getCountFromServer(q.value)).data().count;
     scroll.value.updateScrollTarget();
   } catch (e) {
-    console.error(e);
     notifyError('無法以此條件搜尋公文', e);
   }
 };

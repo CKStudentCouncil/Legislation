@@ -24,7 +24,9 @@
         <q-tr :props="props">
           <q-td v-for="col in props.cols" :key="col.name" :props="props">
             <div v-if="col.name !== 'roles'">{{ col.value }}</div>
-            <div v-else><q-chip v-for="role of col.value" :key="role" :label="DocumentSpecificIdentity.VALUES[role]?.translation"/></div>
+            <div v-else>
+              <q-chip v-for="role of col.value" :key="role" :label="DocumentSpecificIdentity.VALUES[role]?.translation" />
+            </div>
           </q-td>
           <q-td key="actions" style="text-align: right">
             <q-btn class="text-yellow-9 q-ml-sm q-mr-sm" icon="edit" round @click="edit(props.row)">
@@ -50,10 +52,10 @@
           v-model="targetUser.roles"
           :option-label="(o) => o.translation"
           :option-value="(o) => o.firebase"
-          map-options
           :options="Object.values(DocumentSpecificIdentity.VALUES)"
           emit-value
           label="身分"
+          map-options
           multiple
           use-chips
         />
@@ -71,7 +73,8 @@ import { computed, reactive, ref } from 'vue';
 import { DocumentSpecificIdentity, User } from 'src/ts/models.ts';
 import { getAllUsers } from '../../ts/auth.ts';
 import { useFunction } from 'boot/vuefire.ts';
-import { Dialog, Loading, Notify, QTableColumn } from 'quasar';
+import { Dialog, Loading, QTableColumn } from 'quasar';
+import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
 const columns = [
   { name: 'name', label: '姓名', field: 'name', sortable: true, align: 'left' },
@@ -126,19 +129,13 @@ async function submit() {
       await useFunction('addUser')(targetUser);
     }
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '更新失敗',
-      color: 'negative',
-    });
+    notifyError('更新失敗', e);
+    return;
   }
   Loading.hide();
   action.value = '';
   await load();
-  Notify.create({
-    message: '帳號資料已更新',
-    color: 'positive',
-  });
+  notifySuccess('帳號資料已更新');
 }
 
 async function del(row: any) {
@@ -152,19 +149,12 @@ async function del(row: any) {
     try {
       await useFunction('deleteUser')({ uid: row.uid });
     } catch (e) {
-      console.error(e);
-      Notify.create({
-        message: '刪除失敗',
-        color: 'negative',
-      });
+      notifyError('刪除失敗', e);
       return;
     }
     Loading.hide();
     await load();
-    Notify.create({
-      message: '帳號資料已更新',
-      color: 'positive',
-    });
+    notifySuccess('成功刪除帳號');
   });
 }
 

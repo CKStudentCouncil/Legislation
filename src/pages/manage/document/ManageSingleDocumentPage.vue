@@ -131,7 +131,7 @@
 import { useRoute, useRouter } from 'vue-router';
 import { Attachment, documentsCollection } from 'src/ts/models.ts';
 import { arrayRemove, arrayUnion, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { date, Loading, Notify } from 'quasar';
+import { date, Loading } from 'quasar';
 import ProEditor from 'components/ProEditor.vue';
 import { computed, reactive, ref } from 'vue';
 import DocumentDialog from 'components/DocumentDialog.vue';
@@ -141,7 +141,7 @@ import ListEditor from 'components/ListEditor.vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
-import { getReign } from 'src/ts/utils.ts';
+import { getReign, notifyError, notifySuccess } from 'src/ts/utils.ts';
 import { useDocument } from 'vuefire';
 
 const route = useRoute();
@@ -168,20 +168,13 @@ async function update() {
   try {
     await setDoc(doc(documentsCollection(), (docu.value as any).id), editing);
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '編輯失敗',
-      color: 'negative',
-    });
+    notifyError('編輯失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
   action.value = null;
-  Notify.create({
-    message: '編輯成功',
-    color: 'positive',
-  });
+  notifySuccess('編輯成功');
 }
 
 function edit() {
@@ -207,43 +200,29 @@ async function submitContent() {
       content: content.value,
     });
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '編輯失敗',
-      color: 'negative',
-    });
+    notifyError('編輯失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '編輯成功',
-    color: 'positive',
-  });
+  notifySuccess('編輯成功');
   editingContent.value = false;
 }
 
 async function publish() {
-  Loading.show();
+  Loading.show({ message: '更改公開狀態' });
   try {
     await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
       published: true,
       publishedAt: new Date(),
     });
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '發布失敗',
-      color: 'negative',
-    });
+    notifyError('發布失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '發布成功',
-    color: 'positive',
-  });
+  notifySuccess('成功發布公文');
   await router.push(`/document/${(docu.value as any).id}`);
 }
 
@@ -255,19 +234,12 @@ async function retract() {
       publishedAt: null,
     });
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '撤回失敗',
-      color: 'negative',
-    });
+    notifyError('撤回失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '撤回成功',
-    color: 'positive',
-  });
+  notifySuccess('成功撤回公文');
 }
 
 async function remove() {
@@ -275,19 +247,12 @@ async function remove() {
   try {
     await deleteDoc(doc(documentsCollection(), (docu.value as any).id));
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '刪除失敗',
-      color: 'negative',
-    });
+    notifyError('刪除失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '刪除成功',
-    color: 'positive',
-  });
+  notifySuccess('成功刪除公文');
   await router.push('/manage/document/');
 }
 
@@ -318,19 +283,12 @@ async function submitAttachment() {
       });
     }
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '上傳失敗',
-      color: 'negative',
-    });
+    notifyError('上傳附件失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '上傳成功',
-    color: 'positive',
-  });
+  notifySuccess('上傳成功');
   attachmentAction.value = null;
 }
 
@@ -341,19 +299,12 @@ async function removeAttachment(a: Attachment) {
       attachments: arrayRemove(a),
     });
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '刪除附件失敗',
-      color: 'negative',
-    });
+    notifyError('刪除附件失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '刪除附件成功',
-    color: 'positive',
-  });
+  notifySuccess('刪除附件成功');
 }
 
 async function rearrangeAttachment() {
@@ -363,19 +314,12 @@ async function rearrangeAttachment() {
       attachments: docu.value!.attachments,
     });
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '重新排序失敗',
-      color: 'negative',
-    });
+    notifyError('重新排序失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '附件已重新排序',
-    color: 'positive',
-  });
+  notifySuccess('成功重新排序附件');
 }
 
 async function submitPublishedAt() {
@@ -387,19 +331,12 @@ async function submitPublishedAt() {
       reign: getReign(date),
     });
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '編輯失敗',
-      color: 'negative',
-    });
+    notifyError('編輯失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '編輯成功',
-    color: 'positive',
-  });
+  notifySuccess('編輯成功');
   editingPublishedAt.value = false;
 }
 
@@ -420,19 +357,12 @@ async function submitId() {
     await router.push(newId);
     await deleteDoc(doc(documentsCollection(), oldId));
   } catch (e) {
-    console.error(e);
-    Notify.create({
-      message: '編輯失敗',
-      color: 'negative',
-    });
+    notifyError('編輯失敗', e);
     Loading.hide();
     return;
   }
   Loading.hide();
-  Notify.create({
-    message: '編輯成功',
-    color: 'positive',
-  });
+  notifySuccess('編輯成功');
   editingId.value = false;
 }
 </script>

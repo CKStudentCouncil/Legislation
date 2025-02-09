@@ -83,7 +83,13 @@ export class DocumentSpecificIdentity {
   // Student Council
   static Speaker = new DocumentSpecificIdentity('Speaker', '議長', '議', '00', DocumentGeneralIdentity.StudentCouncil);
   static DeputySpeaker = new DocumentSpecificIdentity('DeputySpeaker', '副議長', '副議', '07', DocumentGeneralIdentity.StudentCouncil);
-  static StudentCouncilSecretary = new DocumentSpecificIdentity('StudentCouncilSecretary', '班代大會秘書', '秘', '09', DocumentGeneralIdentity.StudentCouncil);
+  static StudentCouncilSecretary = new DocumentSpecificIdentity(
+    'StudentCouncilSecretary',
+    '班代大會秘書',
+    '秘',
+    '09',
+    DocumentGeneralIdentity.StudentCouncil,
+  );
   static DisciplinaryCommittee = new DocumentSpecificIdentity(
     'DisciplinaryCommittee',
     '紀律委員會',
@@ -269,8 +275,7 @@ export function convertDocumentToFirebase(data: Document) {
   data.confidentiality = data.confidentiality.firebase as any;
   data.fromSpecific = data.fromSpecific.firebase as any;
   data.toSpecific = data.toSpecific.map((toSpecific) => toSpecific.firebase as any);
-  if (data.secretarySpecific)
-    data.secretarySpecific = data.secretarySpecific.firebase as any;
+  if (data.secretarySpecific) data.secretarySpecific = data.secretarySpecific.firebase as any;
   data.type = data.type.firebase as any;
   data.ccSpecific = data.ccSpecific.map((ccSpecific) => ccSpecific.firebase as any);
   return data;
@@ -287,13 +292,9 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     data.publishedAt = data.publishedAt ? new Date(data.publishedAt.toMillis()) : null;
     data.confidentiality = DocumentConfidentiality.VALUES[data.confidentiality as keyof typeof DocumentConfidentiality.VALUES];
     data.fromSpecific = DocumentSpecificIdentity.VALUES[data.fromSpecific];
-    data.toSpecific = data.toSpecific.map(
-      (toSpecific: any) => DocumentSpecificIdentity.VALUES[toSpecific],
-    );
+    data.toSpecific = data.toSpecific.map((toSpecific: any) => DocumentSpecificIdentity.VALUES[toSpecific]);
     data.type = DocumentType.VALUES[data.type as keyof typeof DocumentType.VALUES];
-    data.ccSpecific = data.ccSpecific.map(
-      (ccSpecific: any) => DocumentSpecificIdentity.VALUES[ccSpecific],
-    );
+    data.ccSpecific = data.ccSpecific.map((ccSpecific: any) => DocumentSpecificIdentity.VALUES[ccSpecific]);
     data.secretarySpecific = data.secretarySpecific ? DocumentSpecificIdentity.VALUES[data.secretarySpecific] : null;
     return data as unknown as Document;
   },
@@ -318,9 +319,7 @@ export function usePublicDocuments() {
 }
 
 export function convertContentToFirebase(data: LegislationContent) {
-  if (!((data.type as any) instanceof String)) {
-    data.type = data.type.firebase as any;
-  }
+  data.type = data.type.firebase as any;
   return data;
 }
 
@@ -358,7 +357,7 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
     data.type = LegislationType.VALUES[data.type as keyof typeof LegislationType.VALUES];
     data.history = data.history.map((history: any) => {
       history.content = history.content?.map((content: any) => {
-        content.type = ContentType[content.type as keyof typeof ContentType];
+        if (!(content.type instanceof Object)) content.type = ContentType[content.type as keyof typeof ContentType];
         return content;
       });
       history.amendedAt = history.amendedAt.toDate();
@@ -427,7 +426,13 @@ export class LegislationCategory {
   static StudentCouncil = new LegislationCategory('StudentCouncil', 'SC', '班代大會', 'groups');
   static JudicialCommittee = new LegislationCategory('JudicialCommittee', 'JC', '評議委員會', 'gavel');
   static ExecutiveOrder = new LegislationCategory('ExecutiveOrder', 'EO', '行政命令', 'hardware', LegislationType.Order);
-  static StudentCouncilOrder = new LegislationCategory('StudentCouncilOrder', 'SCO', '班代大會命令', 'connect_without_contact', LegislationType.Order);
+  static StudentCouncilOrder = new LegislationCategory(
+    'StudentCouncilOrder',
+    'SCO',
+    '班代大會命令',
+    'connect_without_contact',
+    LegislationType.Order,
+  );
   static JudicialCommitteeOrder = new LegislationCategory('JudicialCommitteeOrder', 'JCO', '評議委員會命令', 'local_police', LegislationType.Order);
   static VotingCommitteeOrder = new LegislationCategory('VotingCommitteeOrder', 'VCO', '選舉委員會命令', 'how_to_vote', LegislationType.Order);
   static VALUES = {

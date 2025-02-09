@@ -2,9 +2,10 @@
 
 <script lang="ts" setup>
 import { useRouter } from 'vue-router';
-import { Dialog, Loading, Notify } from 'quasar';
+import { Dialog, Loading } from 'quasar';
 import { create, getEmptyDocument } from 'pages/manage/document/common.ts';
 import { DocumentConfidentiality, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
+import { notifyError } from 'src/ts/utils.ts';
 
 const router = useRouter();
 Dialog.create({
@@ -28,7 +29,7 @@ Dialog.create({
       if (content.startsWith('{')) {
         await proceed(JSON.parse(content));
       } else {
-        Notify.create({ type: 'negative', message: '請先複製模板！' });
+        notifyError('請先複製模板內容');
       }
     } catch (e) {
       Dialog.create({
@@ -80,8 +81,7 @@ async function proceed(content: string) {
     const id = await create(adding, false);
     await router.push(`/manage/document/${id}`);
   } catch (e) {
-    console.error(e);
-    Notify.create({ type: 'negative', message: '起草公文失敗' });
+    notifyError('起草公文失敗', e);
     return;
   } finally {
     Loading.hide();

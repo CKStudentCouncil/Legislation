@@ -1,25 +1,18 @@
 <template>
-  <q-btn color="positive" icon="add" label="新增法案" @click="add" class="q-ma-md" />
+  <q-btn class="q-ma-md" color="positive" icon="add" label="新增法案" @click="add" />
   <LegislationPage manage />
-  <LegislationDialog v-model="target" :action="action" @submit="submit" @canceled="action=null" />
+  <LegislationDialog v-model="target" :action="action" @canceled="action = null" @submit="submit" />
 </template>
 
 <script lang="ts" setup>
 import LegislationPage from 'pages/legislation/view/LegislationPage.vue';
 import { reactive, ref } from 'vue';
-import {
-  Addendum,
-  History,
-  Legislation,
-  LegislationCategory,
-  LegislationContent,
-  legislationDocument,
-  useLegislations
-} from 'src/ts/models.ts';
-import { date, Loading, Notify } from 'quasar';
+import { Addendum, History, Legislation, LegislationCategory, LegislationContent, legislationDocument, useLegislations } from 'src/ts/models.ts';
+import { date, Loading } from 'quasar';
 import LegislationDialog from 'components/LegislationDialog.vue';
 import { useRouter } from 'vue-router';
 import { setDoc } from 'firebase/firestore';
+import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
 const action = ref<'add' | null>(null);
 const target = reactive({} as { name: string; category: LegislationCategory; createdAt: string; preface?: string });
@@ -38,7 +31,7 @@ async function submit() {
   try {
     let last = 0;
     for (const legislation of legislations.value) {
-      console.log(legislation)
+      console.log(legislation);
       if (legislation && (legislation as any).id.startsWith(target.category.idPrefix)) {
         try {
           const num = parseInt((legislation as any).id.slice(target.category.idPrefix.length)); // If the prefix doesn't fully match, this will throw
@@ -56,11 +49,10 @@ async function submit() {
       attachments: [] as string[],
     } as unknown as Legislation);
     action.value = null;
-    Notify.create({ type: 'positive', message: '新增法案成功' });
+    notifySuccess('新增法案成功');
     await router.push(`/manage/legislation/${id}`);
   } catch (e) {
-    console.error(e);
-    Notify.create({ type: 'negative', message: '新增法案失敗' });
+    notifyError('新增法案失敗', e);
     return;
   } finally {
     Loading.hide();

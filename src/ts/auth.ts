@@ -1,9 +1,10 @@
 import { useFirebaseAuth } from 'vuefire';
-import { Loading, Notify } from 'quasar';
+import { Loading } from 'quasar';
 import { browserLocalPersistence, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import * as models from 'src/ts/models.ts';
 import { reactive } from 'vue';
 import { useFunction } from 'boot/vuefire.ts';
+import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
 let auth = useFirebaseAuth()!;
 export const loggedInUserClaims = reactive({} as { roles: string[] });
@@ -33,25 +34,12 @@ export function login() {
     .then(() => {
       console.log('Logged in successfully.');
       Loading.hide();
-      Notify.create({
-        message: '登入成功',
-        color: 'positive',
-        icon: 'check_circle',
-        position: 'top',
-        timeout: 2000,
-      });
+      notifySuccess('登入成功');
     })
     .catch((error) => {
       console.error('Failed to log in.');
-      console.error(error);
       Loading.hide();
-      Notify.create({
-        message: '登入失敗',
-        color: 'negative',
-        icon: 'report_problem',
-        position: 'top',
-        timeout: 2000,
-      });
+      notifyError('登入失敗', error);
     });
 }
 
