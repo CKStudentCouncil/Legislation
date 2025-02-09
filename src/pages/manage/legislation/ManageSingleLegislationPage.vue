@@ -150,7 +150,7 @@ import * as models from 'src/ts/models.ts';
 import { ContentType, convertContentToFirebase, LegislationCategory, legislationDocument, useLegislation } from 'src/ts/models.ts';
 import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink, notifyError, notifySuccess, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';
-import { date, Dialog, Loading, Notify } from 'quasar';
+import { date, Dialog, Loading } from 'quasar';
 import { arrayRemove, arrayUnion, deleteDoc, updateDoc } from 'firebase/firestore';
 import { VueDraggable } from 'vue-draggable-plus';
 import { reactive, Ref, ref } from 'vue';

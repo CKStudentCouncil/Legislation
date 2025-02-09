@@ -143,6 +143,7 @@ import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { getReign, notifyError, notifySuccess } from 'src/ts/utils.ts';
 import { useDocument } from 'vuefire';
+import { useFunction } from 'boot/vuefire.ts';
 
 const route = useRoute();
 const router = useRouter();
@@ -216,6 +217,8 @@ async function publish() {
       published: true,
       publishedAt: new Date(),
     });
+    Loading.show({ message: '寄發通知郵件' });
+    await useFunction('publishDocument')({ docId: (docu.value as any).id });
   } catch (e) {
     notifyError('發布失敗', e);
     Loading.hide();

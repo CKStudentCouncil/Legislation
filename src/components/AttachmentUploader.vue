@@ -12,7 +12,7 @@
 <script lang="ts" setup>
 import { ref } from 'vue';
 import { useFunction } from 'boot/vuefire.ts';
-import { Loading, Notify } from 'quasar';
+import { Loading } from 'quasar';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
 const files = ref<File[]>([]);

@@ -6,7 +6,7 @@ import {randomChars} from "./utils";
 
 const auth = admin.auth();
 
-export async function checkRole(request: https.CallableContext, role: string) {
+export async function checkRole(request: https.CallableRequest, role: string) {
   if (!request.auth) {
     throw new https.HttpsError("unauthenticated", "You must be authenticated");
   }

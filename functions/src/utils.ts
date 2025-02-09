@@ -1,4 +1,4 @@
-// eslint-disable-next-line require-jsdoc
+/* eslint-disable require-jsdoc */
 export function randomChars(length: number) {
   let result = "";
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -13,7 +13,7 @@ export function randomChars(length: number) {
 
 export function getReign(date: Date) {
   if (date.getMonth() > 7 || date.getMonth() < 1) { // -1
-    return `${date.getFullYear() - 1945}-1`
+    return `${date.getFullYear() - 1945}-1`;
   }
   return `${date.getFullYear() - 1945 - 1}-2`;
 }
