@@ -27,6 +27,13 @@
             label="會議紀錄"
           />
           <q-input v-model="parentValue.secretaryName" label="會議紀錄姓名" />
+        </div>
+        <div v-if="isMeetingRecord || isMeetingNotice">
+          <div>會議時間</div>
+          <div class="row q-gutter-sm">
+            <q-date :model-value="meetingDate" class="col" mask="YYYY-MM-DD" @update:model-value="updateMeetingDate" />
+            <q-time :model-value="meetingTime" class="col" format24h mask="HH:mm" @update:model-value="updateMeetingTime" />
+          </div>
           <q-input v-model="parentValue.location" label="會議地點" />
         </div>
         <q-select
@@ -76,6 +83,7 @@ import { computed } from 'vue';
 import * as models from '../ts/models';
 import { DocumentConfidentiality, DocumentGeneralIdentity, DocumentSpecificIdentity, DocumentType } from '../ts/models';
 import ListEditor from 'components/ListEditor.vue';
+import { date } from 'quasar';
 
 const props = defineProps<{
   action: 'edit' | 'add' | null;
@@ -116,6 +124,26 @@ const hideConfidentiality = computed(
 );
 const isMeetingNotice = computed(() => parentValue.value.type.firebase == DocumentType.MeetingNotice.firebase);
 const isMeetingRecord = computed(() => parentValue.value.type.firebase == DocumentType.Record.firebase);
+const meetingDate = computed(() => date.formatDate(parentValue.value.meetingTime, 'YYYY-MM-DD'));
+const meetingTime = computed(() => date.formatDate(parentValue.value.meetingTime, 'HH:mm'));
+
+function updateMeetingDate(dt: string) {
+  const d = dt.split('-');
+  if (parentValue.value.meetingTime == null) {
+    parentValue.value.meetingTime = new Date();
+  }
+  parentValue.value.meetingTime?.setFullYear(parseInt(d[0]), parseInt(d[1]) - 1, parseInt(d[2]));
+  console.log(parentValue.value.meetingTime);
+}
+
+function updateMeetingTime(tm: string | null) {
+  if (tm == null) return;
+  const t = tm.split(':');
+  if (parentValue.value.meetingTime == null) {
+    parentValue.value.meetingTime = new Date();
+  }
+  parentValue.value.meetingTime?.setHours(parseInt(t[0]), parseInt(t[1]), 0);
+}
 </script>
 
 <style scoped></style>

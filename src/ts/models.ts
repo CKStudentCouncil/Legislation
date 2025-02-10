@@ -34,6 +34,7 @@ export interface Document {
   read: string[];
   published: boolean;
   publishedAt?: Date;
+  meetingTime?: Date;
 }
 
 export interface MailingList {
@@ -290,6 +291,7 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     if (!data) return null;
     data.createdAt = new Date(data.createdAt.toMillis());
     data.publishedAt = data.publishedAt ? new Date(data.publishedAt.toMillis()) : null;
+    data.meetingTime = data.meetingTime ? new Date(data.meetingTime.toMillis()) : null;
     data.confidentiality = DocumentConfidentiality.VALUES[data.confidentiality as keyof typeof DocumentConfidentiality.VALUES];
     data.fromSpecific = DocumentSpecificIdentity.VALUES[data.fromSpecific];
     data.toSpecific = data.toSpecific.map((toSpecific: any) => DocumentSpecificIdentity.VALUES[toSpecific]);

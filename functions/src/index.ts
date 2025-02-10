@@ -19,6 +19,8 @@ import {createTransport} from "nodemailer";
 import {getCurrentReign} from "./utils";
 import {newDocMail} from "./mail/new-doc";
 import {MailOptions} from "nodemailer/lib/smtp-pool";
+import ical, {ICalCalendarMethod} from "ical-generator";
+
 
 const globalFunctionOptions = {region: "asia-east1"};
 const auth = new google.auth.GoogleAuth({keyFile: "src/credential.json", scopes: ["https://www.googleapis.com/auth/drive.file"]});
@@ -131,15 +133,18 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
   }
 
   const names = [] as string[];
+  const senderName = DocumentSpecificIdentity.VALUES[doc.fromSpecific].translation;
+  let senderMail = undefined as string | undefined;
   const recipientsEmail = [] as string[];
   const ccEmail = [] as string[];
   const users = await admin.auth().listUsers();
   for (const user of users.users) {
     if (user.email == null) continue;
     const roles = user.customClaims?.roles;
+    if (roles.includes(doc.fromSpecific)) senderMail = user.email;
     if (
       roles.some((role: string) => {
-        if (doc.toSpecific.includes(role)) {
+        if (doc.toSpecific && doc.toSpecific.includes(role)) {
           names.push(DocumentSpecificIdentity.VALUES[role].translation);
           return true;
         }
@@ -149,7 +154,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
       recipientsEmail.push(user.email);
     }
     if (roles.some((role: string) => {
-      if (doc.ccSpecific.includes(role)) {
+      if (doc.ccSpecific && doc.ccSpecific.includes(role)) {
         names.push(DocumentSpecificIdentity.VALUES[role].translation);
         return true;
       }
@@ -163,7 +168,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
     from: "建中班聯會法律與公文系統 <cksc77th@gmail.com>",
     to: recipientsEmail,
     subject: `[公文] ${doc.subject}`,
-    html: newDocMail(`${doc.idPrefix}第${doc.idNumber}號`, doc.subject, Array.from(new Set(names)).join("、"), DocumentSpecificIdentity.VALUES[doc.fromSpecific].translation),
+    html: newDocMail(docId, doc.subject, Array.from(new Set(names)).join("、"), senderName),
   } as MailOptions;
   if (recipientsEmail.length == 0) {
     if (ccEmail.length != 0) {
@@ -171,6 +176,33 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
     } else {
       return {success: false, error: "No recipients found."};
     }
+  }
+  if (doc.type === "MeetingNotice") {
+    const cal = ical();
+    const meetingTime = doc.meetingTime.toDate() as Date;
+    const endTime = new Date(meetingTime);
+    endTime.setHours(endTime.getHours() + 1);
+    cal.method(ICalCalendarMethod.REQUEST);
+    cal.createEvent({
+      start: meetingTime,
+      end: endTime,
+      summary: doc.subject,
+      description: doc.content,
+      location: doc.location,
+      organizer: {
+        name: senderName,
+        email: senderMail,
+        mailto: senderMail,
+        sentBy: "cksc77th@gmail.com",
+      },
+      url: "https://cksc-legislation.firebaseapp.com/document/" + docId,
+    });
+    mailOptions.icalEvent = {
+      filename: "invite.ics",
+      method: "REQUEST",
+      content: cal.toString(),
+    };
+    mailOptions.subject = `[開會通知] ${doc.subject}`;
   }
   await mailTransport.sendMail(mailOptions);
   return {success: true};

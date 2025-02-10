@@ -66,6 +66,7 @@ async function proceed(content: string) {
           break;
         case 'createdAt':
         case 'publishedAt':
+        case 'meetingTime':
           parsedValue = new Date(value as any);
           break;
         case 'confidentiality':
