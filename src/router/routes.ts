@@ -32,6 +32,7 @@ const routes: RouteRecordRaw[] = [
         path: 'accounts',
         children: [
           { path: '', component: () => import('pages/manage/ManageAccountsPage.vue') },
+          { path: 'mailing_list', component: () => import('pages/manage/ManageMailingList.vue') },
         ],
       },
     ],

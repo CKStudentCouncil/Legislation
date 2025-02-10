@@ -14,5 +14,9 @@ service cloud.firestore {
       allow read: if resource.data.confidentiality == 'Public' || isSignedIn();
       allow write: if isSignedIn();
     }
+    match /settings/{setting=**} {
+      allow read: if true;
+      allow write: if isSignedIn() && ('Chairman' in request.auth.token.roles || 'Speaker' in request.auth.token.roles || 'DeputySpeaker' in request.auth.token.roles);
+    }
   }
 }

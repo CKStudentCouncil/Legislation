@@ -497,3 +497,49 @@ export interface User {
   email: string;
   roles: string[];
 }
+
+export interface MailingList {
+  main: MailingListEntry[];
+}
+
+export interface MailingListEntry {
+  email: string;
+  roles: DocumentSpecificIdentity[];
+}
+
+export function convertMailingListEntryToFirebase(data: MailingListEntry) {
+  return {
+    email: data.email,
+    roles: data.roles.map((role) => role.firebase),
+  };
+}
+
+export const mailingListConverter: FirestoreDataConverter<MailingList | null> = {
+  toFirestore(mailingList: MailingList) {
+    const data: any = {
+      main: mailingList.main.map(convertMailingListEntryToFirebase),
+    };
+    return firestoreDefaultConverter.toFirestore(data);
+  },
+  fromFirestore(snapshot, options) {
+    const data = firestoreDefaultConverter.fromFirestore(snapshot, options) as any;
+    if (!data) return null;
+    data.main = data.main.map((entry: any) => ({
+      email: entry.email,
+      roles: entry.roles.map((identity: any) => DocumentSpecificIdentity.VALUES[identity]),
+    }));
+    return data as MailingList;
+  },
+};
+
+export function settingsCollection() {
+  return collection(useFirestore(), 'settings');
+}
+
+export function mailingListDoc() {
+  return doc(settingsCollection(), 'mailingList').withConverter(mailingListConverter);
+}
+
+export function useMailingList() {
+  return useDocument(mailingListDoc());
+}

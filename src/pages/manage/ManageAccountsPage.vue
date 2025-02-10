@@ -1,11 +1,15 @@
 <template>
-  <q-page padding>
+  <q-page>
+    <q-tabs align="left">
+      <q-route-tab to="/manage/accounts" label="帳戶" />
+      <q-route-tab to="/manage/accounts/mailing_list" label="郵寄清單" />
+    </q-tabs>
     <q-table
       :columns="columns"
       :filter="filter"
       :loading="loading"
       :rows="Object.values(accounts)"
-      class="rounded-borders shadow-2"
+      class="rounded-borders shadow-2 q-ma-md"
       color="primary"
       row-key="email"
       title="帳號管理"
@@ -48,17 +52,7 @@
       <q-card-section>
         <q-input v-model="targetUser.name" :disable="action == 'edit'" :readonly="action == 'edit'" label="姓名" />
         <q-input v-model="targetUser.email" :disable="action == 'edit'" :readonly="action == 'edit'" label="Email" />
-        <q-select
-          v-model="targetUser.roles"
-          :option-label="(o) => o.translation"
-          :option-value="(o) => o.firebase"
-          :options="Object.values(DocumentSpecificIdentity.VALUES)"
-          emit-value
-          label="身分"
-          map-options
-          multiple
-          use-chips
-        />
+        <RoleSelect v-model="targetUser.roles"/>
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="action = ''" />
@@ -75,6 +69,7 @@ import { getAllUsers } from '../../ts/auth.ts';
 import { useFunction } from 'boot/vuefire.ts';
 import { Dialog, Loading, QTableColumn } from 'quasar';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
+import RoleSelect from 'components/RoleSelect.vue';
 
 const columns = [
   { name: 'name', label: '姓名', field: 'name', sortable: true, align: 'left' },
