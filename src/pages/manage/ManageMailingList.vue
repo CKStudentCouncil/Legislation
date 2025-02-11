@@ -17,6 +17,7 @@
     >
       <template v-slot:top-right>
         <div class="row justify-end q-gutter-sm">
+          <q-btn icon="add_to_photos" @click="bulkAdd">批次新增帳號</q-btn>
           <q-btn icon="add" @click="add">新增帳號</q-btn>
           <q-input v-model="filter" debounce="300" dense label="搜尋">
             <template v-slot:append>
@@ -60,6 +61,21 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
+  <q-dialog v-model="bulkAction">
+    <q-card>
+      <q-card-section>
+        <h6 class="q-ma-none">批次新增帳號</h6>
+      </q-card-section>
+      <q-card-section>
+        <q-input v-model="bulkEmail" label="Email (每行一個)" type="textarea" />
+        <RoleSelect v-model="bulkRole" />
+      </q-card-section>
+      <q-card-actions align="right">
+        <q-btn color="negative" flat label="取消" @click="bulkAction = false" />
+        <q-btn color="primary" flat label="儲存" @click="bulkSubmit()" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <script lang="ts" setup>
@@ -77,6 +93,7 @@ const columns = [
 const mailingList = useMailingList();
 const filter = ref('');
 const action = ref('' as 'edit' | 'add' | '');
+const bulkAction = ref(false);
 const dialog = computed(() => {
   return action.value === 'edit' || action.value === 'add';
 });
@@ -85,11 +102,19 @@ const target = reactive({
   roles: [] as DocumentSpecificIdentity[],
   index: 0,
 });
+const bulkEmail = ref('');
+const bulkRole = ref<string[]>([]);
 
 function add() {
   action.value = 'add';
   target.email = '';
   target.roles = [];
+}
+
+function bulkAdd() {
+  bulkEmail.value = '';
+  bulkRole.value = [];
+  bulkAction.value = true;
 }
 
 function edit(row: any) {
@@ -140,6 +165,30 @@ async function submit() {
   Loading.hide();
   action.value = '';
   notifySuccess('帳號資料已更新');
+}
+
+async function bulkSubmit() {
+  Loading.show();
+  try {
+    const emails = bulkEmail.value
+      .split('\n')
+      .map((e) => e.trim())
+      .filter((e) => !!e);
+    const roles = bulkRole.value;
+    await updateDoc(mailingListDoc(), {
+      main: arrayUnion(
+        ...emails.map((email) => {
+          return { email, roles };
+        }),
+      ),
+    });
+  } catch (e) {
+    notifyError('批次新增失敗', e);
+    return;
+  }
+  Loading.hide();
+  bulkAction.value = false;
+  notifySuccess('成功批次新增帳號');
 }
 </script>
 

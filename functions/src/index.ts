@@ -137,30 +137,36 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
   let senderMail = undefined as string | undefined;
   const recipientsEmail = [] as string[];
   const ccEmail = [] as string[];
+
+  const toChecker = (role: string) => {
+    if (doc.toSpecific && doc.toSpecific.includes(role)) {
+      names.push(DocumentSpecificIdentity.VALUES[role].translation);
+      return true;
+    }
+    return false;
+  };
+  const ccChecker = (role: string) => {
+    if (doc.ccSpecific && doc.ccSpecific.includes(role)) {
+      names.push(DocumentSpecificIdentity.VALUES[role].translation);
+      return true;
+    }
+    return false;
+  };
+  // Check accounts
   const users = await admin.auth().listUsers();
   for (const user of users.users) {
     if (user.email == null) continue;
     const roles = user.customClaims?.roles;
     if (roles.includes(doc.fromSpecific)) senderMail = user.email;
-    if (
-      roles.some((role: string) => {
-        if (doc.toSpecific && doc.toSpecific.includes(role)) {
-          names.push(DocumentSpecificIdentity.VALUES[role].translation);
-          return true;
-        }
-        return false;
-      })
-    ) {
-      recipientsEmail.push(user.email);
-    }
-    if (roles.some((role: string) => {
-      if (doc.ccSpecific && doc.ccSpecific.includes(role)) {
-        names.push(DocumentSpecificIdentity.VALUES[role].translation);
-        return true;
-      }
-      return false;
-    })) {
-      ccEmail.push(user.email);
+    if (roles.some(toChecker)) recipientsEmail.push(user.email);
+    if (roles.some(ccChecker)) ccEmail.push(user.email);
+  }
+  // Check mailing list
+  const mailingList = (await admin.firestore().collection("settings").doc("mailingList").get()).data();
+  if (mailingList) {
+    for (const entry of mailingList.main) {
+      if (entry.roles.some(toChecker)) recipientsEmail.push(entry.email);
+      if (entry.roles.some(ccChecker)) ccEmail.push(entry.email);
     }
   }
 
