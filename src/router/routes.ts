@@ -5,8 +5,12 @@ const routes: RouteRecordRaw[] = [
     path: '/legislation',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/legislation/view/LegislationPage.vue') },
-      { path: ':id', component: () => import('pages/legislation/view/SingleLegislationPage.vue') },
+      { path: '', component: () => import('pages/legislation/LegislationPage.vue') },
+      {
+        path: ':id',
+        component: () => import('pages/legislation/SingleLegislationPage.vue'),
+        children: [{ path: 'draft_amendment', component: () => import('pages/legislation/DraftAmendmentPage.vue') }],
+      },
     ],
   },
   {
@@ -17,7 +21,7 @@ const routes: RouteRecordRaw[] = [
         path: 'legislation',
         children: [
           { path: '', component: () => import('pages/manage/legislation/ManageLegislationPage.vue') },
-          { path: ':id', component: () => import('pages/manage/legislation/ManageSingleLegislationPage.vue') }
+          { path: ':id', component: () => import('pages/manage/legislation/ManageSingleLegislationPage.vue') },
         ],
       },
       {
@@ -25,7 +29,7 @@ const routes: RouteRecordRaw[] = [
         children: [
           { path: '', component: () => import('pages/manage/document/ManageDocumentsPage.vue') },
           { path: 'from_template', component: () => import('pages/manage/document/ManageCreateDocumentFromTemplatePage.vue') },
-          { path: ':id', component: () => import('pages/manage/document/ManageSingleDocumentPage.vue') }
+          { path: ':id', component: () => import('pages/manage/document/ManageSingleDocumentPage.vue') },
         ],
       },
       {
@@ -53,7 +57,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
-    children: [{ path: '', component: () => import('pages/legislation/view/LegislationPage.vue') }],
+    children: [{ path: '', component: () => import('pages/legislation/LegislationPage.vue') }],
   },
 
   // Always leave this as last one,

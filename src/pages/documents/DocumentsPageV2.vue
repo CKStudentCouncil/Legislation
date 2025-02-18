@@ -75,7 +75,7 @@
 
 <script lang="ts" setup>
 import { copyDocLink, getCurrentReign, notifyError } from 'src/ts/utils.ts';
-import { computed, Ref, ref, watch } from 'vue';
+import { computed, reactive, Ref, ref, watch } from 'vue';
 import {
   Document,
   DocumentConfidentiality,
@@ -85,7 +85,7 @@ import {
   DocumentType,
 } from 'src/ts/models.ts';
 import { useCollection } from 'vuefire';
-import { endBefore, getCountFromServer, limit, orderBy, query, where } from 'firebase/firestore';
+import { startAfter, getCountFromServer, limit, orderBy, query, where, Timestamp } from 'firebase/firestore';
 
 const props = defineProps({
   manage: {
@@ -146,24 +146,28 @@ const q = computed(() => {
     ].filter((i) => i !== null) as any[]),
   );
 });
-const lastItem = ref(null) as Ref<Document | null>;
+const lastPublishedAt = ref(undefined) as Ref<number | undefined>;
 const totalDocs = ref(0);
 const scroll = ref();
 let doneFunc = null as (() => void) | null;
 const paginatedQ = computed(() => {
-  if (lastItem.value) {
-    return query(q.value, limit(10), endBefore(lastItem.value.publishedAt));
+  if (lastPublishedAt.value) {
+    return query(q.value, limit(10), startAfter(new Timestamp(lastPublishedAt.value / 1000, 0)));
   } else {
     return query(q.value, limit(10));
   }
 });
 const docs = useCollection(paginatedQ);
-const allDocs = ref([] as Document[]);
+const allDocs = reactive({} as { [id: string]: Document });
 watch(
   // vuefire does not offer a way to do pagination or read document count, so we're on our own
   docs,
   async () => {
-    allDocs.value.push(...(docs.value as Document[]));
+    if (docs.value.length > 0) {
+      for (const doc of docs.value) {
+        if (doc) allDocs[doc.idPrefix + doc.idNumber] = doc;
+      }
+    }
     if (doneFunc) {
       doneFunc();
       doneFunc = null;
@@ -173,7 +177,8 @@ watch(
 );
 const updateTotal = async () => {
   try {
-    allDocs.value = [];
+    lastPublishedAt.value = undefined;
+    Object.keys(allDocs).forEach((k) => delete allDocs[k]);
     totalDocs.value = (await getCountFromServer(q.value)).data().count;
     scroll.value.updateScrollTarget();
   } catch (e) {
@@ -186,16 +191,18 @@ function loadMore(i: number, done: () => void) {
   if (searching.value) {
     return;
   }
-  if (allDocs.value.length >= totalDocs.value) {
+  if (Object.values(allDocs).length >= totalDocs.value) {
     done();
   } else {
-    console.log('loading more', searching.value, allDocs.value.length, totalDocs.value);
+    const newLast = docs.value[docs.value.length - 1];
+    if (newLast && newLast.publishedAt?.valueOf() !== lastPublishedAt.value) {
+      lastPublishedAt.value = newLast.publishedAt?.valueOf();
+    }
     doneFunc = () => {
       searching.value = false;
       done();
     };
     searching.value = true;
-    lastItem.value = docs.value[docs.value.length - 1]!;
   }
 }
 

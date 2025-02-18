@@ -17,8 +17,9 @@
     >
       <template v-slot:top-right>
         <div class="row justify-end q-gutter-sm">
-          <q-btn icon="add_to_photos" @click="bulkAdd">批次新增帳號</q-btn>
-          <q-btn icon="add" @click="add">新增帳號</q-btn>
+          <q-btn icon="add_to_photos" @click="bulkAdd">批次新增郵寄標的</q-btn>
+          <q-btn icon="playlist_remove" @click="bulkRemoveUser">批次刪除郵寄標的</q-btn>
+          <q-btn icon="add" @click="add">新增郵寄標的</q-btn>
           <q-input v-model="filter" debounce="300" dense label="搜尋">
             <template v-slot:append>
               <q-icon name="search" />
@@ -49,7 +50,7 @@
   <q-dialog v-model="dialog">
     <q-card>
       <q-card-section>
-        <h6 class="q-ma-none">編輯帳號</h6>
+        <h6 class="q-ma-none">編輯郵寄標的</h6>
       </q-card-section>
       <q-card-section>
         <q-input v-model="target.email" :disable="action == 'edit'" :readonly="action == 'edit'" label="Email" />
@@ -64,7 +65,7 @@
   <q-dialog v-model="bulkAction">
     <q-card>
       <q-card-section>
-        <h6 class="q-ma-none">批次新增帳號</h6>
+        <h6 class="q-ma-none">批次新增郵寄標的</h6>
       </q-card-section>
       <q-card-section>
         <q-input v-model="bulkEmail" label="Email (每行一個)" type="textarea" />
@@ -164,7 +165,7 @@ async function submit() {
   }
   Loading.hide();
   action.value = '';
-  notifySuccess('帳號資料已更新');
+  notifySuccess('郵寄標的已更新');
 }
 
 async function bulkSubmit() {
@@ -188,7 +189,30 @@ async function bulkSubmit() {
   }
   Loading.hide();
   bulkAction.value = false;
-  notifySuccess('成功批次新增帳號');
+  notifySuccess('成功批次新增郵寄標的');
+}
+
+function bulkRemoveUser() {
+  Dialog.create({
+    title: '批次刪除郵寄標的',
+    message: '請勾選要刪除的郵寄標的，預設全選除了目前登入之郵寄標的',
+    options: {
+      type: 'checkbox',
+      model: mailingList.value!.main.map((a) => a.email),
+      items: mailingList.value!.main.map((a) => ({ label: a.email, value: a.email })),
+    },
+    cancel: true,
+    persistent: true,
+  }).onOk(async (data: any) => {
+    try {
+      await updateDoc(mailingListDoc(), {
+        main: mailingList.value!.main.filter((a) => !data.includes(a.email)).map(convertMailingListEntryToFirebase),
+      });
+    } catch (e) {
+      notifyError('刪除失敗', e);
+    }
+    notifySuccess('郵寄標的已批次刪除');
+  });
 }
 </script>
 
