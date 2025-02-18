@@ -15,7 +15,7 @@
           :options="Object.values(DocumentSpecificIdentity.VALUES)"
         />
         <q-input
-          v-if="parentValue.type.firebase == DocumentType.Order.firebase || isMeetingRecord"
+          v-if="isOrder || isAnnouncement || isMeetingRecord"
           v-model="parentValue.fromName"
           :label="isMeetingRecord ? '會議主席姓名' : '發文者姓名'"
         />
@@ -111,19 +111,15 @@ const types = computed(() =>
 );
 
 const hideTo = computed(
-  () =>
-    parentValue.value.type.firebase == DocumentType.Order.firebase ||
-    parentValue.value.type.firebase.startsWith('JudicialCommittee') ||
-    isMeetingRecord.value,
+  () => isOrder.value || isAnnouncement.value || parentValue.value.type.firebase.startsWith('JudicialCommittee') || isMeetingRecord.value,
 );
 const hideConfidentiality = computed(
-  () =>
-    parentValue.value.type.firebase == DocumentType.Order.firebase ||
-    parentValue.value.type.firebase.startsWith('JudicialCommittee') ||
-    isMeetingRecord.value,
+  () => isOrder.value || isAnnouncement.value || parentValue.value.type.firebase.startsWith('JudicialCommittee') || isMeetingRecord.value,
 );
 const isMeetingNotice = computed(() => parentValue.value.type.firebase == DocumentType.MeetingNotice.firebase);
 const isMeetingRecord = computed(() => parentValue.value.type.firebase == DocumentType.Record.firebase);
+const isOrder = computed(() => parentValue.value.type.firebase == DocumentType.Order.firebase);
+const isAnnouncement = computed(() => parentValue.value.type.firebase == DocumentType.Announcement.firebase);
 const meetingDate = computed(() => date.formatDate(parentValue.value.meetingTime, 'YYYY-MM-DD'));
 const meetingTime = computed(() => date.formatDate(parentValue.value.meetingTime, 'HH:mm'));
 
