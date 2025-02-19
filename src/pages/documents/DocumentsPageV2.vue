@@ -84,8 +84,7 @@ import {
   DocumentSpecificIdentity,
   DocumentType,
 } from 'src/ts/models.ts';
-import { useCollection } from 'vuefire';
-import { startAfter, getCountFromServer, limit, orderBy, query, where, Timestamp } from 'firebase/firestore';
+import { startAfter, getCountFromServer, limit, orderBy, query, where, Timestamp, getDocs } from 'firebase/firestore';
 
 const props = defineProps({
   manage: {
@@ -149,7 +148,6 @@ const q = computed(() => {
 const lastPublishedAt = ref(undefined) as Ref<number | undefined>;
 const totalDocs = ref(0);
 const scroll = ref();
-let doneFunc = null as (() => void) | null;
 const paginatedQ = computed(() => {
   if (lastPublishedAt.value) {
     return query(q.value, limit(10), startAfter(new Timestamp(lastPublishedAt.value / 1000, 0)));
@@ -157,52 +155,38 @@ const paginatedQ = computed(() => {
     return query(q.value, limit(10));
   }
 });
-const docs = useCollection(paginatedQ);
 const allDocs = reactive({} as { [id: string]: Document });
-watch(
-  // vuefire does not offer a way to do pagination or read document count, so we're on our own
-  docs,
-  async () => {
-    if (docs.value.length > 0) {
-      for (const doc of docs.value) {
-        if (doc) allDocs[doc.idPrefix + doc.idNumber] = doc;
-      }
-    }
-    if (doneFunc) {
-      doneFunc();
-      doneFunc = null;
-    }
-  },
-  { deep: true },
-);
 const updateTotal = async () => {
   try {
     lastPublishedAt.value = undefined;
     Object.keys(allDocs).forEach((k) => delete allDocs[k]);
     totalDocs.value = (await getCountFromServer(q.value)).data().count;
     scroll.value.updateScrollTarget();
+    scroll.value.resume();
   } catch (e) {
     notifyError('無法以此條件搜尋公文', e);
   }
 };
 watch(q, updateTotal, { deep: true });
 
-function loadMore(i: number, done: () => void) {
+async function loadMore(i: number, done: (stop?: boolean) => void) {
   if (searching.value) {
     return;
   }
   if (Object.values(allDocs).length >= totalDocs.value) {
-    done();
+    done(true);
   } else {
-    const newLast = docs.value[docs.value.length - 1];
-    if (newLast && newLast.publishedAt?.valueOf() !== lastPublishedAt.value) {
+    searching.value = true;
+    const docs = await getDocs(paginatedQ.value);
+    docs.forEach((doc) => {
+      allDocs[doc.id] = doc.data() as Document;
+    });
+    const newLast = Object.values(allDocs).sort((a, b) => (a.publishedAt?.valueOf() ?? 0) - (b.publishedAt?.valueOf() ?? 0))[0];
+    if (newLast) {
       lastPublishedAt.value = newLast.publishedAt?.valueOf();
     }
-    doneFunc = () => {
-      searching.value = false;
-      done();
-    };
-    searching.value = true;
+    searching.value = false;
+    done();
   }
 }
 

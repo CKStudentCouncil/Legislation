@@ -34,6 +34,7 @@ export async function create(adding: models.Document, template = true) {
     adding.idPrefix = adding.fromSpecific.generic.prefix + adding.fromSpecific.prefix + adding.type.prefix + '字';
   }
   adding.createdAt = new Date();
+  adding.publishedAt = null;
   switch (adding.type.firebase) {
     case models.DocumentType.MeetingNotice.firebase:
       if (template) adding.content = meetingNoticeTemplate();
@@ -47,6 +48,7 @@ export async function create(adding: models.Document, template = true) {
       if (template) adding.content = meetingRecordTemplate();
       break;
     case models.DocumentType.Order.firebase:
+    case models.DocumentType.Announcement.firebase:
     case models.DocumentType.JudicialCommitteeExplanation.firebase:
     case models.DocumentType.JudicialCommitteeDecision.firebase:
       adding.toSpecific = [];

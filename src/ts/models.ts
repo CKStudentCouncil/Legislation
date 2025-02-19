@@ -33,7 +33,7 @@ export interface Document {
   confidentiality: DocumentConfidentiality;
   read: string[];
   published: boolean;
-  publishedAt?: Date;
+  publishedAt?: Date | null;
   meetingTime?: Date;
 }
 

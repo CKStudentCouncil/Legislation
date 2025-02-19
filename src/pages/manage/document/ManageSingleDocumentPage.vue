@@ -189,8 +189,8 @@ function editContent() {
 }
 
 function editPublishedAt() {
-  publishedDate.value = date.formatDate(docu.value?.publishedAt, 'YYYY-MM-DD');
-  publishedTime.value = date.formatDate(docu.value?.publishedAt, 'HH:mm');
+  publishedDate.value = date.formatDate(docu.value?.publishedAt ?? new Date(), 'YYYY-MM-DD');
+  publishedTime.value = date.formatDate(docu.value?.publishedAt ?? new Date(), 'HH:mm');
   editingPublishedAt.value = true;
 }
 
