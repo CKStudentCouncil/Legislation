@@ -67,7 +67,7 @@
       <q-card-section>
         <div class="text-h5 q-ma-none">編輯內文</div>
       </q-card-section>
-      <q-card-section>
+      <q-card-section style="max-height: 80vh; overflow-y: auto">
         <ProEditor v-model="content" />
       </q-card-section>
       <q-card-actions align="right">
