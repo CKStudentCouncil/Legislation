@@ -16,10 +16,11 @@ import * as Stream from "stream";
 import {addUserWithRole, checkRole, editUserClaims} from "./auth";
 import {DocumentSpecificIdentity, User} from "./models";
 import {createTransport} from "nodemailer";
-import {getCurrentReign} from "./utils";
+import {convertToChineseDay, getCurrentReign} from "./utils";
 import {newDocMail} from "./mail/new-doc";
 import {MailOptions} from "nodemailer/lib/smtp-pool";
 import ical, {ICalCalendarMethod} from "ical-generator";
+import {newMeetingNotice} from "./mail/new-meeting-notice";
 
 
 const globalFunctionOptions = {region: "asia-east1"};
@@ -169,7 +170,6 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
       if (entry.roles.some(ccChecker)) ccEmail.push(entry.email);
     }
   }
-
   const mailOptions = {
     from: "建中班聯會法律與公文系統 <cksc77th@gmail.com>",
     to: recipientsEmail,
@@ -208,7 +208,8 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
       method: "REQUEST",
       content: cal.toString(),
     };
-    mailOptions.subject = `[開會通知] ${doc.subject}`;
+    mailOptions.subject = `[開會通知] ${meetingTime.getMonth()+1}/${meetingTime.getDate()} (${convertToChineseDay(meetingTime.getDay())}) ${doc.subject}`;
+    mailOptions.html = newMeetingNotice(docId, doc.subject, Array.from(new Set(names)).join("、"), senderName, meetingTime, doc.location);
   }
   await mailTransport.sendMail(mailOptions);
   return {success: true};

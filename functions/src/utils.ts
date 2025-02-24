@@ -21,3 +21,7 @@ export function getReign(date: Date) {
 export function getCurrentReign() {
   return getReign(new Date());
 }
+
+export function convertToChineseDay(day: number) {
+  return ["日", "一", "二", "三", "四", "五", "六", "日"][day];
+}
