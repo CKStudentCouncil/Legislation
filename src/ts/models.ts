@@ -241,6 +241,7 @@ export class DocumentType {
   static JudicialCommitteeDecision = new DocumentType('JudicialCommitteeDecision', '評議委員會決議', '決', '', true);
   static JudicialCommitteeExplanation = new DocumentType('JudicialCommitteeExplanation', '評議委員會釋字', '釋', '', true);
   // Prefix Court: rendered with DocumentCourt.vue
+  static CourtIndictment = new DocumentType('CourtIndictment', '起訴書', '訴', '5');
   static CourtVerdict = new DocumentType('CourtVerdict', '裁判書', '判', '5', true);
   static CourtNotification = new DocumentType('CourtNotification', '法庭文書-通', '通', '5', true);
   static CourtDocuments = new DocumentType('CourtDocuments', '法庭文書-通', '文', '5', true);
@@ -255,6 +256,7 @@ export class DocumentType {
     MeetingNotice: DocumentType.MeetingNotice,
     JudicialCommitteeDecision: DocumentType.JudicialCommitteeDecision,
     JudicialCommitteeExplanation: DocumentType.JudicialCommitteeExplanation,
+    CourtIndictment: DocumentType.CourtIndictment,
     CourtVerdict: DocumentType.CourtVerdict,
     CourtNotification: DocumentType.CourtNotification,
     CourtDocuments: DocumentType.CourtDocuments,
