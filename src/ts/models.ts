@@ -244,7 +244,7 @@ export class DocumentType {
   static CourtIndictment = new DocumentType('CourtIndictment', '起訴書', '訴', '5');
   static CourtVerdict = new DocumentType('CourtVerdict', '裁判書', '判', '5', true);
   static CourtNotification = new DocumentType('CourtNotification', '法庭文書-通', '通', '5', true);
-  static CourtDocuments = new DocumentType('CourtDocuments', '法庭文書-通', '文', '5', true);
+  static CourtDocuments = new DocumentType('CourtDocuments', '法庭文書-文', '文', '5', true);
   static CourtScrolls = new DocumentType('CourtScrolls', '法庭文書-卷', '卷', '5', true);
   static CourtAppeals = new DocumentType('CourtAppeals', '法庭文書-上', '上', '5', true);
   static CourtProsecutions = new DocumentType('CourtProsecutions', '法庭文書-啟', '啟', '5', true);

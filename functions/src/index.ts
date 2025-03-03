@@ -182,6 +182,8 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
     } else {
       return {success: false, error: "No recipients found."};
     }
+  } else if (ccEmail.length != 0) {
+    mailOptions.cc = ccEmail;
   }
   if (doc.type === "MeetingNotice") {
     const cal = ical();
