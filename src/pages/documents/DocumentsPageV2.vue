@@ -48,7 +48,7 @@
     </div>
     <q-infinite-scroll ref="scroll" :class="$q.screen.gt.sm ? 'row' : ''" @load="loadMore">
       <div v-for="doc of allDocs" :key="doc!.idPrefix + doc!.idNumber" :class="'q-mb-md ' + ($q.screen.gt.sm ? 'q-pr-md col-6' : '')">
-        <q-card>
+        <q-card :class="doc.published ? '' : 'bg-highlight'">
           <div v-if="doc !== null">
             <q-card-section>
               <div>{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
@@ -193,8 +193,12 @@ async function loadMore(i: number, done: (stop?: boolean) => void) {
 updateTotal();
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .col {
   min-width: 150px;
+}
+
+.bg-highlight {
+  background-color: #F2C03730
 }
 </style>
