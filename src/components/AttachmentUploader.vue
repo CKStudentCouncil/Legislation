@@ -1,6 +1,6 @@
 <template>
   <div class="q-gutter-md row items-start">
-    <q-file v-model="files" filled label="選擇檔案 (或拖至此，可多選)" multiple style="max-width: 300px">
+    <q-file v-model="files" filled label="選擇檔案 (或拖至此，可多選)" multiple style="max-width: 300px" :error="error" error-message="請按下上傳按鈕再繼續！" @input="check">
       <template v-slot:prepend>
         <q-icon name="attach_file" />
       </template>
@@ -26,6 +26,7 @@ const props = defineProps({
     default: '',
   },
 });
+const error = ref(false);
 
 async function upload() {
   const results = [] as string[];
@@ -66,10 +67,22 @@ async function upload() {
     if (completed === files.value.length) {
       Loading.hide();
       clearInterval(interval);
+      files.value = [];
+      error.value = false;
       emits('uploaded', results as string[]);
     }
   }, 100);
 }
+
+function check() {
+  const r = (files.value.length !== 0);
+  error.value = r;
+  return !r;
+}
+
+defineExpose({
+  check,
+});
 </script>
 
 <style scoped></style>

@@ -84,7 +84,7 @@
       <q-card-section>
         <q-input v-model="attachment.description" label="說明" />
         <ListEditor v-model="attachment.urls" />
-        <AttachmentUploader :filenamePrefix="`${route.params.id}_附件_`" @uploaded="(u) => attachment.urls.push(...u)" />
+        <AttachmentUploader ref="attachmentUploader" :filenamePrefix="`${route.params.id}_附件_`" @uploaded="(u) => attachment.urls.push(...u)" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="attachmentAction = null" />
@@ -157,6 +157,7 @@ const attachmentAction = ref<'add' | 'edit' | null>(null);
 const attachmentUploading = computed(() => attachmentAction.value !== null);
 const attachment = reactive({} as { description: string; urls: string[]; index: number });
 const attachmentDraggable = ref(true);
+const attachmentUploader = ref<InstanceType<typeof AttachmentUploader> | null>(null);
 const editingPublishedAt = ref(false);
 const publishedDate = ref('');
 const publishedTime = ref('');
@@ -273,6 +274,9 @@ function uploadAttachment(a?: Attachment) {
 }
 
 async function submitAttachment() {
+  if (!attachmentUploader.value.check()) {
+    return;
+  }
   Loading.show();
   try {
     if (attachmentAction.value === 'add') {

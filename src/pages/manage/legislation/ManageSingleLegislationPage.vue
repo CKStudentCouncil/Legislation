@@ -133,7 +133,7 @@
       <q-card-section>
         <q-input v-model="targetAttachment.description" label="說明" type="textarea" />
         <ListEditor v-model="targetAttachment.urls" />
-        <AttachmentUploader :filename-prefix="legislation?.name + '_附件_'" @uploaded="(s) => targetAttachment.urls.push(...s)" />
+        <AttachmentUploader ref="attachmentUploader" :filename-prefix="legislation?.name + '_附件_'" @uploaded="(s) => targetAttachment.urls.push(...s)" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn v-close-popup color="negative" flat label="取消" @click="attachmentAction = null" />
@@ -181,6 +181,7 @@ const contentAction = ref<'edit' | 'add' | null>(null);
 const addendumAction = ref<'edit' | 'add' | null>(null);
 const historyAction = ref<'edit' | 'add' | null>(null);
 const attachmentAction = ref<'edit' | 'add' | null>(null);
+const attachmentUploader = ref<InstanceType<typeof AttachmentUploader> | null>(null);
 const action = ref<'edit' | null>(null);
 const draggable = reactive({ content: true, attachment: true });
 
@@ -367,6 +368,9 @@ async function submitHistory() {
 }
 
 async function submitAttachment() {
+  if (!attachmentUploader.value?.check()) {
+    return;
+  }
   await submitProperty(
     attachmentAction,
     async () => {
