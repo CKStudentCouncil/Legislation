@@ -274,7 +274,7 @@ function uploadAttachment(a?: Attachment) {
 }
 
 async function submitAttachment() {
-  if (!attachmentUploader.value.check()) {
+  if (!attachmentUploader.value?.check()) {
     return;
   }
   Loading.show();

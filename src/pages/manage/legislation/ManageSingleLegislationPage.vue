@@ -339,17 +339,18 @@ async function submitHistory() {
   const mappedHistory = {
     amendedAt: date.extractDate(targetHistory.amendedAt, 'YYYY-MM-DD'),
     brief: targetHistory.brief,
-    content: targetHistory.content?.map(convertContentToFirebase),
+    content: targetHistory.content,
   } as models.History;
   if (targetHistory.link) {
     mappedHistory.link = targetHistory.link;
   }
   if (targetHistory.recordCurrent) {
-    mappedHistory.content = legislation.value!.content.map(convertContentToFirebase);
+    mappedHistory.content = legislation.value!.content;
   }
   await submitProperty(
     historyAction,
     async () => {
+      mappedHistory.content = mappedHistory.content?.map(convertContentToFirebase);
       await updateDoc(legislationDocument(route.params.id! as string), {
         history: arrayUnion(mappedHistory),
       });
@@ -359,7 +360,7 @@ async function submitHistory() {
       await updateDoc(legislationDocument(route.params.id! as string), {
         history: legislation.value!.history.map((h) => {
           const copy = { ...h };
-          copy.content?.map(convertContentToFirebase);
+          copy.content = copy.content?.map(convertContentToFirebase);
           return copy;
         }),
       });
@@ -440,7 +441,7 @@ async function removeAddendum(addendum: models.Addendum) {
 
 async function removeHistory(history: models.History) {
   const copy = { ...history };
-  copy.content?.map((c) => (c.type = c.type.firebase as any));
+  copy.content = copy.content?.map(convertContentToFirebase);
   await removeProperty('history', history, '立法沿革');
 }
 
