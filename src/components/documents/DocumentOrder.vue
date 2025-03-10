@@ -5,9 +5,9 @@
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">{{ doc.fromSpecific.translation }} 令</div>
     <div class="text-h6">發文日期：{{ doc.published ? doc.publishedAt!.toLocaleDateString() : '尚未發布' }}</div>
     <div class="text-h6">發文字號：{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
-    <q-separator class="q-mt-sm q-mb-sm" color="black" />
+    <DocumentSeparator/>
     <div v-html="customSanitize(doc.content)"></div>
-    <q-separator class="q-mt-sm q-mb-sm" color="black" />
+    <DocumentSeparator/>
     <div class="text-h2">
       <span class="text-h6">{{ props.doc.fromSpecific.translation }}</span> {{ props.doc.fromName }}
     </div>
@@ -20,6 +20,7 @@
 <script lang="ts" setup>
 import * as models from 'src/ts/models.ts';
 import { customSanitize } from 'src/ts/utils.ts';
+import DocumentSeparator from 'components/DocumentSeparator.vue';
 
 const props = defineProps<{
   doc: models.Document;

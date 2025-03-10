@@ -9,7 +9,7 @@
     <div class="text-h6">發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : '尚未發布' }}</div>
     <div class="text-h6">密等：{{ doc.confidentiality.translation }}</div>
     <div class="text-h6">主旨：{{ doc.subject }}</div>
-    <q-separator class="q-mt-sm q-mb-sm" color="black" />
+    <DocumentSeparator/>
     <div class="text-h6">說明：</div>
     <div v-html="customSanitize(doc.content)"></div>
   </div>
@@ -19,6 +19,7 @@
 import { computed } from 'vue';
 import * as models from 'src/ts/models.ts';
 import { customSanitize, getReadableRecipient } from 'src/ts/utils.ts';
+import DocumentSeparator from 'components/DocumentSeparator.vue';
 
 const props = defineProps<{
   doc: models.Document;

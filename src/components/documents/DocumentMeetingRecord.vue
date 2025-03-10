@@ -10,7 +10,7 @@
       <div v-if="doc.meetingTime">會議時間：{{ doc.meetingTime.toLocaleString() }}</div>
       <div>地點：{{doc.location}}</div>
     </div>
-    <q-separator class="q-mt-sm q-mb-sm" color="black" />
+    <DocumentSeparator/>
     <div v-html="customSanitize(doc.content)"></div>
   </div>
 </template>
@@ -18,6 +18,7 @@
 <script lang="ts" setup>
 import * as models from 'src/ts/models.ts';
 import { customSanitize } from 'src/ts/utils.ts';
+import DocumentSeparator from 'components/DocumentSeparator.vue';
 
 defineProps<{
   doc: models.Document;

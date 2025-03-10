@@ -39,7 +39,7 @@
       </div>
       <DocumentRenderer :doc="docu" />
       <div v-if="docu.attachments.length > 0">
-        <q-separator class="q-mt-sm q-mb-sm" color="black" />
+        <DocumentSeparator/>
         <q-toggle v-model="attachmentDraggable" label="拖曳排序" />
         <VueDraggable
           v-if="docu.attachments"
@@ -144,6 +144,7 @@ import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { getReign, notifyError, notifySuccess } from 'src/ts/utils.ts';
 import { useDocument } from 'vuefire';
 import { useFunction } from 'boot/vuefire.ts';
+import DocumentSeparator from 'components/DocumentSeparator.vue';
 
 const route = useRoute();
 const router = useRouter();

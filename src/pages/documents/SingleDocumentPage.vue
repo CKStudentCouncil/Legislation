@@ -16,7 +16,7 @@
           <q-tooltip>縮小</q-tooltip>
         </q-btn>
         <DocumentRenderer :doc="doc" :style="`zoom: ${size}%`" />
-        <q-separator v-if="doc.attachments.length > 0" class="q-mt-sm q-mb-sm" color="black" />
+        <DocumentSeparator v-if="doc.attachments.length > 0" />
         <AttachmentDisplay
           v-for="(attachment, index) of doc.attachments"
           :key="attachment.description + attachment.urls.toString()"
@@ -36,6 +36,7 @@ import { useVueToPrint } from 'vue-to-print';
 import { ref } from 'vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
+import DocumentSeparator from 'components/DocumentSeparator.vue';
 
 const route = useRoute();
 const doc = useSpecificDocument(route.params.id as string);
