@@ -129,7 +129,6 @@ function updateMeetingDate(dt: string) {
     parentValue.value.meetingTime = new Date();
   }
   parentValue.value.meetingTime?.setFullYear(parseInt(d[0]), parseInt(d[1]) - 1, parseInt(d[2]));
-  console.log(parentValue.value.meetingTime);
 }
 
 function updateMeetingTime(tm: string | null) {

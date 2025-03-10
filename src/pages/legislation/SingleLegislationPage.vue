@@ -89,7 +89,6 @@ watch(legislation, () => {
         });
       }
     }, 250);
-    console.log(route.hash.substring(1));
   }
 });
 

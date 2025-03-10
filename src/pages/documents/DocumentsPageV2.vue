@@ -49,9 +49,13 @@
     <q-infinite-scroll ref="scroll" :class="$q.screen.gt.sm ? 'row' : ''" @load="loadMore">
       <div v-for="doc of allDocs" :key="doc!.idPrefix + doc!.idNumber" :class="'q-mb-md ' + ($q.screen.gt.sm ? 'q-pr-md col-6' : '')">
         <q-card :class="doc.published ? '' : 'bg-highlight'">
-          <div v-if="doc !== null">
+          <div v-if="!!doc">
             <q-card-section>
               <div>{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
+              <div v-if="!doc.published" class="text-amber-9">
+                <q-icon class="q-pr-sm" name="warning" />
+                未發布
+              </div>
               <div>{{ doc.publishedAt?.toLocaleDateString() }}</div>
               <div class="text-h6">{{ doc.subject }}</div>
             </q-card-section>
@@ -84,7 +88,7 @@ import {
   DocumentSpecificIdentity,
   DocumentType,
 } from 'src/ts/models.ts';
-import { startAfter, getCountFromServer, limit, orderBy, query, where, Timestamp, getDocs } from 'firebase/firestore';
+import { getCountFromServer, getDocs, limit, orderBy, query, startAt, Timestamp, where } from 'firebase/firestore';
 
 const props = defineProps({
   manage: {
@@ -141,16 +145,18 @@ const q = computed(() => {
       published.value === null ? null : where('published', '==', published.value),
       props.manage ? null : where('published', '==', true),
       props.manage ? null : where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
-      orderBy('publishedAt', 'desc'),
+      orderBy('published', 'asc'),
+      orderBy('createdAt', 'desc'),
     ].filter((i) => i !== null) as any[]),
   );
 });
-const lastPublishedAt = ref(undefined) as Ref<number | undefined>;
+const lastCreatedAt = ref(undefined) as Ref<number | undefined>;
+const lastPublished = ref(false);
 const totalDocs = ref(0);
 const scroll = ref();
 const paginatedQ = computed(() => {
-  if (lastPublishedAt.value) {
-    return query(q.value, limit(10), startAfter(new Timestamp(lastPublishedAt.value / 1000, 0)));
+  if (lastCreatedAt.value) {
+    return query(q.value, limit(10), startAt(lastPublished.value, new Timestamp(lastCreatedAt.value / 1000 + 1, 0)));
   } else {
     return query(q.value, limit(10));
   }
@@ -158,7 +164,8 @@ const paginatedQ = computed(() => {
 const allDocs = reactive({} as { [id: string]: Document });
 const updateTotal = async () => {
   try {
-    lastPublishedAt.value = undefined;
+    lastCreatedAt.value = undefined;
+    lastPublished.value = false;
     Object.keys(allDocs).forEach((k) => delete allDocs[k]);
     totalDocs.value = (await getCountFromServer(q.value)).data().count;
     scroll.value.updateScrollTarget();
@@ -181,9 +188,12 @@ async function loadMore(i: number, done: (stop?: boolean) => void) {
     docs.forEach((doc) => {
       allDocs[doc.id] = doc.data() as Document;
     });
-    const newLast = Object.values(allDocs).sort((a, b) => (a.publishedAt?.valueOf() ?? 0) - (b.publishedAt?.valueOf() ?? 0))[0];
+    lastPublished.value = Object.values(allDocs).filter((d) => d.published).length > 0;
+    const newLast = Object.values(allDocs)
+      .filter((v) => (lastPublished.value ? v.published : true))
+      .sort((a, b) => (a.createdAt?.valueOf() ?? 0) - (b.createdAt?.valueOf() ?? 0))[0];
     if (newLast) {
-      lastPublishedAt.value = newLast.publishedAt?.valueOf();
+      lastCreatedAt.value = newLast.createdAt?.valueOf();
     }
     searching.value = false;
     done();
@@ -193,12 +203,12 @@ async function loadMore(i: number, done: (stop?: boolean) => void) {
 updateTotal();
 </script>
 
-<style scoped lang="scss">
+<style lang="scss" scoped>
 .col {
   min-width: 150px;
 }
 
 .bg-highlight {
-  background-color: #F2C03730
+  background-color: #f2c03730;
 }
 </style>

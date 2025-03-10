@@ -31,7 +31,6 @@ async function submit() {
   try {
     let last = 0;
     for (const legislation of legislations.value) {
-      console.log(legislation);
       if (legislation && (legislation as any).id.startsWith(target.category.idPrefix)) {
         try {
           const num = parseInt((legislation as any).id.slice(target.category.idPrefix.length)); // If the prefix doesn't fully match, this will throw
