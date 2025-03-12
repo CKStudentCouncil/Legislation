@@ -3,11 +3,12 @@ import { initializeApp } from 'firebase/app';
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore';
 import { useFirebaseApp, VueFire, VueFireAuth } from 'vuefire';
 import VueGtag from 'vue-gtag';
-import { getFunctions, HttpsCallable, httpsCallable } from '@firebase/functions';
+import type { HttpsCallable} from '@firebase/functions';
+import { getFunctions, httpsCallable } from '@firebase/functions';
 
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
-export default boot(async ({ app, router }) => {
+export default boot(({ app, router }) => {
   // something to do
   const firebaseApp = initializeApp({
     apiKey: 'AIzaSyAI6eGOld2TX1NkPUjvp-nqJNmzfE-Ti7U',
@@ -37,5 +38,5 @@ export default boot(async ({ app, router }) => {
 });
 
 export function useFunction(name: string): HttpsCallable {
-  return httpsCallable(getFunctions(useFirebaseApp()!, 'asia-east1'), name);
+  return httpsCallable(getFunctions(useFirebaseApp(), 'asia-east1'), name);
 }

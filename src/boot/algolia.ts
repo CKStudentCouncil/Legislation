@@ -7,6 +7,6 @@ export const searchClient = algoliasearch(
   'd70f2bd090855ba6fec146656a8db624'
 );
 
-export default boot(async ({ app, router }) => {
+export default boot(({ app }) => {
   app.use(InstantSearch);
 });

@@ -28,7 +28,7 @@ const props = defineProps({
 });
 const error = ref(false);
 
-async function upload() {
+function upload() {
   const results = [] as string[];
   let completed = 0;
   Loading.show();
@@ -69,7 +69,7 @@ async function upload() {
       clearInterval(interval);
       files.value = [];
       error.value = false;
-      emits('uploaded', results as string[]);
+      emits('uploaded', results);
     }
   }, 100);
 }

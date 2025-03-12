@@ -80,8 +80,10 @@
 </template>
 
 <script lang="ts" setup>
-import { convertMailingListEntryToFirebase, DocumentSpecificIdentity, mailingListDoc, useMailingList } from 'src/ts/models.ts';
-import { Dialog, Loading, QTableColumn } from 'quasar';
+import type { DocumentSpecificIdentity} from 'src/ts/models.ts';
+import { convertMailingListEntryToFirebase, mailingListDoc, useMailingList } from 'src/ts/models.ts';
+import type { QTableColumn } from 'quasar';
+import { Dialog, Loading } from 'quasar';
 import { computed, reactive, ref } from 'vue';
 import RoleSelect from 'components/RoleSelect.vue';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';

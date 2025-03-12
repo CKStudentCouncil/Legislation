@@ -55,14 +55,14 @@ async function proceed(content: string) {
       switch (key) {
         case 'fromSpecific':
         case 'secretarySpecific':
-          parsedValue = DocumentSpecificIdentity.VALUES[value as string];
+          parsedValue = DocumentSpecificIdentity.VALUES[value];
           break;
         case 'toSpecific':
         case 'ccSpecific':
           parsedValue = (value as unknown as string[]).map((v) => DocumentSpecificIdentity.VALUES[v]);
           break;
         case 'type':
-          parsedValue = DocumentType.VALUES[value as string];
+          parsedValue = DocumentType.VALUES[value];
           break;
         case 'createdAt':
         case 'publishedAt':
@@ -70,7 +70,7 @@ async function proceed(content: string) {
           parsedValue = new Date(value as any);
           break;
         case 'confidentiality':
-          parsedValue = DocumentConfidentiality.VALUES[value as string];
+          parsedValue = DocumentConfidentiality.VALUES[value];
           break;
         default:
           parsedValue = value;

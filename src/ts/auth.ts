@@ -1,7 +1,7 @@
 import { useFirebaseAuth } from 'vuefire';
 import { Loading } from 'quasar';
 import { browserLocalPersistence, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import * as models from 'src/ts/models.ts';
+import type * as models from 'src/ts/models.ts';
 import { reactive } from 'vue';
 import { useFunction } from 'boot/vuefire.ts';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
@@ -11,7 +11,7 @@ export const loggedInUserClaims = reactive({} as { roles: string[] });
 
 export function init() {
   auth = useFirebaseAuth()!;
-  auth.setPersistence(browserLocalPersistence).then(async () => {
+  void auth.setPersistence(browserLocalPersistence).then(async () => {
     console.log('Firebase auth persistence set.');
     await updateCustomClaims();
   });
@@ -58,5 +58,5 @@ export async function getAllUsers(): Promise<models.User[]> {
 }
 
 export function logout() {
-  auth.signOut();
+  void auth.signOut();
 }

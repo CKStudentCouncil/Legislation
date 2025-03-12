@@ -147,13 +147,15 @@
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
 import * as models from 'src/ts/models.ts';
-import { ContentType, convertContentToFirebase, LegislationCategory, legislationDocument, useLegislation } from 'src/ts/models.ts';
+import type { LegislationCategory} from 'src/ts/models.ts';
+import { ContentType, convertContentToFirebase, legislationDocument, useLegislation } from 'src/ts/models.ts';
 import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink, notifyError, notifySuccess, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';
 import { date, Dialog, Loading } from 'quasar';
 import { arrayRemove, arrayUnion, deleteDoc, updateDoc } from 'firebase/firestore';
 import { VueDraggable } from 'vue-draggable-plus';
-import { reactive, Ref, ref } from 'vue';
+import type { Ref} from 'vue';
+import { reactive, ref } from 'vue';
 import ListEditor from 'components/ListEditor.vue';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
 import LegislationDialog from 'components/LegislationDialog.vue';
@@ -262,7 +264,7 @@ function generateTitle() {
   let last = 0;
   for (const content of legislation.value!.content) {
     if (content.type.firebase == targetContent.type.firebase) {
-      const title = content.title.split('-')[0].match(/[\d零一二三四五六七八九十百千]+/g);
+      const title = content.title.split('-')[0]?.match(/[\d零一二三四五六七八九十百千]+/g);
       if (title) {
         const count = parseInt(title[0].replace(/[零一二三四五六七八九十百千]+/g, (c) => translateNumber(c).toString()));
         if (count > last) {
@@ -274,7 +276,7 @@ function generateTitle() {
   targetContent.title = `第 ${targetContent.type.arabicOrdinal ? last + 1 : translateNumberToChinese(last + 1)} ${targetContent.type.translation}`;
 }
 
-async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallback: () => void, editCallback: () => void) {
+async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallback: () => Promise<void>, editCallback: () => Promise<void>) {
   Loading.show();
   try {
     if (determinant.value == 'add') {
@@ -409,7 +411,7 @@ async function submit() {
   );
 }
 
-async function removeProperty(property: string, object: object, translation: string) {
+function removeProperty(property: string, object: object, translation: string) {
   Dialog.create({
     title: `刪除${translation}`,
     message: `確定要刪除此${translation}嗎？`,
@@ -429,27 +431,27 @@ async function removeProperty(property: string, object: object, translation: str
   });
 }
 
-async function removeContent(content: models.LegislationContent) {
+function removeContent(content: models.LegislationContent) {
   const copy = { ...content };
   copy.type = content.type.firebase as any;
-  await removeProperty('content', content, '內容');
+  removeProperty('content', content, '內容');
 }
 
-async function removeAddendum(addendum: models.Addendum) {
-  await removeProperty('addendum', addendum, '附帶決議');
+function removeAddendum(addendum: models.Addendum) {
+  removeProperty('addendum', addendum, '附帶決議');
 }
 
-async function removeHistory(history: models.History) {
+function removeHistory(history: models.History) {
   const copy = { ...history };
   copy.content = copy.content?.map(convertContentToFirebase);
-  await removeProperty('history', history, '立法沿革');
+  removeProperty('history', history, '立法沿革');
 }
 
-async function removeAttachment(attachment: models.Attachment) {
-  await removeProperty('attachments', attachment, '附件');
+function removeAttachment(attachment: models.Attachment) {
+  removeProperty('attachments', attachment, '附件');
 }
 
-async function remove() {
+function remove() {
   Dialog.create({
     title: '刪除法案',
     message: '確定要刪除此法案嗎？',
@@ -474,7 +476,7 @@ async function rearrange() {
   Loading.show();
   try {
     for (let i = 0; i < legislation.value!.content.length; i++) {
-      legislation.value!.content[i].index = i;
+      legislation.value!.content[i]!.index = i;
     }
     await updateDoc(legislationDocument(route.params.id! as string), {
       content: legislation.value!.content.map(convertContentToFirebase),

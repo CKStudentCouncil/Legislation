@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { Attachment } from 'src/ts/models.ts';
+import type { Attachment } from 'src/ts/models.ts';
 import { translateNumberToChinese } from '../ts/utils.ts';
 
 const props = defineProps<{

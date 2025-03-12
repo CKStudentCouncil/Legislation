@@ -86,8 +86,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ContentType, LegislationContent } from 'src/ts/models.ts';
-import { computed, PropType } from 'vue';
+import type { LegislationContent } from 'src/ts/models.ts';
+import { ContentType } from 'src/ts/models.ts';
+import type { PropType } from 'vue';
+import { computed } from 'vue';
 import { copyLink } from 'src/ts/utils.ts';
 
 const props = defineProps({

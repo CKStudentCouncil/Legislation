@@ -87,8 +87,8 @@ import { Dark, LocalStorage } from 'quasar';
 import { DocumentSpecificIdentity } from '../ts/models.ts';
 
 init();
-let leftDrawerOpen = ref(false);
-let endpoints = [
+const leftDrawerOpen = ref(false);
+const endpoints = [
   { name: '檢視法案', url: '/legislation', icon: 'description', requireAuth: false },
   { name: '檢視公文', url: '/document', icon: 'badge', requireAuth: false },
   { name: '編輯法案', url: '/manage/legislation', icon: 'edit', requireAuth: true },
@@ -96,7 +96,7 @@ let endpoints = [
   { name: '管理帳號', url: '/manage/accounts', icon: 'badge', requireAuth: true, requireRole: DocumentSpecificIdentity.Chairman },
   { name: '關於', url: '/about', icon: 'info', requireAuth: false },
 ];
-let selected = ref('Account Information');
+const selected = ref('Account Information');
 const loggedInUser = useCurrentUser();
 const loggedIn = computed(() => loggedInUser.value !== null);
 
@@ -115,9 +115,9 @@ function changeSelected(name: string) {
 
 function toggleFullscreen() {
   if (document.fullscreenElement) {
-    document.exitFullscreen();
+    void document.exitFullscreen();
   } else {
-    document.documentElement.requestFullscreen();
+    void document.documentElement.requestFullscreen();
   }
 }
 

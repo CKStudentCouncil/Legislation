@@ -125,19 +125,19 @@ const meetingTime = computed(() => date.formatDate(parentValue.value.meetingTime
 
 function updateMeetingDate(dt: string) {
   const d = dt.split('-');
-  if (parentValue.value.meetingTime == null) {
+  if (parentValue.value.meetingTime == null || d.length < 3) {
     parentValue.value.meetingTime = new Date();
   }
-  parentValue.value.meetingTime?.setFullYear(parseInt(d[0]), parseInt(d[1]) - 1, parseInt(d[2]));
+  parentValue.value.meetingTime?.setFullYear(parseInt(d[0]!), parseInt(d[1]!) - 1, parseInt(d[2]!));
 }
 
 function updateMeetingTime(tm: string | null) {
   if (tm == null) return;
   const t = tm.split(':');
-  if (parentValue.value.meetingTime == null) {
+  if (parentValue.value.meetingTime == null || t.length < 2) {
     parentValue.value.meetingTime = new Date();
   }
-  parentValue.value.meetingTime?.setHours(parseInt(t[0]), parseInt(t[1]), 0);
+  parentValue.value.meetingTime?.setHours(parseInt(t[0]!), parseInt(t[1]!), 0);
 }
 </script>
 

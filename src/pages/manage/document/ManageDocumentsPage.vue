@@ -6,7 +6,7 @@
 <script lang="ts" setup>
 import DocumentDialog from 'components/DocumentDialog.vue';
 import { reactive, ref } from 'vue';
-import * as models from '../../../ts/models';
+import type * as models from '../../../ts/models';
 import { Loading } from 'quasar';
 import { useRouter } from 'vue-router';
 import { create, getEmptyDocument } from 'pages/manage/document/common.ts';

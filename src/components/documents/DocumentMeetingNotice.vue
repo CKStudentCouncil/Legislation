@@ -22,7 +22,7 @@
 
 <script lang="ts" setup>
 import { computed } from 'vue';
-import * as models from 'src/ts/models.ts';
+import type * as models from 'src/ts/models.ts';
 import { customSanitize, getReadableRecipient } from 'src/ts/utils.ts';
 import DocumentSeparator from 'components/DocumentSeparator.vue';
 
@@ -33,7 +33,7 @@ const readableTo = computed(() => {
   return getReadableRecipient(props.doc.toSpecific, props.doc.toOther);
 });
 const readableCC = computed(() => {
-  return getReadableRecipient(props.doc.ccSpecific, props.doc.ccOther!);
+  return getReadableRecipient(props.doc.ccSpecific, props.doc.ccOther);
 });
 </script>
 

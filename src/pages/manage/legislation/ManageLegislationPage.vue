@@ -7,7 +7,8 @@
 <script lang="ts" setup>
 import LegislationPage from 'pages/legislation/LegislationPage.vue';
 import { reactive, ref } from 'vue';
-import { Addendum, History, Legislation, LegislationCategory, LegislationContent, legislationDocument, useLegislations } from 'src/ts/models.ts';
+import type { Addendum, History, Legislation, LegislationContent} from 'src/ts/models.ts';
+import { LegislationCategory, legislationDocument, useLegislations } from 'src/ts/models.ts';
 import { date, Loading } from 'quasar';
 import LegislationDialog from 'components/LegislationDialog.vue';
 import { useRouter } from 'vue-router';
@@ -35,7 +36,7 @@ async function submit() {
         try {
           const num = parseInt((legislation as any).id.slice(target.category.idPrefix.length)); // If the prefix doesn't fully match, this will throw
           last = Math.max(last, num);
-        } catch (e) {}
+        } catch (e) { /* empty */ }
       }
     }
     target.createdAt = date.extractDate(target.createdAt, 'YYYY-MM-DD') as any;

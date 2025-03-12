@@ -79,9 +79,11 @@
 
 <script lang="ts" setup>
 import { copyDocLink, getCurrentReign, notifyError } from 'src/ts/utils.ts';
-import { computed, reactive, Ref, ref, watch } from 'vue';
+import type { Ref} from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
+import type {
+  Document} from 'src/ts/models.ts';
 import {
-  Document,
   DocumentConfidentiality,
   DocumentGeneralIdentity,
   documentsCollection,
@@ -200,7 +202,7 @@ async function loadMore(i: number, done: (stop?: boolean) => void) {
   }
 }
 
-updateTotal();
+void updateTotal();
 </script>
 
 <style lang="scss" scoped>

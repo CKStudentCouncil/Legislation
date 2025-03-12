@@ -129,13 +129,14 @@
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
-import { Attachment, documentsCollection } from 'src/ts/models.ts';
+import type { Attachment} from 'src/ts/models.ts';
+import { documentsCollection } from 'src/ts/models.ts';
 import { arrayRemove, arrayUnion, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { date, Loading } from 'quasar';
 import ProEditor from 'components/ProEditor.vue';
 import { computed, reactive, ref } from 'vue';
 import DocumentDialog from 'components/DocumentDialog.vue';
-import * as models from 'src/ts/models';
+import type * as models from 'src/ts/models';
 import AttachmentUploader from 'components/AttachmentUploader.vue';
 import ListEditor from 'components/ListEditor.vue';
 import { VueDraggable } from 'vue-draggable-plus';

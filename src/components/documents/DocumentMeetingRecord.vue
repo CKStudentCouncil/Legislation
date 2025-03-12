@@ -16,7 +16,7 @@
 </template>
 
 <script lang="ts" setup>
-import * as models from 'src/ts/models.ts';
+import type * as models from 'src/ts/models.ts';
 import { customSanitize } from 'src/ts/utils.ts';
 import DocumentSeparator from 'components/DocumentSeparator.vue';
 

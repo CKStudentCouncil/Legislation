@@ -1,0 +1,27 @@
+name: Pull Request Check
+on:
+  pull_request:
+    paths-ignore:
+      - 'functions/**'
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+jobs:
+  build_and_preview:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache packages
+        uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+          path: node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+      - run: yarn install --frozen-lockfile
+      - run: yarn build
+

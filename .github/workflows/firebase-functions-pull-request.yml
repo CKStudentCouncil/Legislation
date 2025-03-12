@@ -1,0 +1,33 @@
+name: Functions Pull Request Check
+on:
+  pull_request:
+    paths:
+      - 'functions/**'
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+jobs:
+  build_and_preview:
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache packages
+        uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-functions-yarn-${{ hashFiles('**/yarn.lock') }}
+          path: firebase/functions/node_modules
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+          cache: 'npm'
+      - name: Install dependencies
+        run: |
+          cd functions
+          yarn install --frozen-lockfile
+      - name: Build & lint
+        run: |
+          cd functions
+          yarn build
+          yarn lint

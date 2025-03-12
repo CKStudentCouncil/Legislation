@@ -1,28 +1,29 @@
 import { Notify } from 'quasar';
-import { documentsCollection, DocumentSpecificIdentity, DocumentType } from './models';
+import type { DocumentType } from './models';
+import { documentsCollection, DocumentSpecificIdentity } from './models';
 import { getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import sanitize from 'sanitize-html';
 import { event } from 'vue-gtag';
 
 export function copyLink(href?: string) {
-  copyText(window.location.href.split('#')[0] + (href ? '#' + href : ''));
+  void copyText(window.location.href.split('#')[0] + (href ? '#' + href : ''));
 }
 
 export function copyLawLink(id: string) {
-  copyText(window.location.origin + (window.location.origin.endsWith('/') ? '' : '/') + 'legislation/' + id);
+  void copyText(window.location.origin + (window.location.origin.endsWith('/') ? '' : '/') + 'legislation/' + id);
 }
 
 export function copyDocLink(id: string) {
-  copyText(window.location.origin + (window.location.origin.endsWith('/') ? '' : '/') + 'document/' + id);
+  void copyText(window.location.origin + (window.location.origin.endsWith('/') ? '' : '/') + 'document/' + id);
 }
 
-export function copyText(text: string) {
-  navigator.clipboard.writeText(text);
-  Notify.create({
-    message: '已複製到剪貼簿',
-    color: 'positive',
-    position: 'top'
-  });
+export async function copyText(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    notifySuccess('已複製連結');
+  } catch (e) {
+    notifyError('無法複製連結', e);
+  }
 }
 
 export function translateNumber(str: string) {
@@ -53,10 +54,10 @@ export function translateNumber(str: string) {
     if (char === '零') continue;
     const next = ary[i + 1];
     if (next) {
-      temp += numChar[char] * levelChar[next];
+      temp += numChar[char!]! * levelChar[next]!;
       i++;
     } else {
-      temp += numChar[char];
+      temp += numChar[char!]!;
     }
   }
   return temp;
@@ -73,16 +74,17 @@ export function translateNumberToChinese(num: number) {
       temp += '零';
       continue;
     }
-    temp += numChar[parseInt(char)] + levelChar[ary.length - i - 1];
+    temp += numChar[parseInt(char!)]! + levelChar[ary.length - i - 1]!;
   }
-  if (temp.startsWith('一十')) temp = temp.slice(1)
+  if (temp.startsWith('一十')) temp = temp.slice(1);
   if (temp.length > 1 && temp.endsWith('零')) temp = temp.slice(0, -1);
   return temp;
 }
 
 export function getReign(date: Date) {
-  if (date.getMonth() > 7 || date.getMonth() < 1) { // -1
-    return `${date.getFullYear() - 1945}-1`
+  if (date.getMonth() > 7 || date.getMonth() < 1) {
+    // -1
+    return `${date.getFullYear() - 1945}-1`;
   }
   return `${date.getFullYear() - 1945 - 1}-2`;
 }
@@ -94,10 +96,10 @@ export function getCurrentReign() {
 export function getReadableRecipient(specific: DocumentSpecificIdentity[], others: string[]) {
   let s = '';
   for (let i = 0; i < specific.length; i++) {
-    if (specific[i].firebase == DocumentSpecificIdentity.Other.firebase) {
+    if (specific[i]!.firebase == DocumentSpecificIdentity.Other.firebase) {
       s += others.join('、');
     } else {
-      s = s.concat(specific[i].translation);
+      s = s.concat(specific[i]!.translation);
     }
     if (i < specific.length - 1) {
       s += '、';
@@ -113,12 +115,16 @@ export async function generateDocumentIdNumber(specific: DocumentSpecificIdentit
     r = '0' + r;
   }
   let s = r + specific.generic.code + specific.code;
-  const lastDoc = await getDocs(query(documentsCollection(),
-    orderBy('createdAt', 'desc'),
-    where('fromSpecific', '==', specific.firebase),
-    where('type', '==', type.firebase),
-    limit(1)));
-  if (lastDoc.docs.length > 0 && lastDoc.docs[0].exists() && lastDoc.docs[0].data()?.idNumber.startsWith(r)) {
+  const lastDoc = await getDocs(
+    query(
+      documentsCollection(),
+      orderBy('createdAt', 'desc'),
+      where('fromSpecific', '==', specific.firebase),
+      where('type', '==', type.firebase),
+      limit(1),
+    ),
+  );
+  if (lastDoc.docs[0] && lastDoc.docs[0].exists() && lastDoc.docs[0].data()?.idNumber.startsWith(r)) {
     const lastDocId = lastDoc.docs[0].id;
     const lastDocIdNumber = parseInt(lastDocId.slice(-4));
     s += (lastDocIdNumber + 1).toString().padStart(4, '0');
@@ -133,21 +139,21 @@ export function customSanitize(text: string) {
     allowedTags: sanitize.defaults.allowedTags.concat(['font']),
     allowedAttributes: Object.assign(sanitize.defaults.allowedAttributes, {
       font: ['color', 'size'],
-      div: ['style']
+      div: ['style'],
     }),
     allowedStyles: {
       '*': {
         // Match HEX and RGB
-        'color': [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
+        color: [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
         'text-align': [/^left$/, /^right$/, /^center$/],
         // Match any number with px, em, %, or small, medium, large
-        'font-size': [/^\d+(px|em|%)$/, /^(small|medium|large)$/]
+        'font-size': [/^\d+(px|em|%)$/, /^(small|medium|large)$/],
       },
-      'p': {
-        'font-size': [/^\d+(px|em|%)$/, /^(small|medium|large)$/]
-      }
-    }
-  })
+      p: {
+        'font-size': [/^\d+(px|em|%)$/, /^(small|medium|large)$/],
+      },
+    },
+  });
 }
 
 export function notifySuccess(message: string): void {
@@ -169,9 +175,9 @@ export function notifyError(message: string, exception?: any): void {
   if (exception) {
     console.error(exception);
     event('exception', {
-      description: message + ': ' +  exception?.message,
+      description: message + ': ' + exception?.message,
       stack: exception?.stack,
       fatal: false,
-    })
+    });
   }
 }

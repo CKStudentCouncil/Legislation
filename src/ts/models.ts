@@ -1,5 +1,6 @@
 import { firestoreDefaultConverter, useCollection, useDocument, useFirestore } from 'vuefire';
-import { collection, doc, FirestoreDataConverter, query, Timestamp, where } from 'firebase/firestore';
+import type { FirestoreDataConverter} from 'firebase/firestore';
+import { collection, doc, query, Timestamp, where } from 'firebase/firestore';
 
 export interface Legislation {
   preface?: string;
