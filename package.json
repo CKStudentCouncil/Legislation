@@ -27,7 +27,7 @@
     "vue-gtag": "^2.0.1",
     "vue-instantsearch": "^4.19.4",
     "vue-router": "^4.5.0",
-    "vue-to-print": "^1.3.1",
+    "vue-to-print": "^1.4.0",
     "vuefire": "^3.2.0"
   },
   "devDependencies": {
