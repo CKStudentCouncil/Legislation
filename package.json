@@ -28,7 +28,7 @@
     "vue-instantsearch": "^4.20.5",
     "vue-router": "^4.5.0",
     "vue-to-print": "^1.4.0",
-    "vuefire": "^3.2.0"
+    "vuefire": "^3.2.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
