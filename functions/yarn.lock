@@ -1440,10 +1440,10 @@ firebase-functions-test@^3.1.0:
     lodash "^4.17.5"
     ts-deepmerge "^2.0.1"
 
-firebase-functions@^6.3.1:
-  version "6.3.1"
-  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-6.3.1.tgz#8f36703fe57f16728b5ff8fe7d91af9187193270"
-  integrity sha512-LTbmsEkSgaOhzTzGUoF7dv906JJJW89o0/spXgnU8gASyR8JLMrCqwV7FnWLso5hyF0fUqNPaEEw/TzLdZMVXw==
+firebase-functions@^6.3.2:
+  version "6.3.2"
+  resolved "https://registry.yarnpkg.com/firebase-functions/-/firebase-functions-6.3.2.tgz#f26c379302788ca0ae25782d4a723065ca218c87"
+  integrity sha512-FC3A1/nhqt1ZzxRnj5HZLScQaozAcFSD/vSR8khqSoFNOfxuXgwJS6ZABTB7+v+iMD5z6Mmxw6OfqITUBuI7OQ==
   dependencies:
     "@types/cors" "^2.8.5"
     "@types/express" "^4.17.21"
