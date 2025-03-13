@@ -1,7 +1,6 @@
-/* eslint-disable require-jsdoc */
 export function randomChars(length: number) {
-  let result = "";
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  let result = '';
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   const charactersLength = characters.length;
   let counter = 0;
   while (counter < length) {
@@ -23,5 +22,5 @@ export function getCurrentReign() {
 }
 
 export function convertToChineseDay(day: number) {
-  return ["日", "一", "二", "三", "四", "五", "六", "日"][day];
+  return ['日', '一', '二', '三', '四', '五', '六', '日'][day];
 }

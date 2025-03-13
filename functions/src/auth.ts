@@ -1,16 +1,15 @@
-/* eslint-disable require-jsdoc */
-import {https} from "firebase-functions";
-import * as admin from "firebase-admin";
-import {User} from "./models";
-import {randomChars} from "./utils";
+import {https} from 'firebase-functions';
+import * as admin from 'firebase-admin';
+import {User} from './models';
+import {randomChars} from './utils';
 
 const auth = admin.auth();
 
 export async function checkRole(request: https.CallableRequest, role: string) {
   if (!request.auth) {
-    throw new https.HttpsError("unauthenticated", "You must be authenticated");
+    throw new https.HttpsError('unauthenticated', 'You must be authenticated');
   }
-  if (request.auth.uid == "5MK7Kr4O9GVg76lHCsy6ex45kP03") {
+  if (request.auth.uid == '5MK7Kr4O9GVg76lHCsy6ex45kP03') {
     // Root account
     return;
   }
@@ -18,8 +17,8 @@ export async function checkRole(request: https.CallableRequest, role: string) {
   const userRoles = user.customClaims?.roles;
   if (userRoles == null || !userRoles.includes(role)) {
     throw new https.HttpsError(
-      "permission-denied",
-      `You do not have the required role (You:${userRoles?.join(",")}/Req:${role}) to perform this action`,
+      'permission-denied',
+      `You do not have the required role (You:${userRoles?.join(',')}/Req:${role}) to perform this action`,
     );
   }
 }
@@ -28,7 +27,7 @@ export async function addUserWithRole(user: User) {
   let result = null;
   try {
     result = await auth.getUserByEmail(user.email);
-  } catch (e) {
+  } catch {
     // user not found
   }
   if (!result) {
@@ -52,7 +51,7 @@ export async function editUserClaims(uid: string, user: User) {
     validClaims = {};
   }
   for (const key in user) {
-    if (user[key as keyof User] != null && key != "uid" && key != "email" && key != "name") {
+    if (user[key as keyof User] != null && key != 'uid' && key != 'email' && key != 'name') {
       validClaims[key as keyof typeof validClaims] = user[key as keyof User];
     }
   }

@@ -1,5 +1,4 @@
 /* eslint-disable no-irregular-whitespace */
-// eslint-disable-next-line require-jsdoc
 export function newDocMail(id: string, subject: string, user: string, from: string) {
   return `<!DOCTYPE html>
 <html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">

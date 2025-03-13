@@ -1,7 +1,6 @@
 /* eslint-disable no-irregular-whitespace */
-import {convertToChineseDay} from "../utils";
+import {convertToChineseDay} from '../utils';
 
-// eslint-disable-next-line require-jsdoc
 export function newMeetingNotice(id: string, subject: string, user: string, from: string, date: Date, location: string) {
   return `<!DOCTYPE html>
 <html lang="en" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:v="urn:schemas-microsoft-com:vml">
