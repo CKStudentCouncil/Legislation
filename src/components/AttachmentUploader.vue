@@ -5,7 +5,9 @@
         <q-icon name="attach_file" />
       </template>
     </q-file>
-    <q-btn color="primary" dense label="上傳並加入附件" @click="upload" />
+    <q-btn class="row" color="primary" dense @click="upload" no-caps>
+      <div><q-icon name="cloud_upload" /><br>上傳並加入附件</div>
+    </q-btn>
   </div>
 </template>
 
