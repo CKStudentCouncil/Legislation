@@ -4523,10 +4523,10 @@ vue-eslint-parser@^10.1.1:
     lodash "^4.17.21"
     semver "^7.6.3"
 
-vue-gtag@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/vue-gtag/-/vue-gtag-2.1.0.tgz#95a99c19d53da8576f6d8ba915090044f6819754"
-  integrity sha512-lnEiHtNkw37lUug36n023uYWRaFz7s2Wk12G+hdzrTKwWwTBuq0Mcd5e0zH65aKPZRWT+51C6LUHZShpTPiMng==
+vue-gtag@^2.1.2:
+  version "2.1.2"
+  resolved "https://registry.yarnpkg.com/vue-gtag/-/vue-gtag-2.1.2.tgz#d9604735dc2f5b1ed3ff6080a969bc1a17197240"
+  integrity sha512-9eTGfIApQ3XpsxJjLNiRP51x0v3c93YJxVO8rKWSLJwbUuICwTMGGfB7x0RLEijFoK3lakgFvR5pR+JF5la2KA==
 
 vue-instantsearch@^4.20.5:
   version "4.20.5"
