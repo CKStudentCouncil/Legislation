@@ -35,7 +35,9 @@ async function submit() {
       if (legislation && (legislation as any).id.startsWith(target.category.idPrefix)) {
         try {
           const num = parseInt((legislation as any).id.slice(target.category.idPrefix.length)); // If the prefix doesn't fully match, this will throw
-          last = Math.max(last, num);
+          if (!isNaN(num)) {
+            last = Math.max(last, num);
+          }
         } catch (e) { /* empty */ }
       }
     }
