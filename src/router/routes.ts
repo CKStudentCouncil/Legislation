@@ -6,12 +6,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/MainLayout.vue'),
     children: [
       { path: '', component: () => import('pages/legislation/LegislationPage.vue') },
-      {
-        path: ':id',
-        component: () => import('pages/legislation/SingleLegislationPage.vue'),
-        children: [{ path: 'draft_amendment', component: () => import('pages/legislation/DraftAmendmentPage.vue') }],
-      },
+      { path: ':id/draft_amendment', component: () => import('pages/legislation/DraftAmendmentPage.vue') },
     ],
+  },
+  {
+    path: '/legislation/:id',
+    component: () => import('layouts/SSRLayout.vue'),
+    children: [{ path: '', component: () => import('pages/legislation/SingleLegislationPage.vue') }],
   },
   {
     path: '/manage',

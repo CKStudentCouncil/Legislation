@@ -8,10 +8,10 @@
         <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
           <q-tooltip>列印</q-tooltip>
         </q-btn>
-        <q-btn class="no-print" dense flat icon="unfold_less" v-if="Object.entries(expanded).length > 0" size="20px" @click="collapseAll">
+        <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat icon="unfold_less" size="20px" @click="collapseAll">
           <q-tooltip>折疊所有條文</q-tooltip>
         </q-btn>
-        <q-btn class="no-print" dense flat icon="unfold_more" v-if="Object.entries(expanded).length > 0" size="20px" @click="expandAll">
+        <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat icon="unfold_more" size="20px" @click="expandAll">
           <q-tooltip>展開所有條文</q-tooltip>
         </q-btn>
       </div>
@@ -19,8 +19,8 @@
       <div v-if="legislation.history.length > 0">
         立法沿革
         <div v-for="history of legislation.history" :key="history.amendedAt.valueOf()">
-          {{ history.amendedAt.toLocaleDateString() + ' ' + history.brief }}
-          <q-btn v-if="history.link" dense flat icon="open_in_new" size="10px" :href="history.link">
+          {{ new Date(history.amendedAt).toLocaleDateString() + ' ' + history.brief }}
+          <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px">
             <q-tooltip>檢視發布公文</q-tooltip>
           </q-btn>
         </div>
@@ -29,11 +29,11 @@
         v-for="content of legislation.content"
         :id="content.index.toString()"
         :key="content.title"
-        :content="content"
-        :printing="printing"
-        :expanded="expanded[content.index]"
-        @update:expanded="expanded[content.index] = $event"
         :class="content.index.toString() === route.hash.substring(1) ? (Dark.isActive ? 'bg-teal-10' : 'bg-yellow-3') : ''"
+        :content="content"
+        :expanded="expanded[content.index]"
+        :printing="printing"
+        @update:expanded="expanded[content.index] = $event"
       />
       <LegislationAddendum v-for="addendum of legislation.addendum" :key="addendum.createdAt.valueOf()" :addendum="addendum" />
       <AttachmentDisplay
@@ -46,38 +46,44 @@
     </div>
   </q-page>
 </template>
-
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { ContentType, useLegislation } from 'src/ts/models.ts';
-import { reactive, ref, watch } from 'vue';
+import { ContentType } from 'src/ts/models.ts';
+import { onMounted, onServerPrefetch, reactive, ref, watch } from 'vue';
 import { event } from 'vue-gtag';
 import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink } from 'src/ts/utils.ts';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
 import { useVueToPrint } from 'vue-to-print';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
-import { Dark } from 'quasar';
+import { Dark, useMeta } from 'quasar';
+import { useLegislationStore } from 'stores/legislation.ts';
 
-const route = useRoute();
-const legislation = useLegislation(route.params.id! as string);
+const legislation = ref();
 const content = ref();
 const printing = ref(false);
 const expanded = reactive({} as Record<number, boolean>);
+const route = useRoute();
 
-watch(legislation, () => {
-  event('view_legislation', {
-    id: route.params.id! as string,
-    name: legislation.value?.name,
-    category: legislation.value?.category.translation,
-    type: legislation.value?.category.type.translation,
-  });
-  document.title = legislation.value?.name + ' - 建中班聯會法律資料庫';
+onMounted(() => {
+  // In window switches do not trigger SSR
+  useLegislationStore()
+    .loadLegislation(route.params.id as string)
+    .then((l) => (legislation.value = l))
+    .catch((e) => console.error(e));
   for (const content of legislation.value?.content ?? []) {
     if (content.type.firebase === ContentType.SpecialClause.firebase) {
       expanded[content.index] = true;
     }
   }
+  event('view_legislation' as any, {
+    id: route.params.id! as string,
+    name: legislation.value?.name,
+    category: legislation.value?.category.translation,
+    type: legislation.value?.category.type.translation,
+  });
+});
+watch(legislation, () => {
   if (route.hash) {
     // wait for the content to load
     setTimeout(() => {
@@ -123,6 +129,39 @@ function expandAll() {
     expanded[key] = true;
   }
 }
+
+defineOptions({
+  async preFetch({ store, currentRoute }) {
+    await useLegislationStore(store).loadLegislation(currentRoute.params.id as string);
+  },
+});
+
+onServerPrefetch(async () => {
+  legislation.value = await useLegislationStore().loadLegislation(route.params.id as string);
+});
+
+useMeta(() => {
+  const store = useLegislationStore();
+  const l = store.getLegislation(route.params.id as string);
+  return {
+    title: l?.name,
+    meta: {
+      description: {
+        name: 'description',
+        content: l?.preface,
+      },
+      'og:title': {
+        name: 'og:title',
+        content: l?.name,
+      },
+      'og:description': {
+        name: 'og:description',
+        content: l?.preface,
+      },
+      // 'og:image': l?.image,
+    },
+  };
+});
 </script>
 
 <style scoped></style>

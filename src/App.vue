@@ -3,7 +3,7 @@
 </template>
 
 <script lang="ts" setup>
-import { Dark, LocalStorage } from 'quasar';
+import { Dark, LocalStorage, useMeta } from 'quasar';
 
 defineOptions({
   name: 'App',
@@ -17,4 +17,17 @@ if (LocalStorage.has('dark')) {
 } else {
   Dark.set('auto');
 }
+useMeta({
+  title: '建國中學班聯會法律與公文系統',
+  meta: {
+    description: {
+      name: 'description',
+      content: 'A platform for organizing and displaying laws, orders and documents of the student council of CKHS',
+    },
+    ogImage: {
+      name: 'og:image',
+      content: 'https://raw.githubusercontent.com/CKStudentCouncil/Legislation/refs/heads/main/mail/images/_1.png',
+    }
+  },
+});
 </script>

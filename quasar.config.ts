@@ -6,7 +6,7 @@ import { defineConfig } from '#q-app/wrappers';
 export default defineConfig((/* ctx */) => {
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
-    // preFetch: true,
+    preFetch: true,
 
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
@@ -40,11 +40,11 @@ export default defineConfig((/* ctx */) => {
       typescript: {
         strict: true,
         vueShim: true,
-        extendTsConfig (tsConfig) {
+        extendTsConfig(tsConfig) {
           tsConfig.exclude!.push('./../functions');
           tsConfig.compilerOptions!.allowImportingTsExtensions = true;
           tsConfig.compilerOptions!.exactOptionalPropertyTypes = false;
-        }
+        },
       },
 
       vueRouterMode: 'history', // available values: 'hash', 'history'
@@ -54,7 +54,7 @@ export default defineConfig((/* ctx */) => {
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
-      // publicPath: '/',
+      publicPath: '/',
       // analyze: true,
       // env: {},
       // rawDefine: {}
@@ -102,7 +102,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: ['Dialog', 'Notify', 'Dark', 'LocalStorage', 'Loading', 'Screen'],
+      plugins: ['Dialog', 'Notify', 'Dark', 'LocalStorage', 'Loading', 'Screen', 'Meta'],
     },
 
     // animations: 'all', // --- includes all animations
