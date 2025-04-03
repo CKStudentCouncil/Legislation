@@ -20,7 +20,7 @@
         <q-btn dense flat icon="edit" size="10px" @click="editHistory(history)" />
         <q-btn color="negative" dense flat icon="delete" size="10px" @click="removeHistory(history)" />
       </div>
-      <q-btn color="positive" flat icon="add" label="新增內容" @click="addContent"></q-btn>
+      <q-btn color="positive" flat icon="add" label="新增內容" @click="addContent()"></q-btn>
       <q-toggle v-model="draggable.content" label="拖曳排序" />
       <VueDraggable
         ref="el"
@@ -35,6 +35,9 @@
             <q-tooltip>拖曳以重新排序</q-tooltip>
           </q-icon>
           <LegislationContent :content="content" class="col" />
+          <q-btn flat icon="downloading" size="10px" @click="addContent(content.index)">
+            <q-tooltip>向下新增一項內容</q-tooltip>
+          </q-btn>
           <q-btn flat icon="edit" size="10px" @click="editContent(content)" />
           <q-btn color="negative" flat icon="delete" size="10px" @click="removeContent(content)" />
         </div>
@@ -161,11 +164,14 @@ import LegislationAddendum from 'components/LegislationAddendum.vue';
 import LegislationDialog from 'components/LegislationDialog.vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import AttachmentUploader from 'components/AttachmentUploader.vue';
+interface EditingLegislationContent extends models.LegislationContent {
+  insertBefore: boolean;
+}
 
 const route = useRoute();
 const router = useRouter();
 const legislation = useLegislation(route.params.id! as string);
-const targetContent = reactive<models.LegislationContent>({} as any);
+const targetContent = reactive({} as EditingLegislationContent);
 const targetAddendum = reactive({} as { content: string[]; createdAt: string; index: number });
 const targetHistory = reactive(
   {} as {
@@ -187,12 +193,13 @@ const attachmentUploader = ref<InstanceType<typeof AttachmentUploader> | null>(n
 const action = ref<'edit' | null>(null);
 const draggable = reactive({ content: true, attachment: true });
 
-function addContent() {
+function addContent(index?: number) {
   targetContent.type = models.ContentType.Clause;
   targetContent.deleted = false;
-  targetContent.index = legislation.value!.content.length;
+  targetContent.index = index ?? legislation.value!.content.length;
   targetContent.subtitle = '';
   targetContent.content = '';
+  targetContent.insertBefore = !!index;
   generateTitle();
   contentAction.value = 'add';
 }
@@ -225,6 +232,7 @@ function editContent(legislationContent: models.LegislationContent) {
   targetContent.title = legislationContent.title;
   targetContent.subtitle = legislationContent.subtitle;
   targetContent.content = legislationContent.content;
+  targetContent.insertBefore = false;
   contentAction.value = 'edit';
 }
 
@@ -300,9 +308,21 @@ async function submitContent() {
   await submitProperty(
     contentAction,
     async () => {
-      await updateDoc(legislationDocument(route.params.id! as string), {
-        content: arrayUnion(convertContentToFirebase(targetContent)),
-      });
+      if (targetContent.insertBefore) {
+        // Bump indices after the content by one
+        for (let i = targetContent.index; i < legislation.value!.content.length; i++) {
+          legislation.value!.content[i]!.index++;
+        }
+        legislation.value!.content.push(targetContent);
+        legislation.value!.content.sort((a, b) => a.index - b.index);
+        await updateDoc(legislationDocument(route.params.id! as string), {
+          content: legislation.value!.content.map(convertContentToFirebase),
+        });
+      } else {
+        await updateDoc(legislationDocument(route.params.id! as string), {
+          content: arrayUnion(convertContentToFirebase(targetContent)),
+        });
+      }
     },
     async () => {
       legislation.value!.content[targetContent.index] = targetContent;
