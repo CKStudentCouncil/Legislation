@@ -11,7 +11,8 @@
     "format": "prettier --write \"**/*.{js,ts,vue,scss,html,md,json}\" --ignore-path .gitignore",
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev -m ssr",
-    "build": "quasar build",
+    "build": "quasar build -m ssr",
+    "gcp-build": "quasar build -m ssr && cd dist/ssr && yarn install",
     "postinstall": "quasar prepare"
   },
   "dependencies": {
@@ -48,7 +49,6 @@
   },
   "engines": {
     "node": "^24 || ^22 || ^20 || ^18",
-    "npm": ">= 6.13.4",
-    "yarn": ">= 1.21.1"
+    "npm": ">= 6.13.4"
   }
 }
