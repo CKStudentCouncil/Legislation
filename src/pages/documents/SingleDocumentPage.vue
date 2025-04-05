@@ -31,15 +31,18 @@
 
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
-import { useSpecificDocument } from 'src/ts/models.ts';
 import { useVueToPrint } from 'vue-to-print';
-import { ref } from 'vue';
+import { onMounted, onServerPrefetch, ref } from 'vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import DocumentSeparator from 'components/DocumentSeparator.vue';
+import { useDocumentStore } from 'stores/document.ts';
+import { useMeta } from 'quasar';
+import { DocumentType } from 'src/ts/models.ts';
+import { convertToChineseDay } from 'app/functions/src/utils.ts';
 
 const route = useRoute();
-const doc = useSpecificDocument(route.params.id as string);
+const doc = ref();
 const content = ref();
 const size = ref(100); // %
 const embed = ref(true);
@@ -62,6 +65,56 @@ const { handlePrint } = useVueToPrint({
       embed.value = true;
     }, 300);
   },
+});
+
+onMounted(() => {
+  // In window switches do not trigger SSR
+  useDocumentStore()
+    .loadDocument(route.params.id as string)
+    .then((d) => (doc.value = d))
+    .catch((e) => console.error(e));
+});
+
+defineOptions({
+  async preFetch({ store, currentRoute }) {
+    await useDocumentStore(store).loadDocument(currentRoute.params.id as string);
+  },
+});
+
+onServerPrefetch(async () => {
+  doc.value = await useDocumentStore().loadDocument(route.params.id as string);
+});
+
+useMeta(() => {
+  const store = useDocumentStore();
+  const d = store.getDocument(route.params.id as string);
+  let description = '';
+  switch (d?.type.firebase) {
+    case DocumentType.MeetingNotice.firebase: {
+      const t = d.meetingTime;
+      description = `開會時間：${t?.getFullYear()}/${(t?.getMonth() ?? 0) + 1}/${t?.getDate()} (${convertToChineseDay(t?.getDay() ?? 0)}) ${t?.getHours()}:${t?.getMinutes()}
+開會地點：${d?.location}
+公文字號：${d?.idPrefix}第${d?.idNumber}號`;
+      break;
+    }
+  }
+  return {
+    title: d?.subject,
+    meta: {
+      description: {
+        name: 'description',
+        content: description,
+      },
+      'og:title': {
+        name: 'og:title',
+        content: d?.subject,
+      },
+      'og:description': {
+        name: 'og:description',
+        content: description,
+      },
+    },
+  };
 });
 
 function share() {
