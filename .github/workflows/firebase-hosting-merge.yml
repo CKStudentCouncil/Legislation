@@ -27,9 +27,6 @@ jobs:
           cache: 'npm'
       - run: yarn install --frozen-lockfile
       - run: yarn spa-build
-      - run: yarn gcp-build
-      - run: mv dist/ssr/client/assets/* dist/spa/assets/
-      - run: mv dist/ssr/server/assets/* dist/spa/assets/
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}

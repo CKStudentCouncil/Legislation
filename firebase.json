@@ -26,6 +26,13 @@
         }
       },
       {
+        "source": "/ssr-assets/**",
+        "run": {
+          "serviceId": "cksc-legislation",
+          "region": "asia-east1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
