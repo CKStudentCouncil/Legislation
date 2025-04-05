@@ -15,6 +15,7 @@
       <div>會議名稱：{{ doc.subject }}</div>
       <div v-if="doc.meetingTime">會議時間：{{ doc.meetingTime.toLocaleString() }}</div>
       <div v-if="doc.location">會議地點：{{ doc.location }}</div>
+      <div v-if="doc.fromName">會議主席：{{ doc.fromSpecific.translation }} {{ doc.fromName }}</div>
     </div>
     <div v-html="customSanitize(doc.content)"></div>
   </div>

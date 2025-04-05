@@ -92,9 +92,10 @@ useMeta(() => {
   switch (d?.type.firebase) {
     case DocumentType.MeetingNotice.firebase: {
       const t = d.meetingTime;
-      description = `開會時間：${t?.getFullYear()}/${(t?.getMonth() ?? 0) + 1}/${t?.getDate()} (${convertToChineseDay(t?.getDay() ?? 0)}) ${t?.getHours()}:${t?.getMinutes()}
-開會地點：${d?.location}
-公文字號：${d?.idPrefix}第${d?.idNumber}號`;
+      description = `會議時間：${t?.getFullYear()}/${(t?.getMonth() ?? 0) + 1}/${t?.getDate()} (${convertToChineseDay(t?.getDay() ?? 0)}) ${t?.getHours()}:${t?.getMinutes()}
+會議地點：${d?.location}
+公文字號：${d?.idPrefix}第${d?.idNumber}號
+${d?.fromName ? `會議主席：${d.fromSpecific.translation} ${d.fromName}` : ''}`;
       break;
     }
   }

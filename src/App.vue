@@ -18,7 +18,8 @@ if (LocalStorage.has('dark')) {
   Dark.set('auto');
 }
 useMeta({
-  title: '建國中學班聯會法律與公文系統',
+  title: 'null',
+  titleTemplate: (title) => `${title !== 'null' ? title + ' - ' : ''}建國中學班聯會法律與公文系統`,
   meta: {
     description: {
       name: 'description',

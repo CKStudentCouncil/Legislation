@@ -15,9 +15,9 @@
           :options="Object.values(DocumentSpecificIdentity.VALUES)"
         />
         <q-input
-          v-if="isOrder || isAnnouncement || isMeetingRecord"
+          v-if="isOrder || isAnnouncement || isMeetingRecord || isMeetingNotice"
           v-model="parentValue.fromName"
-          :label="isMeetingRecord ? '會議主席姓名' : '發文者姓名'"
+          :label="isMeetingRecord || isMeetingNotice ? '會議主席姓名' : '發文者姓名'"
         />
         <div v-if="isMeetingRecord">
           <q-select
