@@ -6,7 +6,7 @@ import sanitize from 'sanitize-html';
 import { event } from 'vue-gtag';
 
 export function copyLink(href?: string) {
-  void copyText(window.location.href.split('#')[0] + (href ? '#' + href : ''));
+  void copyText(location.protocol + '//' + location.host + location.pathname + (href ? '?c=' + href : ''));
 }
 
 export function copyLawLink(id: string) {

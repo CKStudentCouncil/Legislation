@@ -29,7 +29,7 @@
         v-for="content of legislation.content"
         :id="content.index.toString()"
         :key="content.title"
-        :class="content.index.toString() === route.hash.substring(1) ? (Dark.isActive ? 'bg-teal-10' : 'bg-yellow-3') : ''"
+        :class="content.index.toString() === hash ? (Dark.isActive ? 'bg-teal-10' : 'bg-yellow-3') : ''"
         :content="content"
         :expanded="expanded[content.index]"
         :printing="printing"
@@ -64,7 +64,10 @@ const content = ref();
 const printing = ref(false);
 const expanded = reactive({} as Record<number, boolean>);
 const route = useRoute();
-
+const hash = ref(route.hash?.substring(1)); // Old URLs uses hash
+if (!hash.value || hash.value.length === 0) {
+  hash.value = route.query.c as string;
+}
 onMounted(() => {
   // In window switches do not trigger SSR
   useLegislationStore()
@@ -84,10 +87,10 @@ onMounted(() => {
   });
 });
 watch(legislation, () => {
-  if (route.hash) {
+  if (hash.value) {
     // wait for the content to load
     setTimeout(() => {
-      const el = document.getElementById(route.hash.substring(1));
+      const el = document.getElementById(hash.value);
       if (el) {
         window.scrollTo({
           top: el.offsetTop - 100,
@@ -143,10 +146,9 @@ onServerPrefetch(async () => {
 useMeta(() => {
   const store = useLegislationStore();
   const l = store.getLegislation(route.params.id as string);
-  let hash = parseInt(route.hash?.substring(1));
-  hash = hash ? hash : 0;
   let description = '' as string | null | undefined;
-  const content = l?.content.find((c) => c.index === hash);
+  const intHash = parseInt(hash.value ?? '0');
+  const content = l?.content.find((c) => c.index === intHash);
   if (content) {
     description = content.title;
     switch (content.type.firebase) {
