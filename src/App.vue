@@ -27,6 +27,18 @@ useMeta({
     ogImage: {
       name: 'og:image',
       content: 'https://raw.githubusercontent.com/CKStudentCouncil/Legislation/refs/heads/main/mail/images/_1.png',
+    },
+    ogImageWidth: {
+      name: 'og:image:width',
+      content: '1920',
+    },
+    ogImageHeight: {
+      name: 'og:image:height',
+      content: '640',
+    },
+    twitterImage: {
+      name: 'twitter:image',
+      content: 'https://raw.githubusercontent.com/CKStudentCouncil/Legislation/refs/heads/main/mail/images/_1.png',
     }
   },
 });
