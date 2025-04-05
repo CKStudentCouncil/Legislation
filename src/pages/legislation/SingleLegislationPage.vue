@@ -143,12 +143,31 @@ onServerPrefetch(async () => {
 useMeta(() => {
   const store = useLegislationStore();
   const l = store.getLegislation(route.params.id as string);
+  let hash = parseInt(route.hash?.substring(1));
+  hash = hash ? hash : 0;
+  let description = '' as string | null | undefined;
+  const content = l?.content.find((c) => c.index === hash);
+  if (content) {
+    description = content.title;
+    switch (content.type.firebase) {
+      case ContentType.Volume.firebase:
+      case ContentType.Chapter.firebase:
+      case ContentType.Section.firebase:
+      case ContentType.Subsection.firebase:
+        description += ' ' + content.subtitle + ' \n' + content.content;
+        break;
+      case ContentType.SpecialClause.firebase:
+      case ContentType.Clause.firebase:
+        description += (content.subtitle?.length > 0 ? ' 【' + content.subtitle + '】 \n' : ' \n') + content.content;
+        break;
+    }
+  }
   return {
     title: l?.name,
     meta: {
       description: {
         name: 'description',
-        content: l?.preface,
+        content: description,
       },
       'og:title': {
         name: 'og:title',
@@ -156,9 +175,8 @@ useMeta(() => {
       },
       'og:description': {
         name: 'og:description',
-        content: l?.preface,
+        content: description,
       },
-      // 'og:image': l?.image,
     },
   };
 });

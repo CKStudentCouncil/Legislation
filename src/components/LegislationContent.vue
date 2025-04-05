@@ -63,6 +63,7 @@
         {{ $props.content.title }} {{ $props.content.subtitle }}
         <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
       </div>
+      <div v-if="$props.content.content?.length ?? 0 > 0" class="text-h6 text-bold">{{ $props.content.content }}</div>
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Chapter.firebase">
       <div class="text-h5 text-bold" style="line-height: 65px">
