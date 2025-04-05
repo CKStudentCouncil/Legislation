@@ -1,6 +1,6 @@
 <template>
   <q-no-ssr>
-    <q-header class="bg-primary text-white" elevated height-hint="98">
+    <q-header class="bg-primary text-white no-print" elevated height-hint="98">
       <q-toolbar>
         <q-btn dense flat icon="menu" round @click="toggleLeftDrawer" />
 
