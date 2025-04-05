@@ -12,6 +12,7 @@
     "test": "echo \"No test specified\" && exit 0",
     "dev": "quasar dev -m ssr",
     "build": "quasar build -m ssr",
+    "spa-build": "quasar build",
     "gcp-build": "quasar build -m ssr && cd dist/ssr && yarn install",
     "postinstall": "quasar prepare"
   },

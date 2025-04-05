@@ -26,7 +26,7 @@ jobs:
           node-version: '22.x'
           cache: 'npm'
       - run: yarn install --frozen-lockfile
-      - run: yarn build
+      - run: yarn spa-build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
