@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.22.0",
-    "@quasar/app-vite": "^2.1.0",
+    "@quasar/app-vite": "^2.2.0",
     "@types/node": "^22.13.11",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.0",
