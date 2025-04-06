@@ -91,8 +91,9 @@ useMeta(() => {
   let description = '';
   switch (d?.type.firebase) {
     case DocumentType.MeetingNotice.firebase: {
-      const t = d.meetingTime;
+      let t = d.meetingTime;
       if (t) {
+        t = new Date(t);
         description = `會議時間：${t.getFullYear()}/${(t.getMonth()) + 1}/${t.getDate()} (${convertToChineseDay(t.getDay())}) ${t.getHours()}:${t.getMinutes()}
 會議地點：${d?.location}
 公文字號：${d?.idPrefix}第${d?.idNumber}號
