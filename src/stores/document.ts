@@ -12,8 +12,8 @@ export const useDocumentStore = defineStore('myStore', {
       return (document: string): models.Document | null => {
         if (state.document[document]) {
           state.document[document].createdAt = new Date(state.document[document].createdAt);
-          state.document[document].publishedAt = state.document[document].publishedAt ? new Date() : null;
-          state.document[document].meetingTime = state.document[document].meetingTime ? new Date() : null;
+          state.document[document].publishedAt = state.document[document].publishedAt ? new Date(state.document[document].publishedAt) : null;
+          state.document[document].meetingTime = state.document[document].meetingTime ? new Date(state.document[document].meetingTime) : null;
           return state.document[document];
         }
         return null;

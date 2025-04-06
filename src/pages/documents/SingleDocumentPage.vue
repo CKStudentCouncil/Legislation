@@ -94,6 +94,8 @@ useMeta(() => {
       let t = d.meetingTime;
       if (t) {
         t = new Date(t);
+        t.setHours(t.getHours() + t.getTimezoneOffset() / 60); // Reset to UTC
+        t.setHours(t.getHours() + 8); // Set to GMT+8
         description = `會議時間：${t.getFullYear()}/${(t.getMonth()) + 1}/${t.getDate()} (${convertToChineseDay(t.getDay())}) ${t.getHours()}:${t.getMinutes()}
 會議地點：${d?.location}
 公文字號：${d?.idPrefix}第${d?.idNumber}號
