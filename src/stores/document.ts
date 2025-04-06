@@ -10,13 +10,19 @@ export const useDocumentStore = defineStore('myStore', {
   getters: {
     getDocument: (state) => {
       return (document: string): models.Document | null => {
-        return state.document[document] || null;
+        if (state.document[document]) {
+          state.document[document].createdAt = new Date(state.document[document].createdAt);
+          state.document[document].publishedAt = state.document[document].publishedAt ? new Date() : null;
+          state.document[document].meetingTime = state.document[document].meetingTime ? new Date() : null;
+          return state.document[document];
+        }
+        return null;
       };
     },
   },
   actions: {
     async loadDocument(document: string): Promise<models.Document | null> {
-      if (this.document[document]) return this.document[document];
+      if (this.document[document]) return this.getDocument(document);
       const docu = await getDoc(doc(documentsCollection(), document));
       if (docu.exists()) {
         this.document[document] = docu.data() as models.Document;

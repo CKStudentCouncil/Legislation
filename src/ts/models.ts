@@ -35,7 +35,7 @@ export interface Document {
   read: string[];
   published: boolean;
   publishedAt?: Date | null;
-  meetingTime?: Date;
+  meetingTime?: Date | null;
 }
 
 export interface MailingList {

@@ -121,8 +121,8 @@ const isMeetingRecord = computed(() => parentValue.value.type.firebase == Docume
 const isOrder = computed(() => parentValue.value.type.firebase == DocumentType.Order.firebase);
 const isAnnouncement = computed(() => parentValue.value.type.firebase == DocumentType.Announcement.firebase);
 //TODO: fix/why doesn't the date selector update while the data does?
-const meetingDate = computed(() => date.formatDate(parentValue.value.meetingTime, 'YYYY-MM-DD'));
-const meetingTime = computed(() => date.formatDate(parentValue.value.meetingTime, 'HH:mm'));
+const meetingDate = computed(() => date.formatDate(parentValue.value.meetingTime ?? new Date(), 'YYYY-MM-DD'));
+const meetingTime = computed(() => date.formatDate(parentValue.value.meetingTime ?? new Date(), 'HH:mm'));
 
 function updateMeetingDate(dt: string) {
   const d = dt.split('-');
