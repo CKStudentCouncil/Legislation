@@ -1,5 +1,5 @@
 <template>
-  <div :style="$q.dark.isActive ? 'background-color: rgb(18, 18, 18);color: white' : ''">
+  <div :class="$q.dark.isActive ? 'dark' : 'auto-dark'">
     <router-view />
   </div>
 </template>
@@ -57,3 +57,17 @@ useMeta({
   },
 });
 </script>
+
+<style lang="scss">
+@media (prefers-color-scheme: dark) {
+  .auto-dark {
+    background-color: #181818;
+    color: #ffffff;
+  }
+}
+
+.dark {
+  background-color: #181818;
+  color: #ffffff;
+}
+</style>
