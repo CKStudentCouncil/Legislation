@@ -1,9 +1,12 @@
 <template>
-  <router-view />
+  <div :style="$q.dark.isActive ? 'background-color: rgb(18, 18, 18);color: white' : ''">
+    <router-view />
+  </div>
 </template>
 
 <script lang="ts" setup>
-import { Dark, LocalStorage, useMeta } from 'quasar';
+import { Dark, LocalStorage, useMeta, useQuasar } from 'quasar';
+import { useSSRContext } from 'vue';
 
 defineOptions({
   name: 'App',
@@ -16,6 +19,16 @@ if (LocalStorage.has('dark')) {
   }
 } else {
   Dark.set('auto');
+}
+if (process.env.SERVER) {
+  const ssrContext = useSSRContext();
+  const $q = useQuasar();
+  if (ssrContext?.req.headers['sec-ch-prefers-color-scheme'] === 'dark') {
+    $q.dark.set(true);
+    console.log($q.dark);
+  } else if (ssrContext?.req.headers['sec-ch-prefers-color-scheme'] === 'light') {
+    $q.dark.set(false);
+  }
 }
 useMeta({
   title: 'null',
@@ -40,7 +53,7 @@ useMeta({
     twitterImage: {
       name: 'twitter:image',
       content: 'https://raw.githubusercontent.com/CKStudentCouncil/Legislation/refs/heads/main/mail/images/_1.png',
-    }
+    },
   },
 });
 </script>

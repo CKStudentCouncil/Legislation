@@ -11,6 +11,9 @@ export default defineSsrMiddleware(({ app, resolve, render, serve }) => {
   // over to Vue and Vue Router to render our page
   app.get(resolve.urlPath('/legislation/*'), (req: Request, res: Response) => {
     res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Accept-CH', 'Sec-CH-Prefers-Color-Scheme');
+    res.setHeader('Vary', 'Sec-CH-Prefers-Color-Scheme');
+    res.setHeader('Critical-CH', 'Sec-CH-Prefers-Color-Scheme');
 
     render(/* the ssrContext: */ { req, res })
       .then((html) => {
