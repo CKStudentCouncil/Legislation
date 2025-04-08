@@ -4568,10 +4568,10 @@ vue-eslint-parser@^10.1.1:
     lodash "^4.17.21"
     semver "^7.6.3"
 
-vue-gtag@~3.0.0-beta.18:
-  version "3.0.0-beta.18"
-  resolved "https://registry.yarnpkg.com/vue-gtag/-/vue-gtag-3.0.0-beta.18.tgz#7637e494334ae2acadd8790639419c3842c17804"
-  integrity sha512-GHOn/UYRMx4qllUb/FDrFIEbcMBZiRSs7JrhNI9Gr6yAswC2qITk8am0KW9FlnWj72QVSqq2wVZQhDQNQtcZNw==
+vue-gtag@~3.3.0:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/vue-gtag/-/vue-gtag-3.3.0.tgz#caf08c0a51c3ae1488fa66e30c1b7246fd0479e2"
+  integrity sha512-UabyirzO6TUF6SgStwLOyou1iSSC1ZEIdm+7TODyGZbEtzEGRvSPT5KGWKoCyBrQZqjKI17rZNjsW3v8nExX7g==
 
 vue-instantsearch@^4.20.5:
   version "4.20.5"
