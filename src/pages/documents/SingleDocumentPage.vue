@@ -3,18 +3,20 @@
     <div v-if="!doc">載入中...(或查無此公文)</div>
     <div v-else ref="content" class="official-font-when-printing" style="max-width: 1170px">
       <div>
-        <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
-          <q-tooltip>列印</q-tooltip>
-        </q-btn>
-        <q-btn class="no-print" dense flat icon="share" size="20px" @click="share">
-          <q-tooltip>分享</q-tooltip>
-        </q-btn>
-        <q-btn class="no-print" dense flat icon="zoom_in" size="20px" @click="size += 10">
-          <q-tooltip>放大</q-tooltip>
-        </q-btn>
-        <q-btn class="no-print" dense flat icon="zoom_out" size="20px" @click="size -= 10">
-          <q-tooltip>縮小</q-tooltip>
-        </q-btn>
+        <q-no-ssr>
+          <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
+            <q-tooltip>列印</q-tooltip>
+          </q-btn>
+          <q-btn class="no-print" dense flat icon="share" size="20px" @click="share">
+            <q-tooltip>分享</q-tooltip>
+          </q-btn>
+          <q-btn class="no-print" dense flat icon="zoom_in" size="20px" @click="size += 10">
+            <q-tooltip>放大</q-tooltip>
+          </q-btn>
+          <q-btn class="no-print" dense flat icon="zoom_out" size="20px" @click="size -= 10">
+            <q-tooltip>縮小</q-tooltip>
+          </q-btn>
+        </q-no-ssr>
         <DocumentRenderer :doc="doc" :style="`zoom: ${size}%`" />
         <DocumentSeparator v-if="doc.attachments.length > 0" />
         <AttachmentDisplay

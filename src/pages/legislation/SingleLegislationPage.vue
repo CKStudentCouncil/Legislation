@@ -4,16 +4,18 @@
     <div v-if="legislation" ref="content" class="official-font-when-printing" style="max-width: 1170px">
       <div class="text-h4 flex-center q-pb-md text-center">
         {{ legislation.name }}
-        <q-btn class="no-print" dense flat icon="link" size="20px" @click="copyLink()" />
-        <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
-          <q-tooltip>列印</q-tooltip>
-        </q-btn>
-        <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat icon="unfold_less" size="20px" @click="collapseAll">
-          <q-tooltip>折疊所有條文</q-tooltip>
-        </q-btn>
-        <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat icon="unfold_more" size="20px" @click="expandAll">
-          <q-tooltip>展開所有條文</q-tooltip>
-        </q-btn>
+        <q-no-ssr>
+          <q-btn class="no-print" dense flat icon="link" size="20px" @click="copyLink()" />
+          <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
+            <q-tooltip>列印</q-tooltip>
+          </q-btn>
+          <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat icon="unfold_less" size="20px" @click="collapseAll">
+            <q-tooltip>折疊所有條文</q-tooltip>
+          </q-btn>
+          <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat icon="unfold_more" size="20px" @click="expandAll">
+            <q-tooltip>展開所有條文</q-tooltip>
+          </q-btn>
+        </q-no-ssr>
       </div>
       <div v-if="legislation.preface" class="text-h6 text-bold">{{ legislation.preface }}</div>
       <div v-if="legislation.history.length > 0">
