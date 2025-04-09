@@ -1,7 +1,7 @@
 <template>
   <q-page class="row items-center justify-evenly" padding>
     <div v-if="!docu">載入中...(或查無此公文)</div>
-    <div v-else style="max-width: 1170px">
+    <div v-else style="max-width: min(1170px, 97vw)">
       <div class="q-gutter-md q-mb-md">
         <q-btn color="positive" icon="edit" label="編輯資訊" @click="edit" />
         <q-btn color="primary" icon="edit" label="編輯內文" @click="editContent" />
@@ -132,7 +132,7 @@ import { useRoute, useRouter } from 'vue-router';
 import type { Attachment} from 'src/ts/models.ts';
 import { documentsCollection } from 'src/ts/models.ts';
 import { arrayRemove, arrayUnion, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { date, Loading } from 'quasar';
+import { date, Loading, useQuasar } from 'quasar';
 import ProEditor from 'components/ProEditor.vue';
 import { computed, reactive, ref } from 'vue';
 import DocumentDialog from 'components/DocumentDialog.vue';
@@ -158,7 +158,7 @@ const action = ref<'edit' | null>(null);
 const attachmentAction = ref<'add' | 'edit' | null>(null);
 const attachmentUploading = computed(() => attachmentAction.value !== null);
 const attachment = reactive({} as { description: string; urls: string[]; index: number });
-const attachmentDraggable = ref(true);
+const attachmentDraggable = ref(!useQuasar().platform.is.mobile);
 const attachmentUploader = ref<InstanceType<typeof AttachmentUploader> | null>(null);
 const editingPublishedAt = ref(false);
 const publishedDate = ref('');

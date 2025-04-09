@@ -1,7 +1,7 @@
 <template>
   <q-page class="row items-center justify-evenly" padding>
     <div v-if="!doc">載入中...(或查無此公文)</div>
-    <div v-else ref="content" class="official-font-when-printing" style="max-width: 1170px">
+    <div v-else ref="content" class="official-font-when-printing" style="max-width: min(1170px, 97vw)">
       <div>
         <q-no-ssr>
           <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">

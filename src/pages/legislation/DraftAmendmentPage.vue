@@ -1,7 +1,7 @@
 <template>
   <q-page class="row items-center justify-evenly" padding>
     <div v-if="!legislation">查無此法 (或載入中)</div>
-    <div v-if="legislation" ref="content" class="official-font-when-printing" style="max-width: 1170px">
+    <div v-if="legislation" ref="content" class="official-font-when-printing" style="max-width: min(1170px, 97vw)">
       <div class="text-h4 flex-center q-pb-md text-center">
         {{ legislation.name }}
         <q-btn class="no-print" dense flat icon="link" size="20px" @click="copyLink()" />

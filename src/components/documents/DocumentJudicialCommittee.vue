@@ -1,6 +1,6 @@
 <template>
   <div v-if="!doc">載入中...(或查無此公文)</div>
-  <div v-else style="max-width: 1170px">
+  <div v-else>
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">
       <div>臺北市立建國中學班聯會</div>
       <div v-if="doc.type.firebase==DocumentType.JudicialCommitteeDecision.firebase">評議委員會 決議文</div>

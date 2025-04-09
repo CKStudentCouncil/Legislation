@@ -3,13 +3,28 @@
     <p class="text-h6 text-bold">附件{{ translateNumberToChinese(props.order) }}</p>
     <p>{{ props.attachment.description }}</p>
     <div v-for="url of props.attachment.urls" :key="url">
-      <iframe class="no-print" v-if="!(noEmbed)&&getGoogleFileEmbed(url)" :src="getGoogleFileEmbed(url)" width="100%" height="600" allow="autoplay"></iframe>
-      <a v-else :href="url" target="_blank">{{ url }}</a>
+      <iframe
+        v-if="!noEmbed && getGoogleFileEmbed(url)"
+        :src="getGoogleFileEmbed(url)"
+        allow="autoplay"
+        class="no-print"
+        height="600"
+        width="100%"
+      ></iframe>
+      <div v-else>
+        <a
+          v-if="url.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&\/=]*)/)"
+          :href="url"
+          target="_blank"
+          style="word-wrap: break-word;"
+          >{{ url }}</a>
+        <p v-else>{{ url }}</p>
+      </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import type { Attachment } from 'src/ts/models.ts';
 import { translateNumberToChinese } from '../ts/utils.ts';
 
@@ -22,11 +37,11 @@ const props = defineProps<{
 function getGoogleFileEmbed(input: string) {
   let file_id = null;
   const driveCapture = input.match(/https:\/\/drive\.google\.com\/file\/d\/(.*)\/view.*/);
-  if (driveCapture&&driveCapture.length>1) {
+  if (driveCapture && driveCapture.length > 1) {
     file_id = driveCapture[1];
   }
   const documentCapture = input.match(/https:\/\/docs\.google\.com\/(document|spreadsheets|presentation)\/d\/(.*)\/edit.*/);
-  if (documentCapture&&documentCapture.length>2) {
+  if (documentCapture && documentCapture.length > 2) {
     file_id = documentCapture[2];
   }
   if (file_id) {
@@ -35,6 +50,4 @@ function getGoogleFileEmbed(input: string) {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

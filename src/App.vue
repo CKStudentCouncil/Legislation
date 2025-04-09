@@ -1,21 +1,23 @@
 <template>
-  <div :class="$q.dark.isActive ? 'dark' : 'auto-dark'">
+  <div :class="$q.dark.isActive ? 'auto-dark' : ''" id="mainframe">
     <router-view />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { Dark, LocalStorage, useMeta, useQuasar } from 'quasar';
-import { useSSRContext } from 'vue';
+import { ref, useSSRContext } from 'vue';
 
 defineOptions({
   name: 'App',
 });
+const mainframe = ref();
 if (LocalStorage.has('dark')) {
   if (LocalStorage.getItem<boolean>('dark')) {
     Dark.set(true);
   } else {
     Dark.set(false);
+    document.querySelector('#mainframe')?.classList.remove('auto-dark');
   }
 } else {
   Dark.set('auto');
@@ -25,7 +27,6 @@ if (process.env.SERVER) {
   const $q = useQuasar();
   if (ssrContext?.req.headers['sec-ch-prefers-color-scheme'] === 'dark') {
     $q.dark.set(true);
-    console.log($q.dark);
   } else if (ssrContext?.req.headers['sec-ch-prefers-color-scheme'] === 'light') {
     $q.dark.set(false);
   }
@@ -57,17 +58,3 @@ useMeta({
   },
 });
 </script>
-
-<style lang="scss">
-@media (prefers-color-scheme: dark) {
-  .auto-dark {
-    background-color: #181818;
-    color: #ffffff;
-  }
-}
-
-.dark {
-  background-color: #181818;
-  color: #ffffff;
-}
-</style>
