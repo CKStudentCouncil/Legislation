@@ -195,6 +195,7 @@ export class DocumentSpecificIdentity {
   static ConstitutionalCourt = new DocumentSpecificIdentity('ConstitutionalCourt', '憲章法庭', '憲', '05', DocumentGeneralIdentity.JudicialCommittee);
   static SupremeCourt = new DocumentSpecificIdentity('SupremeCourt', '大法庭', '大', '06', DocumentGeneralIdentity.JudicialCommittee);
   static Other = new DocumentSpecificIdentity('Other', '其他', '', '99', DocumentGeneralIdentity.StudentCouncil);
+  static ConstitutionalCensorCourt = new DocumentSpecificIdentity('ConstitutionalCensorCourt', '審查庭', '審', '07', DocumentGeneralIdentity.JudicialCommittee);
   static VALUES = {
     Chairman: DocumentSpecificIdentity.Chairman,
     ViceChairman: DocumentSpecificIdentity.ViceChairman,
@@ -223,6 +224,7 @@ export class DocumentSpecificIdentity {
     GeneralCourt: DocumentSpecificIdentity.GeneralCourt,
     ConstitutionalCourt: DocumentSpecificIdentity.ConstitutionalCourt,
     SupremeCourt: DocumentSpecificIdentity.SupremeCourt,
+    ConstitutionalCensorCourt: DocumentSpecificIdentity.ConstitutionalCensorCourt,
     Other: DocumentSpecificIdentity.Other,
   } as Record<string, DocumentSpecificIdentity>;
 
