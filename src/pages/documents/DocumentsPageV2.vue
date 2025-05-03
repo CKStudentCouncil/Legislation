@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <div :class="$q.screen.gt.xs ? 'row' : ''">
+    <q-no-ssr :class="$q.screen.gt.xs ? 'row' : ''">
       <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" class="col q-pr-sm" clearable debounce="500" />
       <q-select
         v-model="fromGeneric"
@@ -45,7 +45,7 @@
         label="公文類型"
       />
       <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" />
-    </div>
+    </q-no-ssr>
     <q-infinite-scroll ref="scroll" :class="$q.screen.gt.sm ? 'row' : ''" @load="loadMore">
       <div v-for="doc of allDocs" :key="doc!.idPrefix + doc!.idNumber" :class="'q-mb-md ' + ($q.screen.gt.sm ? 'q-pr-md col-6' : '')">
         <q-card :class="doc.published ? '' : 'bg-highlight'">
@@ -170,8 +170,10 @@ const updateTotal = async () => {
     lastPublished.value = false;
     Object.keys(allDocs).forEach((k) => delete allDocs[k]);
     totalDocs.value = (await getCountFromServer(q.value)).data().count;
-    scroll.value.updateScrollTarget();
-    scroll.value.resume();
+    if (!process.env.SERVER) {
+      scroll.value.updateScrollTarget();
+      scroll.value.resume();
+    }
   } catch (e) {
     notifyError('無法以此條件搜尋公文', e);
   }

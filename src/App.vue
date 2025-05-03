@@ -1,27 +1,16 @@
 <template>
-  <div :class="$q.dark.isActive ? 'auto-dark' : ''" id="mainframe">
+  <div id="mainframe" :class="$q.dark.isActive ? 'auto-dark' : ''">
     <router-view />
   </div>
 </template>
 
 <script lang="ts" setup>
 import { Dark, LocalStorage, useMeta, useQuasar } from 'quasar';
-import { ref, useSSRContext } from 'vue';
+import { onMounted, useSSRContext } from 'vue';
 
 defineOptions({
   name: 'App',
 });
-const mainframe = ref();
-if (LocalStorage.has('dark')) {
-  if (LocalStorage.getItem<boolean>('dark')) {
-    Dark.set(true);
-  } else {
-    Dark.set(false);
-    document.querySelector('#mainframe')?.classList.remove('auto-dark');
-  }
-} else {
-  Dark.set('auto');
-}
 if (process.env.SERVER) {
   const ssrContext = useSSRContext();
   const $q = useQuasar();
@@ -31,6 +20,18 @@ if (process.env.SERVER) {
     $q.dark.set(false);
   }
 }
+onMounted(() => {
+  if (LocalStorage.has('dark')) {
+    if (LocalStorage.getItem<boolean>('dark')) {
+      Dark.set(true);
+    } else {
+      Dark.set(false);
+      document.querySelector('#mainframe')?.classList.remove('auto-dark');
+    }
+  } else {
+    Dark.set('auto');
+  }
+});
 useMeta({
   title: 'null',
   titleTemplate: (title) => `${title !== 'null' ? title + ' - ' : ''}建國中學班聯會法律與公文系統`,

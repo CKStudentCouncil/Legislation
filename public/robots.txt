@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Allow: /legislation
+Allow: /document
+Disallow: /manage

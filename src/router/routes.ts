@@ -3,16 +3,12 @@ import type { RouteRecordRaw } from 'vue-router';
 const routes: RouteRecordRaw[] = [
   {
     path: '/legislation',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('layouts/SSRLayout.vue'),
     children: [
       { path: '', component: () => import('pages/legislation/LegislationPage.vue') },
+      { path: ':id', component: () => import('pages/legislation/SingleLegislationPage.vue') },
       { path: ':id/draft_amendment', component: () => import('pages/legislation/DraftAmendmentPage.vue') },
     ],
-  },
-  {
-    path: '/legislation/:id',
-    component: () => import('layouts/SSRLayout.vue'),
-    children: [{ path: '', component: () => import('pages/legislation/SingleLegislationPage.vue') }],
   },
   {
     path: '/manage',
@@ -44,24 +40,20 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/document',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('layouts/SSRLayout.vue'),
     children: [
       { path: '', component: () => import('pages/documents/DocumentsPageV2.vue') },
+      { path: '', component: () => import('pages/documents/SingleDocumentPage.vue') },
     ],
   },
   {
-    path: '/document/:id',
-    component: () => import('layouts/SSRLayout.vue'),
-    children: [{ path: '', component: () => import('pages/documents/SingleDocumentPage.vue') }],
-  },
-  {
     path: '/about',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('layouts/SSRLayout.vue'),
     children: [{ path: '', component: () => import('pages/AboutPage.vue') }],
   },
   {
     path: '/',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('layouts/SSRLayout.vue'),
     children: [{ path: '', component: () => import('pages/legislation/LegislationPage.vue') }],
   },
 
