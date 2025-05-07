@@ -14,7 +14,7 @@
       <q-btn color="positive" flat icon="add" label="新增立法沿革" @click="addHistory"></q-btn>
       <div v-for="history of legislation.history.sort((a, b) => a.amendedAt.valueOf() - b.amendedAt.valueOf())" :key="history.amendedAt.valueOf()">
         {{ history.amendedAt.toLocaleDateString() + ' ' + history.brief }}
-        <q-btn v-if="history.link" dense flat icon="open_in_new" size="10px">
+        <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px">
           <q-tooltip>檢視發布公文</q-tooltip>
         </q-btn>
         <q-btn dense flat icon="edit" size="10px" @click="editHistory(history)" />
