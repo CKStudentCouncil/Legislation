@@ -35,6 +35,8 @@ jobs:
       - run: yarn install --frozen-lockfile
       - run: yarn spa-build
       - run: yarn gcp-build
+      - run: mkdir dist/spa/ssr-assets
+      - run: mv ./dist/ssr/client/ssr-assets/* ./dist/spa/ssr-assets
 
       - name: Firebase Hosting Deploy
         uses: FirebaseExtended/action-hosting-deploy@v0
