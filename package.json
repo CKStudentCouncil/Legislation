@@ -20,7 +20,7 @@
     "@quasar/extras": "^1.16.17",
     "@types/sanitize-html": "^2.13.0",
     "algoliasearch": "^5.24.0",
-    "firebase": "^11.5.0",
+    "firebase": "^11.7.1",
     "instantsearch.css": "^8.5.1",
     "pinia": "^3.0.2",
     "quasar": "^2.18.1",
