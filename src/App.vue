@@ -38,7 +38,7 @@ useMeta({
   meta: {
     description: {
       name: 'description',
-      content: 'A platform for organizing and displaying laws, orders and documents of the student council of CKHS',
+      content: '建國中學班聯會內憲章、法律、命令、公文之中央儲存資料庫',
     },
     ogImage: {
       name: 'og:image',

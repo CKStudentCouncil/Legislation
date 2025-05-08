@@ -1,7 +1,7 @@
 {
   "name": "cksc-legislation",
   "version": "0.0.1",
-  "description": "A platform for organizing and displaying laws, orders and documents of the student council of CKHS",
+  "description": "建國中學班聯會內憲章、法律、命令、公文之中央儲存資料庫",
   "productName": "CKSC Legislation",
   "author": "RobotHanzo <36107150+RobotHanzo@users.noreply.github.com>",
   "type": "module",
