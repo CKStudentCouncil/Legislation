@@ -2,16 +2,16 @@
   <q-dialog :model-value="action != null" persistent>
     <q-card>
       <q-card-section>
-        <h6 class="q-ma-none">{{ action == 'edit' ? '編輯' : '新建' }}法案</h6>
+        <h6 class="q-ma-none">{{ action == 'edit' ? '編輯' : '新建' }}法令</h6>
       </q-card-section>
       <q-card-section>
-        <q-input v-model="parentValue.name" label="法案名稱" />
+        <q-input v-model="parentValue.name" label="法令名稱" />
         <q-input v-model="parentValue.preface" label="序言" />
         <q-select
           v-model="parentValue.category"
           :option-label="(o) => o.translation"
           :options="Object.values(LegislationCategory.VALUES)"
-          label="法案類別"
+          label="法令類別"
         />
         <div class="q-pt-md q-pb-sm">立法日期：</div>
         <q-date v-model="parentValue.createdAt" mask="YYYY-MM-DD" />

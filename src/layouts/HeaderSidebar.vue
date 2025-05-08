@@ -85,9 +85,9 @@ onMounted(() => {
 });
 const leftDrawerOpen = ref(false);
 const endpoints = [
-  { name: '檢視法案', url: '/legislation', icon: 'description', requireAuth: false },
-  { name: '檢視公文', url: '/document', icon: 'badge', requireAuth: false },
-  { name: '編輯法案', url: '/manage/legislation', icon: 'edit', requireAuth: true },
+  { name: '檢視法令', url: '/legislation', icon: 'gavel', requireAuth: false },
+  { name: '檢視公文', url: '/document', icon: 'description', requireAuth: false },
+  { name: '編輯法令', url: '/manage/legislation', icon: 'edit', requireAuth: true },
   { name: '編輯公文', url: '/manage/document', icon: 'draw', requireAuth: true },
   { name: '管理帳號', url: '/manage/accounts', icon: 'badge', requireAuth: true, requireRole: DocumentSpecificIdentity.Chairman },
   { name: '關於', url: '/about', icon: 'info', requireAuth: false },

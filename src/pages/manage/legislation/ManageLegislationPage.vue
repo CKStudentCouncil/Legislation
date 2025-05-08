@@ -1,5 +1,5 @@
 <template>
-  <q-btn class="q-ma-md" color="positive" icon="add" label="新增法案" @click="add" />
+  <q-btn class="q-ma-md" color="positive" icon="add" label="新增法令" @click="add" />
   <LegislationPage manage />
   <LegislationDialog v-model="target" :action="action" @canceled="action = null" @submit="submit" />
 </template>
@@ -51,10 +51,10 @@ async function submit() {
       attachments: [] as string[],
     } as unknown as Legislation);
     action.value = null;
-    notifySuccess('新增法案成功');
+    notifySuccess('新增法令成功');
     await router.push(`/manage/legislation/${id}`);
   } catch (e) {
-    notifyError('新增法案失敗', e);
+    notifyError('新增法令失敗', e);
     return;
   } finally {
     Loading.hide();

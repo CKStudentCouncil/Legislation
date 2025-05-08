@@ -478,8 +478,8 @@ function removeAttachment(attachment: models.Attachment) {
 
 function remove() {
   Dialog.create({
-    title: '刪除法案',
-    message: '確定要刪除此法案嗎？',
+    title: '刪除法令',
+    message: '確定要刪除此法令嗎？',
     cancel: true,
     persistent: true,
   }).onOk(async () => {
@@ -493,7 +493,7 @@ function remove() {
       return;
     }
     Loading.hide();
-    notifySuccess('成功刪除法案');
+    notifySuccess('成功刪除法令');
   });
 }
 
