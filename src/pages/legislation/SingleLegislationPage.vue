@@ -20,12 +20,17 @@
       <div v-if="legislation.preface" class="text-h6 text-bold">{{ legislation.preface }}</div>
       <div v-if="legislation.history.length > 0">
         立法沿革
-        <div v-for="history of legislation.history" :key="history.amendedAt.valueOf()">
-          {{ new Date(history.amendedAt).toLocaleDateString() + ' ' + history.brief }}
-          <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px">
-            <q-tooltip>檢視發布公文</q-tooltip>
-          </q-btn>
-        </div>
+        <table>
+          <tr v-for="history of legislation.history" :key="history.amendedAt.valueOf()">
+            <th>{{ new Date(history.amendedAt).toLocaleDateString() }}</th>
+            <th>{{ history.brief }}</th>
+            <th>
+              <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px">
+                <q-tooltip>檢視發布公文</q-tooltip>
+              </q-btn>
+            </th>
+          </tr>
+        </table>
       </div>
       <LegislationContent
         v-for="content of legislation.content"
@@ -186,4 +191,10 @@ useMeta(() => {
 });
 </script>
 
-<style scoped></style>
+<style scoped>
+th {
+  font-weight: normal;
+  text-align: left;
+  vertical-align: top;
+}
+</style>
