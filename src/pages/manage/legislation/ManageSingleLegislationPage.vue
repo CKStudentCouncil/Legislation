@@ -136,7 +136,11 @@
       <q-card-section>
         <q-input v-model="targetAttachment.description" label="說明" type="textarea" />
         <ListEditor v-model="targetAttachment.urls" />
-        <AttachmentUploader ref="attachmentUploader" :filename-prefix="legislation?.name + '_附件_'" @uploaded="(s) => targetAttachment.urls.push(...s)" />
+        <AttachmentUploader
+          ref="attachmentUploader"
+          :filename-prefix="legislation?.name + '_附件_'"
+          @uploaded="(s) => targetAttachment.urls.push(...s)"
+        />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn v-close-popup color="negative" flat label="取消" @click="attachmentAction = null" />
@@ -149,21 +153,22 @@
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
+import type { LegislationCategory } from 'src/ts/models.ts';
 import * as models from 'src/ts/models.ts';
-import type { LegislationCategory} from 'src/ts/models.ts';
 import { ContentType, convertContentToFirebase, legislationDocument, useLegislation } from 'src/ts/models.ts';
 import LegislationContent from 'components/LegislationContent.vue';
 import { copyLink, notifyError, notifySuccess, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';
 import { date, Dialog, Loading } from 'quasar';
 import { arrayRemove, arrayUnion, deleteDoc, updateDoc } from 'firebase/firestore';
 import { VueDraggable } from 'vue-draggable-plus';
-import type { Ref} from 'vue';
+import type { Ref } from 'vue';
 import { reactive, ref } from 'vue';
 import ListEditor from 'components/ListEditor.vue';
 import LegislationAddendum from 'components/LegislationAddendum.vue';
 import LegislationDialog from 'components/LegislationDialog.vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import AttachmentUploader from 'components/AttachmentUploader.vue';
+
 interface EditingLegislationContent extends models.LegislationContent {
   insertBefore: boolean;
 }
@@ -303,7 +308,7 @@ async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallba
 }
 
 async function submitContent() {
-  targetContent.content = targetContent.content?.replaceAll(',', '，').replaceAll(';', '；').trim();
+  targetContent.content = targetContent.content?.replaceAll(',', '，').replaceAll(';', '；').replaceAll(':', '：').trim();
   targetContent.subtitle = targetContent.subtitle?.replaceAll('【', '').replaceAll('】', '');
   await submitProperty(
     contentAction,
@@ -379,13 +384,13 @@ async function submitHistory() {
     },
     async () => {
       legislation.value!.history[targetHistory.index] = mappedHistory;
-      await updateDoc(legislationDocument(route.params.id! as string), {
-        history: legislation.value!.history.map((h) => {
-          const copy = { ...h };
-          copy.content = copy.content?.map(convertContentToFirebase);
-          return copy;
-        }),
-      });
+      const newHistory = legislation.value!.history.map((h) => {
+        const copy = { ...h };
+        copy.content = copy.content?.map(convertContentToFirebase) ?? [];
+        return copy;
+      }).slice(0); // Copying the array prevents firebase changing it midway for some reason
+      console.log(newHistory);
+      await updateDoc(legislationDocument(route.params.id! as string), { history: newHistory });
     },
   );
 }
