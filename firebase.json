@@ -12,7 +12,28 @@
     ],
     "rewrites": [
       {
+        "source": "/",
+        "run": {
+          "serviceId": "cksc-legislation",
+          "region": "asia-east1"
+        }
+      },
+      {
+        "source": "/legislation",
+        "run": {
+          "serviceId": "cksc-legislation",
+          "region": "asia-east1"
+        }
+      },
+      {
         "source": "/legislation/**",
+        "run": {
+          "serviceId": "cksc-legislation",
+          "region": "asia-east1"
+        }
+      },
+      {
+        "source": "/document",
         "run": {
           "serviceId": "cksc-legislation",
           "region": "asia-east1"
