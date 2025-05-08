@@ -21,7 +21,7 @@ defineEmits({
   <div class="row">
     <div class="col">
       <p class="text-h6 text-bold">
-        {{ addendum.createdAt.toLocaleDateString() }} 通過附帶決議{{ translateNumberToChinese(addendum.content.length) }}項：
+        {{ new Date(addendum.createdAt).toLocaleDateString() }} 通過附帶決議{{ translateNumberToChinese(addendum.content.length) }}項：
       </p>
       <p v-for="[index, content] of addendum.content.entries()" :key="content">
         <span class="q-mr-sm text-secondary text-italic">{{ index + 1 }}</span>
