@@ -79,12 +79,20 @@ onMounted(() => {
 
 defineOptions({
   async preFetch({ store, currentRoute }) {
-    await useDocumentStore(store).loadDocument(currentRoute.params.id as string);
+    try {
+      await useDocumentStore(store).loadDocument(currentRoute.params.id as string);
+    } catch {
+      console.error(`Document loading failed (not found?): ${currentRoute.params.id as string}`)
+    }
   },
 });
 
 onServerPrefetch(async () => {
-  doc.value = await useDocumentStore().loadDocument(route.params.id as string);
+  try {
+    doc.value = await useDocumentStore().loadDocument(route.params.id as string);
+  } catch {
+    console.error(`Document loading failed (not found?): ${route.params.id as string}`)
+  }
 });
 
 useMeta(() => {
