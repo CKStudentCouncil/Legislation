@@ -330,8 +330,14 @@ export function usePublicDocuments() {
 }
 
 export function convertContentToFirebase(data: LegislationContent) {
-  data.type = data.type.firebase as any;
-  return data;
+  return {
+    content: data.content,
+    deleted: data.deleted,
+    subtitle: data.subtitle,
+    title: data.title,
+    type: data.type.firebase,
+    index: data.index,
+  } as any;
 }
 
 export const legislationConverter: FirestoreDataConverter<Legislation | null> = {

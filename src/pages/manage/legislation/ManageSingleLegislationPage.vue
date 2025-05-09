@@ -459,7 +459,7 @@ function removeProperty(property: string, object: object, translation: string) {
 function removeContent(content: models.LegislationContent) {
   const copy = { ...content };
   copy.type = content.type.firebase as any;
-  removeProperty('content', content, '內容');
+  removeProperty('content', copy, '內容');
 }
 
 function removeAddendum(addendum: models.Addendum) {
