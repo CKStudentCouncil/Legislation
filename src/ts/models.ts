@@ -11,6 +11,7 @@ export interface Legislation {
   history: History[];
   addendum?: Addendum[];
   attachments?: Attachment[];
+  frozenBy?: string;
 }
 
 export interface Document {
@@ -373,6 +374,7 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
       }),
       attachments: legislation.attachments,
     };
+    if (legislation.frozenBy) data.frozenBy = legislation.frozenBy; // To save storage space
     return firestoreDefaultConverter.toFirestore(data);
   },
   fromFirestore(snapshot: any): Legislation {

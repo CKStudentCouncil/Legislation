@@ -90,6 +90,7 @@
         <q-input v-model="targetContent.title" label="標題" />
         <q-input v-model="targetContent.subtitle" :disable="targetContent.deleted" label="副標題 (無須加入中括號)" />
         <q-input
+          autofocus
           v-if="targetContent.type.firebase != ContentType.Chapter.firebase"
           v-model="targetContent.content"
           :disable="targetContent.deleted"
@@ -103,7 +104,7 @@
           label="凍結或失效"
           @update:model-value="(v) => (v ? (targetContent.frozenBy = ' ') : (targetContent.frozenBy = undefined))"
         />
-        <q-input v-if="targetContent.frozenBy" ref="frozenByRef" v-model="targetContent.frozenBy" :rules="[isUrl]" label="凍結或失效之依據公文" />
+        <q-input v-if="targetContent.frozenBy" ref="contentFrozenByRef" v-model="targetContent.frozenBy" :rules="[isUrl]" label="凍結或失效之依據公文" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="contentAction = null" />
@@ -134,7 +135,7 @@
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="historyAction = null" />
-        <q-btn color="positive" flat label="確定" @click="submitHistory" />
+        <q-btn color="positive" flat label="確定" @click="submitHistory(false)" @click.ctrl.shift="submitHistory(true)" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -155,7 +156,7 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
-  <LegislationDialog v-model="target" :action="action" @canceled="action = null" @submit="submit" />
+  <LegislationDialog v-model="target" :action="action" @canceled="action = null" @submit="submit" ref="frozenByRef" />
 </template>
 
 <script lang="ts" setup>
@@ -197,7 +198,7 @@ const targetHistory = reactive(
   },
 );
 const targetAttachment = reactive({} as { description: string; urls: string[]; index: number });
-const target = reactive({} as { name: string; category: LegislationCategory; createdAt: string; preface?: string });
+const target = reactive({} as { name: string; category: LegislationCategory; createdAt: string; preface?: string; frozenBy?: string });
 const contentAction = ref<'edit' | 'add' | null>(null);
 const addendumAction = ref<'edit' | 'add' | null>(null);
 const historyAction = ref<'edit' | 'add' | null>(null);
@@ -206,6 +207,7 @@ const attachmentUploader = ref<InstanceType<typeof AttachmentUploader> | null>(n
 const action = ref<'edit' | null>(null);
 const draggable = reactive({ content: true, attachment: true });
 const historyLinkRef = ref();
+const contentFrozenByRef = ref();
 const frozenByRef = ref();
 
 function addContent(index?: number) {
@@ -282,6 +284,7 @@ function edit() {
   target.category = legislation.value!.category;
   target.createdAt = date.formatDate(legislation.value!.createdAt, 'YYYY-MM-DD');
   target.preface = legislation.value!.preface ?? '';
+  target.frozenBy = legislation.value!.frozenBy;
   action.value = 'edit';
 }
 
@@ -323,7 +326,7 @@ async function submitContent() {
   targetContent.frozenBy = targetContent.frozenBy?.trim();
   if (!targetContent.frozenBy) {
     targetContent.frozenBy = undefined;
-  } else if (frozenByRef.value?.validate() !== true) {
+  } else if (contentFrozenByRef.value?.validate() !== true) {
     return;
   }
   targetContent.content = targetContent.content?.replaceAll(',', '，').replaceAll(';', '；').replaceAll(':', '：').trim();
@@ -380,8 +383,8 @@ async function submitAddendum() {
   );
 }
 
-async function submitHistory() {
-  if (historyLinkRef.value?.validate() !== true) return;
+async function submitHistory(skipCheck: boolean = false) {
+  if (!skipCheck && historyLinkRef.value?.validate() !== true) return;
   const mappedHistory = {
     amendedAt: date.extractDate(targetHistory.amendedAt, 'YYYY-MM-DD'),
     brief: targetHistory.brief,
@@ -439,6 +442,12 @@ async function submitAttachment() {
 }
 
 async function submit() {
+  target.frozenBy = target.frozenBy?.trim();
+  if (!target.frozenBy) {
+    target.frozenBy = undefined;
+  } else if (frozenByRef.value?.validate() !== true) {
+    return;
+  }
   await submitProperty(
     action,
     async () => {},
@@ -450,6 +459,9 @@ async function submit() {
       } as any;
       if (target.preface) {
         data.preface = target.preface;
+      }
+      if (target.frozenBy) {
+        data.frozenBy = target.frozenBy;
       }
       await updateDoc(legislationDocument(route.params.id! as string), data);
     },
