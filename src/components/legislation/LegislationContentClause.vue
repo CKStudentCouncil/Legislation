@@ -2,9 +2,9 @@
   <div v-if="$props.content.deleted" class="text-bold text-strike">{{ $props.content.title }}<span style="font-weight: normal"> (刪除)</span></div>
   <div v-else :class="$props.content.frozenBy ? 'bg-highlight' : ''">
     <div v-if="$props.content.frozenBy">
-      <q-icon class="on-left" name="warning" />
-      下列條文部分或全文已遭凍結或失效，詳見
-      <q-btn :href="$props.content.frozenBy" dense icon="link" label="相關連結" target="_blank" />
+      <q-icon class="q-mr-xs" name="warning" size="20px" />
+      本條文部分或全文已遭凍結或失效，詳見
+      <q-btn :href="$props.content.frozenBy" class="no-print" dense icon="link" label="相關連結" target="_blank" />
     </div>
     <div>
       <div class="text-bold">
@@ -25,6 +25,9 @@
             </p>
           </div>
         </div>
+        <p v-else-if="$props.content.type.firebase == ContentType.SpecialClause.firebase" style="white-space: break-spaces">
+          {{ $props.content.content }}
+        </p>
         <div v-else>
           {{ $props.content.content }}
         </div>
@@ -36,6 +39,7 @@
 <script lang="ts" setup>
 import type { PropType } from 'vue';
 import { computed } from 'vue';
+import { ContentType } from 'src/ts/models.ts';
 import type { LegislationContent } from 'src/ts/models.ts';
 import { copyLink } from 'src/ts/utils.ts';
 
@@ -52,13 +56,6 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-  expanded: {
-    type: Boolean,
-    default: true,
-  },
-});
-defineEmits({
-  'update:expanded': (value: boolean) => true,
 });
 
 const lines = computed(() => props.content.content!.split('\n'));

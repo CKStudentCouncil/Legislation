@@ -75,11 +75,6 @@ const props = defineProps({
 defineEmits({
   'update:expanded': (value: boolean) => true,
 });
-
-const lines = computed(() => props.content.content!.split('\n'));
-const cleanLines = computed(() =>
-  props.content.content!.split('\n').filter((line) => line.match(/^[(]?（?[一二三四五六七八九十]*([）)、])/) == null),
-);
 </script>
 
 <style scoped>

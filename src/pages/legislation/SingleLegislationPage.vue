@@ -24,7 +24,7 @@
           <tr v-for="history of legislation.history" :key="history.amendedAt.valueOf()">
             <th>{{ new Date(history.amendedAt).toLocaleDateString() }}</th>
             <th>{{ history.brief }}</th>
-            <th>
+            <th class="no-print">
               <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px">
                 <q-tooltip>檢視發布公文</q-tooltip>
               </q-btn>
@@ -81,11 +81,6 @@ onMounted(() => {
     .loadLegislation(route.params.id as string)
     .then((l) => (legislation.value = l))
     .catch((e) => console.error(e));
-  for (const content of legislation.value?.content ?? []) {
-    if (content.type.firebase === ContentType.SpecialClause.firebase) {
-      expanded[content.index] = true;
-    }
-  }
   event('view_legislation' as any, {
     id: route.params.id! as string,
     name: legislation.value?.name,
@@ -106,7 +101,12 @@ watch(legislation, () => {
       }
     }, 250);
   }
-});
+  for (const content of legislation.value?.content ?? []) {
+    if (content.type.firebase === ContentType.SpecialClause.firebase) {
+      expanded[content.index] = true;
+    }
+  }
+}, { once: true });
 
 const { handlePrint } = useVueToPrint({
   content: content,
