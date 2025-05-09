@@ -1,8 +1,8 @@
 <template>
   <q-page>
     <q-tabs align="left">
-      <q-route-tab to="/manage/accounts" label="帳戶" />
-      <q-route-tab to="/manage/accounts/mailing_list" label="郵寄清單" />
+      <q-route-tab label="帳戶" to="/manage/accounts" />
+      <q-route-tab label="郵寄清單" to="/manage/accounts/mailing_list" />
     </q-tabs>
     <q-table
       :columns="columns"
@@ -51,8 +51,16 @@
       </q-card-section>
       <q-card-section>
         <q-input v-model="targetUser.name" :disable="action == 'edit'" :readonly="action == 'edit'" label="姓名" />
-        <q-input v-model="targetUser.email" :disable="action == 'edit'" :readonly="action == 'edit'" label="Email" />
-        <RoleSelect v-model="targetUser.roles"/>
+        <q-input
+          ref="emailRef"
+          v-model="targetUser.email"
+          :disable="action == 'edit'"
+          :readonly="action == 'edit'"
+          :rules="['email']"
+          error-message="請輸入有效的電子郵件地址"
+          label="Email"
+        />
+        <RoleSelect v-model="targetUser.roles" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="action = ''" />
@@ -86,11 +94,12 @@ const filter = ref('');
 const dialog = computed(() => {
   return action.value === 'edit' || action.value === 'add';
 });
+const emailRef = ref();
 
 async function load() {
   loading.value = true;
   accounts.length = 0; // Typescript magic
-  for (const acc of (await getAllUsers())) {
+  for (const acc of await getAllUsers()) {
     accounts.push(acc);
   }
   loading.value = false;
@@ -113,6 +122,7 @@ function add() {
 }
 
 async function submit() {
+  if (emailRef.value.validate() !== true) return;
   Loading.show();
   try {
     if (action.value === 'edit') {

@@ -13,7 +13,7 @@
       ></iframe>
       <div v-else>
         <a
-          v-if="url.match(/https?:\/\/(www\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_+.~#?&\/=]*)/)"
+          v-if="isUrl(url)"
           :href="url"
           target="_blank"
           style="word-wrap: break-word;"
@@ -27,6 +27,7 @@
 <script lang="ts" setup>
 import type { Attachment } from 'src/ts/models.ts';
 import { translateNumberToChinese } from '../ts/utils.ts';
+import { isUrl } from 'src/ts/checks.ts';
 
 const props = defineProps<{
   attachment: Attachment;

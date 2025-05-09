@@ -99,8 +99,8 @@
         <q-checkbox v-model="targetContent.deleted" label="刪除" />
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn v-close-popup color="negative" flat label="取消" @click="contentAction = null" />
-        <q-btn v-close-popup color="positive" flat label="確定" @click="submitContent" />
+        <q-btn color="negative" flat label="取消" @click="contentAction = null" />
+        <q-btn color="positive" flat label="確定" @click="submitContent" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -112,8 +112,8 @@
         <ListEditor v-model="targetAddendum.content" />
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn v-close-popup color="negative" flat label="取消" @click="addendumAction = null" />
-        <q-btn v-close-popup color="positive" flat label="確定" @click="submitAddendum" />
+        <q-btn color="negative" flat label="取消" @click="addendumAction = null" />
+        <q-btn color="positive" flat label="確定" @click="submitAddendum" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -122,12 +122,12 @@
       <q-card-section>
         <q-date v-model="targetHistory.amendedAt" class="q-mb-md" label="日期" mask="YYYY-MM-DD" />
         <q-input v-model="targetHistory.brief" label="簡述" />
-        <q-input v-model="targetHistory.link" label="發布公文連結" />
+        <q-input ref="historyLinkRef" v-model="targetHistory.link" :rules="[isUrl]" label="發布公文連結" />
         <q-checkbox v-model="targetHistory.recordCurrent" label="記錄目前法條內容為修改後內容" />
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn v-close-popup color="negative" flat label="取消" @click="historyAction = null" />
-        <q-btn v-close-popup color="positive" flat label="確定" @click="submitHistory" />
+        <q-btn color="negative" flat label="取消" @click="historyAction = null" />
+        <q-btn color="positive" flat label="確定" @click="submitHistory" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -143,8 +143,8 @@
         />
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn v-close-popup color="negative" flat label="取消" @click="attachmentAction = null" />
-        <q-btn v-close-popup color="positive" flat label="確定" @click="submitAttachment" />
+        <q-btn color="negative" flat label="取消" @click="attachmentAction = null" />
+        <q-btn color="positive" flat label="確定" @click="submitAttachment" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -168,6 +168,7 @@ import LegislationAddendum from 'components/LegislationAddendum.vue';
 import LegislationDialog from 'components/LegislationDialog.vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import AttachmentUploader from 'components/AttachmentUploader.vue';
+import { isUrl } from 'src/ts/checks.ts';
 
 interface EditingLegislationContent extends models.LegislationContent {
   insertBefore: boolean;
@@ -197,6 +198,7 @@ const attachmentAction = ref<'edit' | 'add' | null>(null);
 const attachmentUploader = ref<InstanceType<typeof AttachmentUploader> | null>(null);
 const action = ref<'edit' | null>(null);
 const draggable = reactive({ content: true, attachment: true });
+const historyLinkRef = ref();
 
 function addContent(index?: number) {
   targetContent.type = models.ContentType.Clause;
@@ -363,6 +365,7 @@ async function submitAddendum() {
 }
 
 async function submitHistory() {
+  if (historyLinkRef.value?.validate() !== true) return;
   const mappedHistory = {
     amendedAt: date.extractDate(targetHistory.amendedAt, 'YYYY-MM-DD'),
     brief: targetHistory.brief,
@@ -384,12 +387,13 @@ async function submitHistory() {
     },
     async () => {
       legislation.value!.history[targetHistory.index] = mappedHistory;
-      const newHistory = legislation.value!.history.map((h) => {
-        const copy = { ...h };
-        copy.content = copy.content?.map(convertContentToFirebase) ?? [];
-        return copy;
-      }).slice(0); // Copying the array prevents firebase changing it midway for some reason
-      console.log(newHistory);
+      const newHistory = legislation
+        .value!.history.map((h) => {
+          const copy = { ...h };
+          copy.content = copy.content?.map(convertContentToFirebase) ?? [];
+          return copy;
+        })
+        .slice(0); // Copying the array prevents firebase changing it midway for some reason
       await updateDoc(legislationDocument(route.params.id! as string), { history: newHistory });
     },
   );
