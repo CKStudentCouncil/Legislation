@@ -97,6 +97,13 @@
           type="textarea"
         />
         <q-checkbox v-model="targetContent.deleted" label="刪除" />
+        <q-checkbox
+          v-if="targetContent.type.firebase == ContentType.Clause.firebase"
+          :model-value="!!targetContent.frozenBy"
+          label="凍結或失效"
+          @update:model-value="(v) => (v ? (targetContent.frozenBy = ' ') : (targetContent.frozenBy = undefined))"
+        />
+        <q-input v-if="targetContent.frozenBy" ref="frozenByRef" v-model="targetContent.frozenBy" :rules="[isUrl]" label="凍結或失效之依據公文" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="contentAction = null" />
@@ -156,7 +163,7 @@ import { useRoute, useRouter } from 'vue-router';
 import type { LegislationCategory } from 'src/ts/models.ts';
 import * as models from 'src/ts/models.ts';
 import { ContentType, convertContentToFirebase, legislationDocument, useLegislation } from 'src/ts/models.ts';
-import LegislationContent from 'components/LegislationContent.vue';
+import LegislationContent from 'components/legislation/LegislationContent.vue';
 import { copyLink, notifyError, notifySuccess, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';
 import { date, Dialog, Loading } from 'quasar';
 import { arrayRemove, arrayUnion, deleteDoc, updateDoc } from 'firebase/firestore';
@@ -164,8 +171,8 @@ import { VueDraggable } from 'vue-draggable-plus';
 import type { Ref } from 'vue';
 import { reactive, ref } from 'vue';
 import ListEditor from 'components/ListEditor.vue';
-import LegislationAddendum from 'components/LegislationAddendum.vue';
-import LegislationDialog from 'components/LegislationDialog.vue';
+import LegislationAddendum from 'components/legislation/LegislationAddendum.vue';
+import LegislationDialog from 'components/legislation/LegislationDialog.vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import AttachmentUploader from 'components/AttachmentUploader.vue';
 import { isUrl } from 'src/ts/checks.ts';
@@ -199,10 +206,12 @@ const attachmentUploader = ref<InstanceType<typeof AttachmentUploader> | null>(n
 const action = ref<'edit' | null>(null);
 const draggable = reactive({ content: true, attachment: true });
 const historyLinkRef = ref();
+const frozenByRef = ref();
 
 function addContent(index?: number) {
   targetContent.type = models.ContentType.Clause;
   targetContent.deleted = false;
+  targetContent.frozenBy = '';
   targetContent.index = index ?? legislation.value!.content.length;
   targetContent.subtitle = '';
   targetContent.content = '';
@@ -235,6 +244,7 @@ function addAttachment() {
 function editContent(legislationContent: models.LegislationContent) {
   targetContent.type = legislationContent.type;
   targetContent.deleted = legislationContent.deleted;
+  targetContent.frozenBy = legislationContent.frozenBy;
   targetContent.index = legislationContent.index;
   targetContent.title = legislationContent.title;
   targetContent.subtitle = legislationContent.subtitle;
@@ -310,6 +320,12 @@ async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallba
 }
 
 async function submitContent() {
+  targetContent.frozenBy = targetContent.frozenBy?.trim();
+  if (!targetContent.frozenBy) {
+    targetContent.frozenBy = undefined;
+  } else if (frozenByRef.value?.validate() !== true) {
+    return;
+  }
   targetContent.content = targetContent.content?.replaceAll(',', '，').replaceAll(';', '；').replaceAll(':', '：').trim();
   targetContent.subtitle = targetContent.subtitle?.replaceAll('【', '').replaceAll('】', '');
   await submitProperty(

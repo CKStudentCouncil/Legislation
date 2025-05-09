@@ -39,8 +39,8 @@ import { useLegislation } from 'src/ts/models.ts';
 import { useRoute } from 'vue-router';
 import { copyLink } from 'src/ts/utils.ts';
 import { Dark } from 'quasar';
-import LegislationAddendum from 'components/LegislationAddendum.vue';
-import LegislationContent from 'components/LegislationContent.vue';
+import LegislationAddendum from 'components/legislation/LegislationAddendum.vue';
+import LegislationContent from 'components/legislation/LegislationContent.vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 
 const route = useRoute();

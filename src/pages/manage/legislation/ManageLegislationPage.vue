@@ -10,7 +10,7 @@ import { reactive, ref } from 'vue';
 import type { Addendum, History, Legislation, LegislationContent} from 'src/ts/models.ts';
 import { LegislationCategory, legislationDocument, useLegislations } from 'src/ts/models.ts';
 import { date, Loading } from 'quasar';
-import LegislationDialog from 'components/LegislationDialog.vue';
+import LegislationDialog from 'components/legislation/LegislationDialog.vue';
 import { useRouter } from 'vue-router';
 import { setDoc } from 'firebase/firestore';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';

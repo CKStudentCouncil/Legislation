@@ -1,5 +1,5 @@
 import { firestoreDefaultConverter, useCollection, useDocument, useFirestore } from 'vuefire';
-import type { FirestoreDataConverter} from 'firebase/firestore';
+import type { FirestoreDataConverter } from 'firebase/firestore';
 import { collection, doc, query, Timestamp, where } from 'firebase/firestore';
 
 export interface Legislation {
@@ -194,7 +194,13 @@ export class DocumentSpecificIdentity {
   static GeneralCourt = new DocumentSpecificIdentity('GeneralCourt', '一般法庭', '政', '04', DocumentGeneralIdentity.JudicialCommittee);
   static ConstitutionalCourt = new DocumentSpecificIdentity('ConstitutionalCourt', '憲章法庭', '憲', '05', DocumentGeneralIdentity.JudicialCommittee);
   static SupremeCourt = new DocumentSpecificIdentity('SupremeCourt', '大法庭', '大', '06', DocumentGeneralIdentity.JudicialCommittee);
-  static ConstitutionalCensorCourt = new DocumentSpecificIdentity('ConstitutionalCensorCourt', '審查庭', '審', '07', DocumentGeneralIdentity.JudicialCommittee);
+  static ConstitutionalCensorCourt = new DocumentSpecificIdentity(
+    'ConstitutionalCensorCourt',
+    '審查庭',
+    '審',
+    '07',
+    DocumentGeneralIdentity.JudicialCommittee,
+  );
   static Other = new DocumentSpecificIdentity('Other', '其他', '', '99', DocumentGeneralIdentity.StudentCouncil);
   static VALUES = {
     Chairman: DocumentSpecificIdentity.Chairman,
@@ -330,14 +336,23 @@ export function usePublicDocuments() {
 }
 
 export function convertContentToFirebase(data: LegislationContent) {
-  return {
+  const content = {
     content: data.content,
-    deleted: data.deleted,
     subtitle: data.subtitle,
     title: data.title,
     type: data.type.firebase,
     index: data.index,
   } as any;
+  if (data.deleted) content.deleted = data.deleted; // this saves storage space, as most content is not deleted
+  if (data.frozenBy) content.frozenBy = data.frozenBy;
+  return content;
+}
+
+export function convertContentFromFirebase(data: any) {
+  const content = { ... data } as LegislationContent;
+  content.type = ContentType.VALUES[data.type as keyof typeof ContentType.VALUES];
+  content.deleted = !!data.deleted;
+  return content;
 }
 
 export const legislationConverter: FirestoreDataConverter<Legislation | null> = {
@@ -364,19 +379,11 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
     const data = firestoreDefaultConverter.fromFirestore(snapshot) as any;
     if (!data) return data;
     data.category = LegislationCategory.VALUES[data.category as keyof typeof LegislationCategory.VALUES] as any;
-    data.content = data.content
-      .map((content: any) => {
-        content.type = ContentType.VALUES[content.type as keyof typeof ContentType.VALUES];
-        return content;
-      })
-      .sort((a: any, b: any) => a.index - b.index);
+    data.content = data.content.map(convertContentFromFirebase).sort((a: any, b: any) => a.index - b.index);
     data.createdAt = data.createdAt.toDate();
     data.type = LegislationType.VALUES[data.type as keyof typeof LegislationType.VALUES];
     data.history = data.history.map((history: any) => {
-      history.content = history.content?.map((content: any) => {
-        if (!(content.type instanceof Object)) content.type = ContentType[content.type as keyof typeof ContentType];
-        return content;
-      });
+      history.content = history.content?.map(convertContentFromFirebase);
       history.amendedAt = history.amendedAt.toDate();
       return history;
     });
@@ -413,7 +420,8 @@ export interface History {
 
 export interface LegislationContent {
   content?: string; // null if type is ContentType.Chapter
-  deleted: boolean;
+  deleted: boolean; // null in firebase if not deleted
+  frozenBy?: string; // null if not frozen
   subtitle: string;
   title: string;
   type: ContentType;

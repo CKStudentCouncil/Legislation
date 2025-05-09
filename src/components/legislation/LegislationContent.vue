@@ -1,26 +1,7 @@
 <template>
   <div>
     <div v-if="$props.content.type.firebase == ContentType.Clause.firebase">
-      <div v-if="$props.content.deleted" class="text-bold text-strike">
-        {{ $props.content.title }}<span style="font-weight: normal"> (刪除)</span>
-      </div>
-      <div v-else>
-        <div class="text-bold">
-          {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
-          <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
-        </div>
-        <div v-for="[index, line] of lines.entries()" :key="index" class="row">
-          <p class="q-mb-sm">
-            <span
-              :style="line.match(/^[(]?（?[一二三四五六七八九十]*([）)、])/) || cleanLines.length <= 1 ? 'visibility: hidden' : ''"
-              class="q-mr-sm text-secondary text-italic"
-            >
-              {{ cleanLines.indexOf(line) + 1 }}
-            </span>
-            {{ line }}
-          </p>
-        </div>
-      </div>
+      <LegislationContentClause :content="$props.content" />
     </div>
     <div v-if="$props.content.type.firebase == ContentType.SpecialClause.firebase">
       <q-expansion-item
@@ -33,29 +14,12 @@
         @update:model-value="(v) => $emit('update:expanded', v)"
       >
         <template v-slot:header>
-          <div v-if="$props.content.deleted" class="text-bold text-strike">
-            {{ $props.content.title }}<span style="font-weight: normal"> (刪除)</span>
-          </div>
-          <div v-else>
-            <div class="text-bold">
-              {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
-              <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
-            </div>
-          </div>
+          <LegislationContentClause :content="$props.content" :count-lines="false" :show-content="false" />
         </template>
         <p v-if="!$props.content.deleted" style="white-space: break-spaces">{{ $props.content.content }}</p>
       </q-expansion-item>
       <div v-else>
-        <div v-if="$props.content.deleted" class="text-bold text-strike">
-          {{ $props.content.title }}<span style="font-weight: normal"> (刪除)</span>
-        </div>
-        <div v-else>
-          <div class="text-bold">
-            {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
-            <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
-          </div>
-          <p style="white-space: break-spaces">{{ $props.content.content }}</p>
-        </div>
+        <LegislationContentClause :content="$props.content" :count-lines="false" />
       </div>
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Volume.firebase">
@@ -92,6 +56,7 @@ import { ContentType } from 'src/ts/models.ts';
 import type { PropType } from 'vue';
 import { computed } from 'vue';
 import { copyLink } from 'src/ts/utils.ts';
+import LegislationContentClause from 'components/legislation/LegislationContentClause.vue';
 
 const props = defineProps({
   content: {
@@ -112,7 +77,10 @@ defineEmits({
 });
 
 const lines = computed(() => props.content.content!.split('\n'));
-const cleanLines = computed(() => props.content.content!.split('\n').filter((line) => line.match(/^[(]?（?[一二三四五六七八九十]*([）)、])/) == null));
+const cleanLines = computed(() =>
+  props.content.content!.split('\n').filter((line) => line.match(/^[(]?（?[一二三四五六七八九十]*([）)、])/) == null),
+);
 </script>
 
-<style scoped></style>
+<style scoped>
+</style>
