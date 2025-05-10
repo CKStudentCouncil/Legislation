@@ -46,6 +46,7 @@
       />
       <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" />
     </q-no-ssr>
+    <div class="text-grey-6">共 {{totalDocs}} 件公文符合查詢條件</div>
     <q-infinite-scroll ref="scroll" :class="$q.screen.gt.sm ? 'row' : ''" @load="loadMore">
       <div v-for="doc of allDocs" :key="doc!.idPrefix + doc!.idNumber" :class="'q-mb-md ' + ($q.screen.gt.sm ? 'q-pr-md col-6' : '')">
         <q-card :class="doc.published ? '' : 'bg-highlight'">

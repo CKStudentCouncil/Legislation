@@ -1,12 +1,26 @@
 <template>
   <div class="q-gutter-md row items-start">
-    <q-file v-model="files" filled label="選擇檔案 (或拖至此，可多選)" multiple style="max-width: 300px" :error="error" error-message="請按下上傳按鈕再繼續！" @input="check">
+    <q-file
+      v-model="files"
+      :error="error"
+      :max-file-size="1024 * 1024 * 25"
+      error-message="請按下上傳按鈕再繼續！"
+      filled
+      label="選擇檔案 (或拖至此，可多選)"
+      multiple
+      style="max-width: 300px"
+      @rejected="sizeLimitExceeded"
+      @input="check"
+    >
       <template v-slot:prepend>
         <q-icon name="attach_file" />
       </template>
     </q-file>
-    <q-btn class="row" color="primary" dense @click="upload" no-caps>
-      <div><q-icon name="cloud_upload" /><br>上傳並加入附件</div>
+    <q-btn class="row" color="primary" dense no-caps @click="upload">
+      <div>
+        <q-icon name="cloud_upload" />
+        <br />上傳並加入附件
+      </div>
     </q-btn>
   </div>
 </template>
@@ -77,9 +91,13 @@ function upload() {
 }
 
 function check() {
-  const r = (files.value.length !== 0);
+  const r = files.value.length !== 0;
   error.value = r;
   return !r;
+}
+
+function sizeLimitExceeded() {
+  notifyError('單一檔案不得超過25MB，請嘗試壓縮檔案後再繼續')
 }
 
 defineExpose({

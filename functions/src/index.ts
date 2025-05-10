@@ -69,11 +69,19 @@ export const getAllUsers = onCall(globalFunctionOptions, async (request) => {
   });
 });
 
-export const uploadAttachment = onCall(globalFunctionOptions, async (request) => {
+export const uploadAttachment = onCall({
+  ...globalFunctionOptions,
+  memory: '512MiB'
+}, async (request) => {
   if (request.auth == null) {
     throw new HttpsError('unauthenticated', 'The function must be called while authenticated.');
   }
   const { name, content, mimeType } = request.data;
+  const buf = Buffer.from(content, 'base64');
+  const fileSize = buf.length;
+  if (fileSize > 25 * 1024 * 1024) {
+    throw new HttpsError('invalid-argument', 'File size exceeds 25MiB limit.');
+  }
   const folderQuery = await driveAPI.files.list({
     q: `mimeType='application/vnd.google-apps.folder' and name='${getCurrentReign()}'`,
     fields: 'files(id)'
@@ -101,7 +109,7 @@ export const uploadAttachment = onCall(globalFunctionOptions, async (request) =>
     },
     media: {
       mimeType,
-      body: new Stream.PassThrough().end(Buffer.from(content, 'base64'))
+      body: new Stream.PassThrough().end(buf)
     },
     fields: 'id,webViewLink'
   });
