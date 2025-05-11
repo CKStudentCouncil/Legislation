@@ -2,18 +2,18 @@
   <q-no-ssr>
     <q-header class="bg-primary text-white no-print" elevated height-hint="98">
       <q-toolbar>
-        <q-btn dense flat icon="menu" round @click="toggleLeftDrawer" />
+        <q-btn aria-label="收合側選單" dense flat icon="menu" round @click="toggleLeftDrawer" />
 
         <q-toolbar-title>
           <q-avatar>
-            <img alt="favicon" src="/icon.png" />
+            <img alt="favicon" src="/icon.png" height="38" width="38" />
           </q-avatar>
           <span v-if="$q.screen.gt.xs" class="q-pl-sm">建國中學班聯會法律與公文系統</span>
           <span v-else class="q-pl-sm">建中班聯會法律與公文系統</span>
         </q-toolbar-title>
 
-        <q-btn v-if="$q.screen.gt.xs" :icon="Dark.isActive ? 'dark_mode' : 'nights_stay'" flat @click="toggleDark" />
-        <q-btn v-if="$q.screen.gt.xs" flat icon="fullscreen" @click="toggleFullscreen" />
+        <q-btn v-if="$q.screen.gt.xs" :icon="Dark.isActive ? 'dark_mode' : 'nights_stay'" flat @click="toggleDark" aria-label="切換暗色模式" />
+        <q-btn v-if="$q.screen.gt.xs" flat icon="fullscreen" @click="toggleFullscreen" aria-label="切換全螢幕" />
         <q-btn v-if="$q.screen.gt.xs && !loggedIn" align="right" dense flat icon="login" @click="login()">登入</q-btn>
         <q-btn v-if="$q.screen.gt.xs && loggedIn" align="right" dense flat icon="logout" @click="logout()">登出</q-btn>
       </q-toolbar>
@@ -50,7 +50,7 @@
         <q-item v-if="loggedIn && loggedInUser !== null && loggedInUser !== undefined">
           <q-item-section v-if="loggedInUser.photoURL !== null" avatar>
             <q-avatar>
-              <img :src="loggedInUser.photoURL" alt="profile picture" />
+              <img :src="loggedInUser.photoURL" alt="profile picture" height="40" width="40" />
             </q-avatar>
           </q-item-section>
           <q-item-section>

@@ -23,29 +23,17 @@
       </div>
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Volume.firebase">
-      <div class="text-h4 text-bold" style="line-height: 65px">
-        {{ $props.content.title }} {{ $props.content.subtitle }}
-        <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
-      </div>
+      <legislation-content-generic :content="content" class="text-h4 text-bold" style="line-height: 65px" />
       <div v-if="$props.content.content?.length ?? 0 > 0" class="text-h6 text-bold">{{ $props.content.content }}</div>
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Chapter.firebase">
-      <div class="text-h5 text-bold" style="line-height: 65px">
-        {{ $props.content.title }} {{ $props.content.subtitle }}
-        <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
-      </div>
+      <legislation-content-generic :content="content" class="text-h5 text-bold" style="line-height: 65px" />
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Section.firebase">
-      <div class="text-h6 text-bold" style="line-height: 45px">
-        {{ $props.content.title }} {{ $props.content.subtitle }}
-        <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
-      </div>
+      <legislation-content-generic :content="content" class="text-h6 text-bold" style="line-height: 45px" />
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Subsection.firebase">
-      <div class="text-h6 text-bold" style="line-height: 30px">
-        {{ $props.content.title }} {{ $props.content.subtitle }}
-        <q-btn class="no-print" dense flat icon="link" @click="copyLink($props.content.index.toString())"></q-btn>
-      </div>
+      <legislation-content-generic :content="content" class="text-h6 text-bold" style="line-height: 30px" />
     </div>
   </div>
 </template>
@@ -54,11 +42,10 @@
 import type { LegislationContent } from 'src/ts/models.ts';
 import { ContentType } from 'src/ts/models.ts';
 import type { PropType } from 'vue';
-import { computed } from 'vue';
-import { copyLink } from 'src/ts/utils.ts';
 import LegislationContentClause from 'components/legislation/LegislationContentClause.vue';
+import LegislationContentGeneric from 'components/legislation/LegislationContentGeneric.vue';
 
-const props = defineProps({
+defineProps({
   content: {
     type: Object as PropType<LegislationContent>,
     required: true,
@@ -77,5 +64,4 @@ defineEmits({
 });
 </script>
 
-<style scoped>
-</style>
+<style scoped></style>

@@ -10,6 +10,7 @@
         class="no-print"
         height="600"
         width="100%"
+        title="Google 雲端附件預覽"
       ></iframe>
       <div v-else>
         <a

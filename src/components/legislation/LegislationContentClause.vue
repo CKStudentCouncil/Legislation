@@ -9,7 +9,9 @@
     <div>
       <div class="text-bold">
         {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
-        <q-btn class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())"></q-btn>
+        <q-no-ssr>
+          <q-btn aria-label="複製連結" class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())" />
+        </q-no-ssr>
       </div>
       <div v-if="showContent">
         <div v-if="countLines">
@@ -39,8 +41,8 @@
 <script lang="ts" setup>
 import type { PropType } from 'vue';
 import { computed } from 'vue';
-import { ContentType } from 'src/ts/models.ts';
 import type { LegislationContent } from 'src/ts/models.ts';
+import { ContentType } from 'src/ts/models.ts';
 import { copyLink } from 'src/ts/utils.ts';
 
 const props = defineProps({
