@@ -6,8 +6,8 @@
         <span v-if="legislation.frozenBy">(失效) </span>
         {{ legislation.name }}
         <q-no-ssr style="display: inline">
-          <q-btn class="no-print" dense flat icon="link" size="20px" @click="copyLink()" />
-          <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
+          <q-btn aria-label="複製連結" class="no-print" dense flat icon="link" size="20px" @click="copyLink()" />
+          <q-btn aria-label="列印" class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
             <q-tooltip>列印</q-tooltip>
           </q-btn>
           <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat icon="unfold_less" size="20px" @click="collapseAll">
