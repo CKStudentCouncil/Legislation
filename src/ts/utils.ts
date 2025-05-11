@@ -119,12 +119,13 @@ export async function generateDocumentIdNumber(specific: DocumentSpecificIdentit
   if (r.length === 3) {
     r = '0' + r;
   }
-  let s = r + specific.generic.code + specific.code;
+  const target = specific.shareIdWith ? specific.shareIdWith : specific;
+  let s = r + target.generic.code + target.code;
   const lastDoc = await getDocs(
     query(
       documentsCollection(),
       orderBy('createdAt', 'desc'),
-      where('fromSpecific', '==', specific.firebase),
+      where('fromSpecific', '==', target.firebase),
       where('type', '==', type.firebase),
       limit(1),
     ),
