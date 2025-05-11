@@ -169,6 +169,13 @@ export class DocumentSpecificIdentity {
     '07',
     DocumentGeneralIdentity.ExecutiveDepartment,
   );
+  static ElectoralCommissionChair = new DocumentSpecificIdentity(
+    'ElectoralCommissionChair',
+    '選舉委員會主任委員',
+    '選舉',
+    '07',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+  );
   // Judicial Committee
   static JudicialCommitteeChairman = new DocumentSpecificIdentity(
     'JudicialCommitteeChairman',
@@ -224,6 +231,7 @@ export class DocumentSpecificIdentity {
     DocumentationDivision: DocumentSpecificIdentity.DocumentationDivision,
     GeneralAffairsDivision: DocumentSpecificIdentity.GeneralAffairsDivision,
     ElectoralCommission: DocumentSpecificIdentity.ElectoralCommission,
+    ElectoralCommissionChair: DocumentSpecificIdentity.ElectoralCommissionChair,
     JudicialCommitteeChairman: DocumentSpecificIdentity.JudicialCommitteeChairman,
     JudicialCommitteeViceChairman: DocumentSpecificIdentity.JudicialCommitteeViceChairman,
     JudicialCommitteeMember: DocumentSpecificIdentity.JudicialCommitteeMember,
