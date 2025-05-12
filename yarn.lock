@@ -4307,10 +4307,10 @@ instantsearch.css@^8.5.1:
   resolved "https://registry.yarnpkg.com/instantsearch.css/-/instantsearch.css-8.5.1.tgz#ece29d17048c282dda95b5eb35400041c519f97d"
   integrity sha512-lu4gWSa2crIA1OAuFwtrNJy4d8oRvKmkY5gv8Dbf3tuedQMm6cf7K+1kXJKRAHLm4pZos9RXIH10m57UfDKbyg==
 
-instantsearch.js@4.78.2:
-  version "4.78.2"
-  resolved "https://registry.yarnpkg.com/instantsearch.js/-/instantsearch.js-4.78.2.tgz#5e6358d974af7c9f5ac308a8cc3654fb4fa128c0"
-  integrity sha512-Yuw+lVWK8iL5Dv/vARNNgfuSVt+6hmOV0SgNrIhvpMs8RzzTR9laHRfLeVsr9+wtbvTd3B8hB/oTJZRuEBlLsQ==
+instantsearch.js@4.78.3:
+  version "4.78.3"
+  resolved "https://registry.yarnpkg.com/instantsearch.js/-/instantsearch.js-4.78.3.tgz#4a5fb40338c124daf1886f0d52cfbb9ad7d757dd"
+  integrity sha512-0i7vyX9jHEIKSfhu+CZHL/ySnbMAe7e98YUJiZX5D7AiXo2WvAPbnV/3CXIPR0whNWOXKGvlv7Ji7Pt4Yrn+Aw==
   dependencies:
     "@algolia/events" "^4.0.1"
     "@types/dom-speech-recognition" "^0.0.1"
@@ -7347,13 +7347,13 @@ vue-gtag@~3.5.0:
   resolved "https://registry.yarnpkg.com/vue-gtag/-/vue-gtag-3.5.0.tgz#2851af0a5f035452f3cc28c4d20b6ebc78da76a2"
   integrity sha512-eycDX/wg0iQSxSMn8dm+oQ7HxfHxzMxF7UPzqVlE8MaDqS8p9iTmjIyZfurMN5Jb8n4bcZMK08pEydSu2wR22w==
 
-vue-instantsearch@^4.20.7:
-  version "4.20.7"
-  resolved "https://registry.yarnpkg.com/vue-instantsearch/-/vue-instantsearch-4.20.7.tgz#06d47f6c633cc482a240f17fcb532d5e82f6693c"
-  integrity sha512-t7u/MPMyro+uRotUxO0mEY25OzkRZTdE/BgA6+vW4uve4OSCaIitHg7y9JWQ2PVwxrsZ1yHL0rLbJUcTvpAsgA==
+vue-instantsearch@^4.20.8:
+  version "4.20.8"
+  resolved "https://registry.yarnpkg.com/vue-instantsearch/-/vue-instantsearch-4.20.8.tgz#78250e8920bb49fb7aea64fb12f3c905bfc2eb62"
+  integrity sha512-mOadtCGJhcIQMwSKXxRmxpw5hMsLR3zuy5Gy4pNO1PAcz91Rk1dxbwRtSMT6PnBr2GADQXEAm9OzRKwjhbnF4w==
   dependencies:
     instantsearch-ui-components "0.11.1"
-    instantsearch.js "4.78.2"
+    instantsearch.js "4.78.3"
     mitt "^2.1.0"
 
 vue-router@^4.5.1:
