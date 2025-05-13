@@ -9,7 +9,8 @@
     <div v-html="customSanitize(doc.content)"></div>
     <DocumentSeparator />
     <div class="text-h2">
-      <span class="text-h6">{{ props.doc.fromSpecific.position }}</span> {{ props.doc.fromName }}
+      <span class="text-h6 on-left">{{ doc.fromSpecific.signatureTitle ?? doc.fromSpecific.translation }}</span>
+      {{ props.doc.fromName }}
     </div>
     <div v-if="doc.published" class="text-h4 text-center q-mt-lg">
       中華民國 {{ doc.publishedAt!.getFullYear() - 1911 }} 年 {{ doc.publishedAt!.getMonth() + 1 }} 月 {{ doc.publishedAt!.getDate() }} 日
