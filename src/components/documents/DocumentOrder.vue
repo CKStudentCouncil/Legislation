@@ -5,11 +5,12 @@
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">{{ doc.fromSpecific.translation }} 令</div>
     <div class="text-h6">發文日期：{{ doc.published ? doc.publishedAt!.toLocaleDateString() : '尚未發布' }}</div>
     <div class="text-h6">發文字號：{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
-    <DocumentSeparator/>
+    <DocumentSeparator />
     <div v-html="customSanitize(doc.content)"></div>
-    <DocumentSeparator/>
+    <DocumentSeparator />
     <div class="text-h2">
-      <span class="text-h6">{{ props.doc.fromSpecific.translation }}</span> {{ props.doc.fromName }}
+      <span class="text-h6 on-left">{{ doc.fromSpecific.signatureTitle ?? doc.fromSpecific.translation }}</span>
+      {{ props.doc.fromName }}
     </div>
     <div v-if="doc.published" class="text-h4 text-center q-mt-lg">
       中華民國 {{ doc.publishedAt!.getFullYear() - 1911 }} 年 {{ doc.publishedAt!.getMonth() + 1 }} 月 {{ doc.publishedAt!.getDate() }} 日
