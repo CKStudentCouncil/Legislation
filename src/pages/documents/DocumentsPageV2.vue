@@ -2,7 +2,7 @@
   <q-page padding>
     <q-no-ssr :class="$q.screen.gt.xs ? 'row' : ''">
       <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" class="col q-pr-sm" clearable debounce="500" />
-      <q-input v-model="before" class="col q-pr-sm" mask="date" :rules="['date']" label="發文日期早於" shadow-text="可按右旁按鈕選擇" :disabled="published === false">
+      <q-input v-model="before" class="col q-pr-sm" mask="date" :rules="[optionalDate]" label="發文日期早於" shadow-text="可按右旁按鈕選擇" :disabled="published === false">
         <template v-slot:append>
           <q-icon name="event" class="cursor-pointer">
             <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -15,7 +15,7 @@
           </q-icon>
         </template>
       </q-input>
-      <q-input v-model="after" class="col q-pr-sm" mask="date" :rules="['date']" label="發文日期晚於" shadow-text="可按右旁按鈕選擇" :disabled="published === false">
+      <q-input v-model="after" class="col q-pr-sm" mask="date" :rules="[optionalDate]" label="發文日期晚於" shadow-text="可按右旁按鈕選擇" :disabled="published === false">
         <template v-slot:append>
           <q-icon name="event" class="cursor-pointer">
             <q-popup-proxy cover transition-show="scale" transition-hide="scale">
@@ -70,7 +70,7 @@
         multiple
         use-chips
       />
-      <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" />
+      <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" @update:model-value="choosePublished" />
     </q-no-ssr>
     <div class="text-grey-6">共 {{totalDocs}} 件公文符合查詢條件</div>
     <q-infinite-scroll ref="scroll" :class="$q.screen.gt.sm ? 'row' : ''" @load="loadMore">
@@ -118,6 +118,7 @@ import {
   DocumentType,
 } from 'src/ts/models.ts';
 import { getCountFromServer, getDocs, limit, orderBy, query, startAt, Timestamp, where } from 'firebase/firestore';
+import { optionalDate } from 'src/ts/checks.ts';
 
 const props = defineProps({
   manage: {
@@ -232,6 +233,13 @@ async function loadMore(i: number, done: (stop?: boolean) => void) {
     }
     searching.value = false;
     done();
+  }
+}
+
+function choosePublished() {
+  if (published.value === false) {
+    before.value = null;
+    after.value = null;
   }
 }
 
