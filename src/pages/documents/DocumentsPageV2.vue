@@ -2,6 +2,40 @@
   <q-page padding>
     <q-no-ssr :class="$q.screen.gt.xs ? 'row' : ''">
       <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" class="col q-pr-sm" clearable debounce="500" />
+      <q-input v-model="before" class="col q-pr-sm" mask="date" :rules="['date']" label="發文日期早於" shadow-text="可按右旁按鈕選擇" :disabled="published === false">
+        <template v-slot:append>
+          <q-icon name="event" class="cursor-pointer">
+            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+              <q-date v-model="before">
+                <div class="row items-center justify-end">
+                  <q-btn v-close-popup label="Close" color="primary" flat />
+                </div>
+              </q-date>
+            </q-popup-proxy>
+          </q-icon>
+        </template>
+      </q-input>
+      <q-input v-model="after" class="col q-pr-sm" mask="date" :rules="['date']" label="發文日期晚於" shadow-text="可按右旁按鈕選擇" :disabled="published === false">
+        <template v-slot:append>
+          <q-icon name="event" class="cursor-pointer">
+            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+              <q-date v-model="after">
+                <div class="row items-center justify-end">
+                  <q-btn v-close-popup label="Close" color="primary" flat />
+                </div>
+              </q-date>
+            </q-popup-proxy>
+          </q-icon>
+        </template>
+      </q-input>
+      <q-select
+        v-model="type"
+        :option-label="(i) => i.translation"
+        :options="Object.values(DocumentType.VALUES)"
+        class="col q-pr-sm"
+        clearable
+        label="公文類型"
+      />
       <q-select
         v-model="fromGeneric"
         :option-label="(i) => i.translation"
@@ -35,14 +69,6 @@
         label="受文者"
         multiple
         use-chips
-      />
-      <q-select
-        v-model="type"
-        :option-label="(i) => i.translation"
-        :options="Object.values(DocumentType.VALUES)"
-        class="col q-pr-sm"
-        clearable
-        label="公文類型"
       />
       <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" />
     </q-no-ssr>
@@ -104,6 +130,8 @@ const fromGeneric = ref(null) as Ref<DocumentGeneralIdentity | null>;
 const fromSpecific = ref([]) as Ref<DocumentSpecificIdentity[]>;
 const toGeneric = ref(null) as Ref<DocumentGeneralIdentity | null>;
 const toSpecific = ref([]) as Ref<DocumentSpecificIdentity[]>;
+const before = ref(null) as Ref<string | null>;
+const after = ref(null) as Ref<string | null>;
 const type = ref(null) as Ref<DocumentType | null>;
 const published = ref(null) as Ref<boolean | null>;
 const searching = ref(false);
@@ -144,13 +172,15 @@ const q = computed(() => {
             toSpecific.value.map((i) => i.firebase),
           )
         : null,
+      before.value ? where('publishedAt', '<=', new Date(before.value)) : null,
+      after.value ? where('publishedAt', '>=', new Date(after.value + ' 23:59:59')) : null,
       type.value ? where('type', '==', type.value.firebase) : null,
       published.value === null ? null : where('published', '==', published.value),
       props.manage ? null : where('published', '==', true),
       props.manage ? null : where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
       orderBy('published', 'asc'),
       orderBy('createdAt', 'desc'),
-    ].filter((i) => i !== null) as any[]),
+    ].filter((i) => !!i) as any[]),
   );
 });
 const lastCreatedAt = ref(undefined) as Ref<number | undefined>;
