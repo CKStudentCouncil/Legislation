@@ -114,7 +114,7 @@ export async function generateDocumentIdNumber(specific: DocumentSpecificIdentit
   const date = new Date();
   const r = (date.getFullYear() - 1911).toString();
   const target = specific.shareIdWith ? specific.shareIdWith : specific;
-  let s = r + date.getMonth().toString().padStart(2, '0') + date.getDate().toString().padStart(2, '0');
+  let s = r + (date.getMonth() + 1).toString().padStart(2, '0') + date.getDate().toString().padStart(2, '0');
   const lastDoc = await getDocs(query(documentsCollection(), orderBy('createdAt', 'desc'), where('fromSpecific', '==', target.firebase), limit(1)));
   if (lastDoc.docs[0] && lastDoc.docs[0].exists() && lastDoc.docs[0].data()?.idNumber.startsWith(r)) {
     const lastDocId = lastDoc.docs[0].id;

@@ -24,7 +24,7 @@ export function getEmptyDocument() {
 }
 
 export async function create(adding: models.Document, template = true) {
-  adding.idPrefix = adding.fromSpecific.prefix + adding.type.prefix + '字';
+  adding.idPrefix = adding.fromSpecific.generic.prefix + adding.fromSpecific.prefix + adding.type.prefix + '字';
   adding.createdAt = new Date();
   adding.publishedAt = null;
   switch (adding.type.firebase) {
