@@ -7,13 +7,13 @@ import type { HttpsCallable } from '@firebase/functions';
 import { getFunctions, httpsCallable } from '@firebase/functions';
 
 export const firebaseApp = initializeApp({
-  apiKey: 'AIzaSyAI6eGOld2TX1NkPUjvp-nqJNmzfE-Ti7U',
-  authDomain: 'cksc-legislation.firebaseapp.com',
-  projectId: 'cksc-legislation',
-  storageBucket: 'cksc-legislation.appspot.com',
-  messagingSenderId: '872443717491',
-  appId: '1:872443717491:web:7ea49ba1403de4928b0706',
-  measurementId: 'G-0ZLXJZG30T',
+  apiKey: "AIzaSyAonGxBo_6mxqFbW0XfOhDROAiWfLdWmDs",
+  authDomain: "bqsc-9a645.firebaseapp.com",
+  projectId: "bqsc-9a645",
+  storageBucket: "bqsc-9a645.firebasestorage.app",
+  messagingSenderId: "1014884719639",
+  appId: "1:1014884719639:web:711684060e3239eabe9052",
+  measurementId: "G-S8CB7S18J4"
 });
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
@@ -24,7 +24,7 @@ export default boot(({ app }) => {
   });
   app.use(
     createGtag({
-      appName: 'CKSC Legislation Quasar App',
+      appName: 'BQSC Legislation Quasar App',
       tagId: firebaseApp.options.measurementId!,
     }),
   );

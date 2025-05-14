@@ -1,5 +1,4 @@
 import { Notify } from 'quasar';
-import type { DocumentType } from './models';
 import { documentsCollection, DocumentSpecificIdentity } from './models';
 import { getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import sanitize from 'sanitize-html';
@@ -84,14 +83,11 @@ export function translateNumberToChinese(num: number) {
 export function getReign(date: Date) {
   let year: number;
   if (date.getMonth() < 8) {
-    year = date.getFullYear() - 1945 - 1;
+    year = date.getFullYear() - 2009 - 1;
   } else {
-    year = date.getFullYear() - 1945;
+    year = date.getFullYear() - 2009;
   }
-  if (date.getMonth() > 7 || date.getMonth() < 1) {
-    return `${year}-1`;
-  }
-  return `${year}-2`;
+  return year.toString();
 }
 
 export function getCurrentReign() {
@@ -113,29 +109,19 @@ export function getReadableRecipient(specific: DocumentSpecificIdentity[], other
   return s;
 }
 
-export async function generateDocumentIdNumber(specific: DocumentSpecificIdentity, type: DocumentType) {
-  //e.g. 07620000001，1.公文之文號,由十二碼組成,前三碼為屆次,第四碼為期間次,第五碼為部門碼,第六、七碼為機關碼,第八碼為該公文類型,後四碼為流水號。
-  let r = getCurrentReign().replace('-', '');
-  if (r.length === 3) {
-    r = '0' + r;
-  }
+export async function generateDocumentIdNumber(specific: DocumentSpecificIdentity) {
+  //e.g. 1140429001，民國年三碼+日期四碼+流水號三碼
+  const date = new Date();
+  const r = (date.getFullYear() - 1911).toString();
   const target = specific.shareIdWith ? specific.shareIdWith : specific;
-  let s = r + target.generic.code + target.code;
-  const lastDoc = await getDocs(
-    query(
-      documentsCollection(),
-      orderBy('createdAt', 'desc'),
-      where('fromSpecific', '==', target.firebase),
-      where('type', '==', type.firebase),
-      limit(1),
-    ),
-  );
+  let s = r + date.getMonth().toString().padStart(2, '0') + date.getDate().toString().padStart(2, '0');
+  const lastDoc = await getDocs(query(documentsCollection(), orderBy('createdAt', 'desc'), where('fromSpecific', '==', target.firebase), limit(1)));
   if (lastDoc.docs[0] && lastDoc.docs[0].exists() && lastDoc.docs[0].data()?.idNumber.startsWith(r)) {
     const lastDocId = lastDoc.docs[0].id;
-    const lastDocIdNumber = parseInt(lastDocId.slice(-4));
-    s += (lastDocIdNumber + 1).toString().padStart(4, '0');
+    const lastDocIdNumber = parseInt(lastDocId.slice(-3));
+    s += (lastDocIdNumber + 1).toString().padStart(3, '0');
   } else {
-    s += '0001';
+    s += '001';
   }
   return s;
 }

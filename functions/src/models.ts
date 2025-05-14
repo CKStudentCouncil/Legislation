@@ -7,13 +7,13 @@ export interface User {
 export class DocumentGeneralIdentity {
   static Chairman = new DocumentGeneralIdentity('Chairman', '主席', '建班主', '0');
   static ViceChairman = new DocumentGeneralIdentity('ViceChairman', '副主席', '建班副主', '4');
-  static ExecutiveDepartment = new DocumentGeneralIdentity('ExecutiveDepartment', '行政部門', '建班政', '1');
+  static StudentAssociation = new DocumentGeneralIdentity('StudentAssociation', '行政部門', '建班政', '1');
   static StudentCouncil = new DocumentGeneralIdentity('StudentCouncil', '班代大會', '建班立', '2');
   static JudicialCommittee = new DocumentGeneralIdentity('JudicialCommittee', '評議委員會', '建班評', '3');
   static VALUES = {
     Chairman: DocumentGeneralIdentity.Chairman,
     ViceChairman: DocumentGeneralIdentity.ViceChairman,
-    ExecutiveDepartment: DocumentGeneralIdentity.ExecutiveDepartment,
+    StudentAssociation: DocumentGeneralIdentity.StudentAssociation,
     StudentCouncil: DocumentGeneralIdentity.StudentCouncil,
     JudicialCommittee: DocumentGeneralIdentity.JudicialCommittee,
   } as Record<string, DocumentGeneralIdentity>;
@@ -82,37 +82,37 @@ export class DocumentSpecificIdentity {
     '學生權益股',
     '權',
     '01',
-    DocumentGeneralIdentity.ExecutiveDepartment,
+    DocumentGeneralIdentity.StudentAssociation,
   );
   static PublicRelationsDivision = new DocumentSpecificIdentity(
     'PublicRelationsDivision',
     '公關股',
     '關',
     '02',
-    DocumentGeneralIdentity.ExecutiveDepartment,
+    DocumentGeneralIdentity.StudentAssociation,
   );
-  static ServiceDivision = new DocumentSpecificIdentity('ServiceDivision', '服務股', '服', '03', DocumentGeneralIdentity.ExecutiveDepartment);
-  static EventsDivision = new DocumentSpecificIdentity('EventsDivision', '活動股', '活', '04', DocumentGeneralIdentity.ExecutiveDepartment);
+  static ServiceDivision = new DocumentSpecificIdentity('ServiceDivision', '服務股', '服', '03', DocumentGeneralIdentity.StudentAssociation);
+  static EventsDivision = new DocumentSpecificIdentity('EventsDivision', '活動股', '活', '04', DocumentGeneralIdentity.StudentAssociation);
   static DocumentationDivision = new DocumentSpecificIdentity(
     'DocumentationDivision',
     '文宣股',
     '文',
     '05',
-    DocumentGeneralIdentity.ExecutiveDepartment,
+    DocumentGeneralIdentity.StudentAssociation,
   );
   static GeneralAffairsDivision = new DocumentSpecificIdentity(
     'GeneralAffairsDivision',
     '總務股',
     '總',
     '06',
-    DocumentGeneralIdentity.ExecutiveDepartment,
+    DocumentGeneralIdentity.StudentAssociation,
   );
   static ElectoralCommission = new DocumentSpecificIdentity(
     'ElectoralCommission',
     '選舉委員會',
     '選舉',
     '07',
-    DocumentGeneralIdentity.ExecutiveDepartment,
+    DocumentGeneralIdentity.StudentAssociation,
   );
   // Judicial Committee
   static JudicialCommitteeChairman = new DocumentSpecificIdentity(

@@ -4,6 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
+    "site": "bqsc-legislation",
     "public": "dist/spa",
     "ignore": [
       "firebase.json",
@@ -14,35 +15,35 @@
       {
         "source": "/",
         "run": {
-          "serviceId": "cksc-legislation",
+          "serviceId": "bqsc-legislation",
           "region": "asia-east1"
         }
       },
       {
         "source": "/legislation",
         "run": {
-          "serviceId": "cksc-legislation",
+          "serviceId": "bqsc-legislation",
           "region": "asia-east1"
         }
       },
       {
         "source": "/legislation/**",
         "run": {
-          "serviceId": "cksc-legislation",
+          "serviceId": "bqsc-legislation",
           "region": "asia-east1"
         }
       },
       {
         "source": "/document",
         "run": {
-          "serviceId": "cksc-legislation",
+          "serviceId": "bqsc-legislation",
           "region": "asia-east1"
         }
       },
       {
         "source": "/document/**",
         "run": {
-          "serviceId": "cksc-legislation",
+          "serviceId": "bqsc-legislation",
           "region": "asia-east1"
         }
       },

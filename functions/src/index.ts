@@ -93,7 +93,7 @@ export const uploadAttachment = onCall({
         requestBody: {
           name: getCurrentReign(),
           mimeType: 'application/vnd.google-apps.folder',
-          parents: ['1zNk5v8ZHJwAbDXCO_GswQoeY_CBCpb7m']
+          parents: ['15HH4sm6cT3CvvJNL7PyUOhdg-yJIJy4Z']
         },
         fields: 'id'
       })
@@ -105,7 +105,7 @@ export const uploadAttachment = onCall({
     requestBody: {
       name,
       mimeType,
-      parents: [folder ?? '1zNk5v8ZHJwAbDXCO_GswQoeY_CBCpb7m']
+      parents: [folder ?? '15HH4sm6cT3CvvJNL7PyUOhdg-yJIJy4Z']
     },
     media: {
       mimeType,
@@ -211,7 +211,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
         mailto: senderMail,
         sentBy: 'cksc77th@gmail.com'
       },
-      url: 'https://cksc-legislation.firebaseapp.com/document/' + docId
+      url: 'https://bqsc-legislation.firebaseapp.com/document/' + docId
     });
     mailOptions.icalEvent = {
       filename: 'invite.ics',

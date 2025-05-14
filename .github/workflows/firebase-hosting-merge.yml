@@ -5,14 +5,14 @@ name: Deploy website to Firebase Hosting on merge
 on:
   push:
     branches:
-      - main
+      - bqsc
     paths-ignore:
       - 'firebase/functions/**'
 
 env:
-  PROJECT_ID: cksc-legislation
+  PROJECT_ID: bqsc-9a645
   GAR_LOCATION: asia-east1
-  SERVICE: cksc-legislation
+  SERVICE: bqsc-legislation
   REGION: asia-east1
 
 jobs:
@@ -42,15 +42,16 @@ jobs:
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CKSC_LEGISLATION }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BQSC_LEGISLATION }}
           channelId: live
-          projectId: cksc-legislation
+          projectId: bqsc-9a645
+          target: bqsc-legislation
       - name: Google Auth
         id: auth
         uses: 'google-github-actions/auth@v2'
         with:
           token_format: access_token
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CKSC_LEGISLATION }}
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_BQSC_LEGISLATION }}
       - name: Docker Auth
         id: docker-auth
         uses: 'docker/login-action@v2'

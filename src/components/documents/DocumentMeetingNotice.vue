@@ -4,7 +4,7 @@
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">
       臺北市立建國中學班聯會
       {{
-        doc.fromSpecific.generic.firebase == DocumentGeneralIdentity.ExecutiveDepartment.firebase
+        doc.fromSpecific.generic.firebase == DocumentGeneralIdentity.StudentAssociation.firebase
           ? doc.fromSpecific.translation
           : doc.fromSpecific.generic.translation
       }}

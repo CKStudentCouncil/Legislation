@@ -105,9 +105,7 @@ const parentValue = computed({
 });
 
 const types = computed(() =>
-  Object.values(models.DocumentType.VALUES).filter(
-    (t) => parentValue.value.fromSpecific.generic.firebase === DocumentGeneralIdentity.JudicialCommittee.firebase || !t.judicialCommitteeOnly,
-  ),
+  Object.values(models.DocumentType.VALUES),
 );
 
 const hideTo = computed(

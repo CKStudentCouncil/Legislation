@@ -3,7 +3,7 @@ import { liteClient as algoliasearch } from 'algoliasearch/lite';
 import { boot } from 'quasar/wrappers';
 import { createServerRootMixin } from 'src/ts/vis-mixin.ts';
 
-export const searchClient = algoliasearch('0YZRXQ3XUQ', 'd70f2bd090855ba6fec146656a8db624');
+export const searchClient = algoliasearch('0WK6MQYNG7', '2358951292d547154e5e0f7e0960c08a');
 export const aisMixin = createServerRootMixin({
   searchClient,
   indexName: 'legislation',

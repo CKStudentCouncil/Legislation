@@ -118,6 +118,6 @@ function toggleFullscreen() {
 }
 
 function hasRole(role: DocumentSpecificIdentity) {
-  return loggedInUserClaims.roles?.includes(role.firebase) || loggedInUser.value?.uid === '5MK7Kr4O9GVg76lHCsy6ex45kP03';
+  return loggedInUserClaims.roles?.includes(role.firebase) || loggedInUser.value?.uid === 'VxXGzPHnlTNoVBkaoWcFHOb27113';
 }
 </script>
