@@ -18,7 +18,7 @@
           <div v-for="[index, line] of lines.entries()" :key="index" class="row">
             <p class="q-mb-sm">
               <span
-                :style="line.match(/^[(]?（?[一二三四五六七八九十]*([）)、])/) || cleanLines.length <= 1 ? 'visibility: hidden' : ''"
+                :style="line.match(/^[(]?（?[一二三四五六七八九十\d]*([）)、.])/) || cleanLines.length <= 1 ? 'visibility: hidden' : ''"
                 class="q-mr-sm text-secondary text-italic"
               >
                 {{ cleanLines.indexOf(line) + 1 }}
@@ -62,7 +62,7 @@ const props = defineProps({
 
 const lines = computed(() => props.content.content!.split('\n'));
 const cleanLines = computed(() =>
-  props.content.content!.split('\n').filter((line) => line.match(/^[(]?（?[一二三四五六七八九十]*([）)、])/) == null),
+  props.content.content!.split('\n').filter((line) => line.match(/^[(]?（?[一二三四五六七八九十\d]*([）)、.])/) == null),
 );
 </script>
 

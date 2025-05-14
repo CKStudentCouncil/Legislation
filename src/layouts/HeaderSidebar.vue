@@ -5,11 +5,21 @@
         <q-btn aria-label="收合側選單" dense flat icon="menu" round @click="toggleLeftDrawer" />
 
         <q-toolbar-title>
-          <q-avatar>
-            <img alt="favicon" src="/icon.png" height="38" width="38" />
-          </q-avatar>
-          <span v-if="$q.screen.gt.xs" class="q-pl-sm">建國中學班聯會法律與公文系統</span>
-          <span v-else class="q-pl-sm">建中班聯會法律與公文系統</span>
+          <div v-if="$q.screen.gt.xs">
+            <q-avatar>
+              <img alt="favicon" src="/icon.png" height="38" width="38" />
+            </q-avatar>
+            <span class="q-pl-sm">建國中學班聯會法律與公文系統<span style="font-size: 16px"> for 板橋高中學連會</span></span>
+          </div>
+          <div v-else class="row flex-center">
+            <q-avatar>
+              <img alt="favicon" src="/icon.png" height="38" width="38" />
+            </q-avatar>
+            <div class="q-pl-sm col">
+              <span class="row" style="font-size: 20px;">建國中學班聯會法律與公文系統</span>
+              <span class="row" style="font-size: 12px;"> for 板橋高中學連會</span>
+            </div>
+          </div>
         </q-toolbar-title>
 
         <q-btn v-if="$q.screen.gt.xs" :icon="Dark.isActive ? 'dark_mode' : 'nights_stay'" flat @click="toggleDark" aria-label="切換暗色模式" />

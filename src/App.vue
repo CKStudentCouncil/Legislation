@@ -34,11 +34,11 @@ onMounted(() => {
 });
 useMeta({
   title: 'null',
-  titleTemplate: (title) => `${title !== 'null' ? title + ' - ' : ''}建國中學班聯會法律與公文系統`,
+  titleTemplate: (title) => `${title !== 'null' ? title + ' - ' : ''}板橋高中學聯會法律與公文系統`,
   meta: {
     description: {
       name: 'description',
-      content: '建國中學班聯會內憲章、法律、命令、公文之中央儲存資料庫',
+      content: '板橋高中學聯會內憲章、法律、命令、公文之中央儲存資料庫',
     },
     ogImage: {
       name: 'og:image',

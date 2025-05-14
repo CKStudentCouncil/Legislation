@@ -2,7 +2,7 @@
   <div v-if="!doc">載入中...(或查無此公文)</div>
   <div v-else>
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">
-      臺北市立建國中學班聯會
+      新北市立板橋高級中學學生聯合自治會
       {{
         doc.fromSpecific.generic.firebase == DocumentGeneralIdentity.StudentAssociation.firebase
           ? doc.fromSpecific.translation
