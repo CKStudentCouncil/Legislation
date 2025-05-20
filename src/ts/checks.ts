@@ -6,6 +6,10 @@ export function optionalDate(s: string) {
  return !s || /^-?\d+\/[0-1]\d\/[0-3]\d$/.test(s) || '請輸入有效的日期'
 }
 
+export function isReign(s: string) {
+  return /^\d+-\d$/.test(s) || '請輸入有效的屆次';
+}
+
 export function isNumber(s: string) {
   return /^\d+$/.test(s) || '請輸入阿拉伯數字';
 }

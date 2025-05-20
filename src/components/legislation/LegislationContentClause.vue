@@ -10,7 +10,7 @@
       <div class="text-bold">
         {{ $props.content.title }} <span v-if="$props.content.subtitle.length > 0">【{{ $props.content.subtitle }}】</span>
         <q-no-ssr>
-          <q-btn aria-label="複製連結" class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index.toString())" />
+          <q-btn aria-label="複製連結" class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index)" />
         </q-no-ssr>
       </div>
       <div v-if="showContent">

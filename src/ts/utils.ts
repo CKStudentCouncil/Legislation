@@ -4,9 +4,10 @@ import { documentsCollection, DocumentSpecificIdentity } from './models';
 import { getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 import sanitize from 'sanitize-html';
 import { event } from 'vue-gtag';
+import { convert } from 'html-to-text';
 
-export function copyLink(href?: string) {
-  void copyText(location.protocol + '//' + location.host + location.pathname + (href ? '?c=' + href : ''));
+export function copyLink(href?: string | number | null) {
+  void copyText(location.protocol + '//' + location.host + location.pathname + (href ? '?c=' + href.toString() : ''));
 }
 
 export function copyLawLink(id: string) {
@@ -160,6 +161,10 @@ export function customSanitize(text: string) {
       },
     },
   });
+}
+
+export function htmlToText(html: string, wordwrap: number = 130) {
+  return convert(html, { wordwrap });
 }
 
 export function notifySuccess(message: string): void {

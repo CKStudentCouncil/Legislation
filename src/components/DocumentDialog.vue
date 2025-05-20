@@ -69,6 +69,7 @@
           :options="Object.values(DocumentConfidentiality.VALUES)"
           label="密等"
         />
+        <q-input v-if="isJudicial&&!isProsecution" :model-value="parentValue.prosecutionId" label="啟訴書公文字號或連結" @update:model-value="updateProsecutionId" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="$emit('canceled')" />
@@ -120,6 +121,8 @@ const isMeetingNotice = computed(() => parentValue.value.type.firebase == Docume
 const isMeetingRecord = computed(() => parentValue.value.type.firebase == DocumentType.Record.firebase);
 const isOrder = computed(() => parentValue.value.type.firebase == DocumentType.Order.firebase);
 const isAnnouncement = computed(() => parentValue.value.type.firebase == DocumentType.Announcement.firebase);
+const isJudicial = computed(() => parentValue.value.type.judicialCommitteeOnly);
+const isProsecution = computed(() => parentValue.value.type.firebase == DocumentType.CourtProsecutions.firebase);
 //TODO: fix/why doesn't the date selector update while the data does?
 const meetingDate = computed(() => date.formatDate(parentValue.value.meetingTime ?? new Date(), 'YYYY-MM-DD'));
 const meetingTime = computed(() => date.formatDate(parentValue.value.meetingTime ?? new Date(), 'HH:mm'));
@@ -139,6 +142,17 @@ function updateMeetingTime(tm: string | null) {
     parentValue.value.meetingTime = new Date();
   }
   parentValue.value.meetingTime?.setHours(parseInt(t[0]!), parseInt(t[1]!), 0);
+}
+
+function updateProsecutionId(id: any) {
+  if (typeof id !== 'string') return;
+  if (id.startsWith('http')) {
+    const matches = id.match(/^.*\/document\/(.*)$/);
+    if (matches == null || matches.length < 2) return;
+    parentValue.value.prosecutionId = matches[1]?.trim();
+  } else {
+    parentValue.value.prosecutionId = id.trim();
+  }
 }
 </script>
 

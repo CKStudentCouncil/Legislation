@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <q-no-ssr v-if="filters" :class="$q.screen.gt.xs ? 'row' : ''">
-      <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" class="col q-pr-sm" clearable debounce="500" />
+      <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" class="col q-pr-sm" clearable debounce="500" :rules="[isReign]" />
       <q-input
         v-model="before"
         :disabled="published === false"
@@ -127,7 +127,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import type { Document } from 'src/ts/models.ts';
 import { DocumentConfidentiality, DocumentGeneralIdentity, documentsCollection, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
 import { getCountFromServer, getDocs, limit, orderBy, query, startAt, Timestamp, where } from 'firebase/firestore';
-import { optionalDate } from 'src/ts/checks.ts';
+import { isReign, optionalDate } from 'src/ts/checks.ts';
 
 const props = defineProps({
   manage: {

@@ -25,7 +25,10 @@ const routes: RouteRecordRaw[] = [
         path: 'document',
         children: [
           { path: '', component: () => import('pages/manage/document/ManageDocumentsPage.vue') },
-          { path: 'from_template', component: () => import('pages/manage/document/ManageCreateDocumentFromTemplatePage.vue') },
+          {
+            path: 'from_template',
+            component: () => import('pages/manage/document/ManageCreateDocumentFromTemplatePage.vue'),
+          },
           { path: ':id', component: () => import('pages/manage/document/ManageSingleDocumentPage.vue') },
         ],
       },
@@ -43,8 +46,21 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/SSRLayout.vue'),
     children: [
       { path: '', component: () => import('pages/documents/DocumentsPageV2.vue') },
-      { path: 'judicial', component: () => import('pages/documents/JudicialDocumentsPage.vue') },
       { path: ':id', component: () => import('pages/documents/SingleDocumentPage.vue') },
+    ],
+  },
+  {
+    path: '/document/judicial',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      { path: '', component: () => import('pages/documents/judicial/JudicialDocumentsPage.vue') },
+      {
+        path: 'lawsuit',
+        children: [
+          { path: '', component: () => import('pages/documents/judicial/JudicialLawsuitPage.vue') },
+          { path: ':id', component: () => import('pages/documents/judicial/JudicialSingleLawsuitPage.vue') },
+        ],
+      },
     ],
   },
   {

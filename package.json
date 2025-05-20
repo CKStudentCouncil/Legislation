@@ -21,7 +21,9 @@
     "@types/sanitize-html": "^2.16.0",
     "algoliasearch": "^5.25.0",
     "firebase": "^11.7.1",
+    "html-to-text": "^9.0.5",
     "instantsearch.css": "^8.5.1",
+    "lodash": "^4.17.21",
     "pinia": "^3.0.2",
     "quasar": "^2.18.1",
     "sanitize-html": "^2.16.0",
@@ -36,18 +38,20 @@
   "devDependencies": {
     "@eslint/js": "^9.26.0",
     "@quasar/app-vite": "^2.2.0",
+    "@types/html-to-text": "^9.0.4",
+    "@types/lodash": "^4.17.17",
     "@types/node": "^22.15.18",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.5.0",
     "autoprefixer": "^10.4.21",
     "eslint": "^9.23.0",
     "eslint-plugin-vue": "^10.1.0",
+    "firebase-tools": "^14.3.1",
     "globals": "^16.1.0",
     "prettier": "^3.3.3",
     "typescript": "~5.8.3",
     "vite-plugin-checker": "^0.9.3",
-    "vue-tsc": "^2.2.10",
-    "firebase-tools": "^14.3.1"
+    "vue-tsc": "^2.2.10"
   },
   "engines": {
     "node": "^24 || ^22 || ^20 || ^18",

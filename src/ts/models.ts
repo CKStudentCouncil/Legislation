@@ -37,6 +37,7 @@ export interface Document {
   published: boolean;
   publishedAt?: Date | null;
   meetingTime?: Date | null;
+  prosecutionId?: string;
 }
 
 export interface MailingList {
@@ -310,11 +311,11 @@ export class DocumentType {
   static MeetingNotice = new DocumentType('MeetingNotice', '開會通知', '通', '4');
   // Judicial Committee only
   // Prefix JudicialCommittee: customizable ID, rendered with DocumentJudicialCommittee.vue
-  static JudicialCommitteeDecision = new DocumentType('JudicialCommitteeDecision', '評議委員會決議', '決', '', true, 'gavel');
+  static JudicialCommitteeDecision = new DocumentType('JudicialCommitteeDecision', '評議委員會決議', '決', '', true, 'balance');
   static JudicialCommitteeExplanation = new DocumentType('JudicialCommitteeExplanation', '評議委員會釋字', '釋', '', true, 'assured_workload');
   // Prefix Court: rendered with DocumentCourt.vue
   static CourtIndictment = new DocumentType('CourtIndictment', '起訴書', '訴', '5', false, 'edit_note');
-  static CourtVerdict = new DocumentType('CourtVerdict', '裁判書', '判', '5', true, 'balance');
+  static CourtVerdict = new DocumentType('CourtVerdict', '裁判書', '判', '5', true, 'gavel');
   static CourtNotification = new DocumentType('CourtNotification', '法庭文書-通', '通', '5', true, 'notifications');
   static CourtDocuments = new DocumentType('CourtDocuments', '法庭文書-文', '文', '5', true, 'description');
   static CourtScrolls = new DocumentType('CourtScrolls', '法庭文書-卷', '卷', '5', true, 'receipt_long');
@@ -358,8 +359,16 @@ export function convertDocumentToFirebase(data: Document) {
 }
 
 export const documentConverter: FirestoreDataConverter<Document | null> = {
-  toFirestore(data: Document) {
-    return firestoreDefaultConverter.toFirestore(convertDocumentToFirebase(data) as any);
+  toFirestore(doc: Document) {
+    const data = firestoreDefaultConverter.toFirestore(convertDocumentToFirebase(doc) as any);
+    if (!data.location) delete data.location;
+    if (!data.fromName) delete data.fromName;
+    if (!data.secretarySpecific) delete data.secretarySpecific;
+    if (!data.secretaryName) delete data.secretaryName;
+    if (!data.published) delete data.publishedAt;
+    if (!data.meetingTime) delete data.meetingTime;
+    if (!data.prosecutionId) delete data.prosecutionId;
+    return data
   },
   fromFirestore(snapshot, options) {
     const data = firestoreDefaultConverter.fromFirestore(snapshot, options);
