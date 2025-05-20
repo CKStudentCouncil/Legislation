@@ -43,6 +43,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('layouts/SSRLayout.vue'),
     children: [
       { path: '', component: () => import('pages/documents/DocumentsPageV2.vue') },
+      { path: 'judicial', component: () => import('pages/documents/JudicialDocumentsPage.vue') },
       { path: ':id', component: () => import('pages/documents/SingleDocumentPage.vue') },
     ],
   },

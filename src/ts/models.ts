@@ -310,16 +310,16 @@ export class DocumentType {
   static MeetingNotice = new DocumentType('MeetingNotice', '開會通知', '通', '4');
   // Judicial Committee only
   // Prefix JudicialCommittee: customizable ID, rendered with DocumentJudicialCommittee.vue
-  static JudicialCommitteeDecision = new DocumentType('JudicialCommitteeDecision', '評議委員會決議', '決', '', true);
-  static JudicialCommitteeExplanation = new DocumentType('JudicialCommitteeExplanation', '評議委員會釋字', '釋', '', true);
+  static JudicialCommitteeDecision = new DocumentType('JudicialCommitteeDecision', '評議委員會決議', '決', '', true, 'gavel');
+  static JudicialCommitteeExplanation = new DocumentType('JudicialCommitteeExplanation', '評議委員會釋字', '釋', '', true, 'assured_workload');
   // Prefix Court: rendered with DocumentCourt.vue
-  static CourtIndictment = new DocumentType('CourtIndictment', '起訴書', '訴', '5');
-  static CourtVerdict = new DocumentType('CourtVerdict', '裁判書', '判', '5', true);
-  static CourtNotification = new DocumentType('CourtNotification', '法庭文書-通', '通', '5', true);
-  static CourtDocuments = new DocumentType('CourtDocuments', '法庭文書-文', '文', '5', true);
-  static CourtScrolls = new DocumentType('CourtScrolls', '法庭文書-卷', '卷', '5', true);
-  static CourtAppeals = new DocumentType('CourtAppeals', '法庭文書-上', '上', '5', true);
-  static CourtProsecutions = new DocumentType('CourtProsecutions', '法庭文書-啟', '啟', '5', true);
+  static CourtIndictment = new DocumentType('CourtIndictment', '起訴書', '訴', '5', false, 'edit_note');
+  static CourtVerdict = new DocumentType('CourtVerdict', '裁判書', '判', '5', true, 'balance');
+  static CourtNotification = new DocumentType('CourtNotification', '法庭文書-通', '通', '5', true, 'notifications');
+  static CourtDocuments = new DocumentType('CourtDocuments', '法庭文書-文', '文', '5', true, 'description');
+  static CourtScrolls = new DocumentType('CourtScrolls', '法庭文書-卷', '卷', '5', true, 'receipt_long');
+  static CourtAppeals = new DocumentType('CourtAppeals', '法庭文書-上', '上', '5', true, 'campaign');
+  static CourtProsecutions = new DocumentType('CourtProsecutions', '法庭文書-啟', '啟', '5', true, 'flag');
   static VALUES = {
     Announcement: DocumentType.Announcement,
     Order: DocumentType.Order,
@@ -343,6 +343,7 @@ export class DocumentType {
     public prefix: string,
     public code: string,
     public judicialCommitteeOnly: boolean = false,
+    public icon?: string,
   ) {}
 }
 

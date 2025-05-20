@@ -17,7 +17,7 @@
         </ais-search-box>
       </q-no-ssr>
       <div class="row">
-        <q-no-ssr class="col-2" style="min-width: 350px">
+        <q-no-ssr class="col-2" style="min-width: 250px">
           <ais-menu attribute="category">
             <template v-slot="{ refine }">
               <div class="q-pt-md">

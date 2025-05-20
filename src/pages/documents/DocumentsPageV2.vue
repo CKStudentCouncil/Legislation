@@ -1,27 +1,43 @@
 <template>
   <q-page padding>
-    <q-no-ssr :class="$q.screen.gt.xs ? 'row' : ''">
+    <q-no-ssr v-if="filters" :class="$q.screen.gt.xs ? 'row' : ''">
       <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" class="col q-pr-sm" clearable debounce="500" />
-      <q-input v-model="before" class="col q-pr-sm" mask="date" :rules="[optionalDate]" label="發文日期早於" shadow-text="可按右旁按鈕選擇" :disabled="published === false">
+      <q-input
+        v-model="before"
+        :disabled="published === false"
+        :rules="[optionalDate]"
+        class="col q-pr-sm"
+        label="發文日期早於"
+        mask="date"
+        shadow-text="可按右旁按鈕選擇"
+      >
         <template v-slot:append>
-          <q-icon name="event" class="cursor-pointer">
-            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+          <q-icon class="cursor-pointer" name="event">
+            <q-popup-proxy cover transition-hide="scale" transition-show="scale">
               <q-date v-model="before">
                 <div class="row items-center justify-end">
-                  <q-btn v-close-popup label="Close" color="primary" flat />
+                  <q-btn v-close-popup color="primary" flat label="Close" />
                 </div>
               </q-date>
             </q-popup-proxy>
           </q-icon>
         </template>
       </q-input>
-      <q-input v-model="after" class="col q-pr-sm" mask="date" :rules="[optionalDate]" label="發文日期晚於" shadow-text="可按右旁按鈕選擇" :disabled="published === false">
+      <q-input
+        v-model="after"
+        :disabled="published === false"
+        :rules="[optionalDate]"
+        class="col q-pr-sm"
+        label="發文日期晚於"
+        mask="date"
+        shadow-text="可按右旁按鈕選擇"
+      >
         <template v-slot:append>
-          <q-icon name="event" class="cursor-pointer">
-            <q-popup-proxy cover transition-show="scale" transition-hide="scale">
+          <q-icon class="cursor-pointer" name="event">
+            <q-popup-proxy cover transition-hide="scale" transition-show="scale">
               <q-date v-model="after">
                 <div class="row items-center justify-end">
-                  <q-btn v-close-popup label="Close" color="primary" flat />
+                  <q-btn v-close-popup color="primary" flat label="Close" />
                 </div>
               </q-date>
             </q-popup-proxy>
@@ -72,9 +88,9 @@
       />
       <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" @update:model-value="choosePublished" />
     </q-no-ssr>
-    <div class="text-grey-6">共 {{totalDocs}} 件公文符合查詢條件</div>
+    <div class="text-grey-6">共 {{ totalDocs }} 件公文符合查詢條件</div>
     <q-infinite-scroll ref="scroll" :class="$q.screen.gt.sm ? 'row' : ''" @load="loadMore">
-      <div v-for="doc of allDocs" :key="doc!.idPrefix + doc!.idNumber" :class="'q-mb-md ' + ($q.screen.gt.sm ? 'q-pr-md col-6' : '')">
+      <div v-for="doc of allDocs" :key="doc!.idPrefix + doc!.idNumber" :class="'q-mb-md q-pr-md ' + ($q.screen.gt.sm && dense ? 'col-6' : '')">
         <q-card :class="doc.published ? '' : 'bg-highlight'">
           <div v-if="!!doc">
             <q-card-section>
@@ -106,17 +122,10 @@
 
 <script lang="ts" setup>
 import { copyDocLink, getCurrentReign, notifyError } from 'src/ts/utils.ts';
-import type { Ref} from 'vue';
+import type { Ref } from 'vue';
 import { computed, reactive, ref, watch } from 'vue';
-import type {
-  Document} from 'src/ts/models.ts';
-import {
-  DocumentConfidentiality,
-  DocumentGeneralIdentity,
-  documentsCollection,
-  DocumentSpecificIdentity,
-  DocumentType,
-} from 'src/ts/models.ts';
+import type { Document } from 'src/ts/models.ts';
+import { DocumentConfidentiality, DocumentGeneralIdentity, documentsCollection, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
 import { getCountFromServer, getDocs, limit, orderBy, query, startAt, Timestamp, where } from 'firebase/firestore';
 import { optionalDate } from 'src/ts/checks.ts';
 
@@ -125,8 +134,24 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  dense: {
+    type: Boolean,
+    default: true,
+  },
+  filters: {
+    type: Boolean,
+    default: true,
+  },
+  filterType: {
+    type: String,
+    default: null,
+  },
+  filterReign: {
+    type: String,
+    default: null,
+  },
 });
-const reign = ref(getCurrentReign());
+const reign = ref(props.filters ? getCurrentReign() : null);
 const fromGeneric = ref(null) as Ref<DocumentGeneralIdentity | null>;
 const fromSpecific = ref([]) as Ref<DocumentSpecificIdentity[]>;
 const toGeneric = ref(null) as Ref<DocumentGeneralIdentity | null>;
@@ -140,7 +165,7 @@ const q = computed(() => {
   return query(
     documentsCollection(),
     ...([
-      reign.value ? where('reign', '==', reign.value) : null,
+      props.filterReign || reign.value ? where('reign', '==', props.filterReign ?? reign.value) : null,
       fromGeneric.value && fromSpecific.value.length === 0
         ? where(
             'fromSpecific',
@@ -175,7 +200,7 @@ const q = computed(() => {
         : null,
       before.value ? where('publishedAt', '<=', new Date(before.value)) : null,
       after.value ? where('publishedAt', '>=', new Date(after.value + ' 23:59:59')) : null,
-      type.value ? where('type', '==', type.value.firebase) : null,
+      type.value || props.filterType ? where('type', '==', type.value?.firebase ?? props.filterType) : null,
       published.value === null ? null : where('published', '==', published.value),
       props.manage ? null : where('published', '==', true),
       props.manage ? null : where('confidentiality', '==', DocumentConfidentiality.Public.firebase),

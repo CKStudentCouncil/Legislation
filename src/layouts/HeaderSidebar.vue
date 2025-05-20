@@ -89,6 +89,7 @@ const endpoints = [
   { name: '檢視公文', url: '/document', icon: 'description', requireAuth: false },
   { name: '編輯法令', url: '/manage/legislation', icon: 'edit', requireAuth: true },
   { name: '編輯公文', url: '/manage/document', icon: 'draw', requireAuth: true },
+  { name: '評委文書', url: '/document/judicial', icon: 'balance', requireAuth: false },
   { name: '管理帳號', url: '/manage/accounts', icon: 'badge', requireAuth: true, requireRole: DocumentSpecificIdentity.Chairman },
   { name: '關於', url: '/about', icon: 'info', requireAuth: false },
 ];
