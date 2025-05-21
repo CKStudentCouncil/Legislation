@@ -91,7 +91,7 @@ onMounted(() => {
     id: route.params.id! as string,
     name: legislation.value?.name,
     category: legislation.value?.category.translation,
-    type: legislation.value?.category.type.translation,
+    type: legislation.value?.category.type.translation
   });
 });
 watch(legislation, () => {
@@ -102,7 +102,7 @@ watch(legislation, () => {
       if (el) {
         window.scrollTo({
           top: el.offsetTop - 100,
-          behavior: 'smooth',
+          behavior: 'smooth'
         });
       }
     }, 250);
@@ -131,7 +131,7 @@ const { handlePrint } = useVueToPrint({
     setTimeout(() => {
       printing.value = false;
     }, 300);
-  },
+  }
 });
 
 function collapseAll() {
@@ -149,7 +149,7 @@ function expandAll() {
 defineOptions({
   async preFetch({ store, currentRoute }) {
     await useLegislationStore(store).loadLegislation(currentRoute.params.id as string);
-  },
+  }
 });
 
 onServerPrefetch(async () => {
@@ -177,22 +177,31 @@ useMeta(() => {
         break;
     }
   }
+  const lastUpdated = l?.history[l?.history.length - 1]?.amendedAt?.toISOString();
   return {
     title: l?.name,
     meta: {
       description: {
         name: 'description',
-        content: description,
+        content: description
+      },
+      'last-modified': {
+        'http-equiv': 'last-modified',
+        content: lastUpdated
+      },
+      'og:updated-time': {
+        name: 'og:updated-time',
+        content: lastUpdated
       },
       'og:title': {
         name: 'og:title',
-        content: l?.name,
+        content: l?.name
       },
       'og:description': {
         name: 'og:description',
-        content: description,
-      },
-    },
+        content: description
+      }
+    }
   };
 });
 </script>

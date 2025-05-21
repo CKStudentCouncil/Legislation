@@ -120,12 +120,21 @@ ${d?.fromName ? `會議主席：${d.fromSpecific.translation} ${d.fromName}` : '
       break;
     }
   }
+  const lastUpdated = d?.publishedAt?.toISOString();
   return {
     title: d?.subject,
     meta: {
       description: {
         name: 'description',
         content: description,
+      },
+      'last-modified': {
+        'http-equiv': 'last-modified',
+        content: lastUpdated,
+      },
+      'og:updated-time': {
+        name: 'og:updated-time',
+        content: lastUpdated
       },
       'og:title': {
         name: 'og:title',

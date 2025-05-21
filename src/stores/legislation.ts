@@ -10,7 +10,16 @@ export const useLegislationStore = defineStore('legislation', {
   getters: {
     getLegislation: (state) => {
       return (legislation: string): Legislation | null => {
-        return state.legislations[legislation] || null;
+        const l = state.legislations[legislation];
+        if (!l) return null;
+        l.history.map(h => {
+          h.amendedAt = new Date(h.amendedAt);
+          return h;
+        })
+        l.addendum?.map(a => {
+          a.createdAt = new Date(a.createdAt);
+        })
+        return l;
       };
     },
   },
