@@ -4,7 +4,7 @@
     <q-route-tab label="訴訟查詢" to="/document/judicial/lawsuit" />
   </q-tabs>
   <q-page padding>
-    <q-stepper ref="stepper" v-model="step" animated header-nav vertical :class="sortedDocs.length === 0 ? 'text-center' : ''">
+    <q-stepper ref="stepper" v-model="step" :class="sortedDocs.length === 0 ? 'text-center' : ''" animated header-nav vertical>
       <q-spinner v-if="sortedDocs.length === 0" color="primary" size="40px" />
       <q-step
         v-for="(doc, index) in sortedDocs"
@@ -19,7 +19,7 @@
           <q-btn v-if="step !== sortedDocs.length - 1" color="primary" label="下一頁" @click="next" />
           <q-btn v-if="step !== 0" color="primary" flat label="上一頁" @click="previous" />
           <q-btn color="primary" flat icon="link" label="複製連結" @click="copyLink(step)" />
-          <q-btn color="primary" flat icon="open_in_new" label="檢視原文" @click="previous" />
+          <q-btn :to="`/document/${doc.idPrefix}第${doc.idNumber}號`" color="primary" flat icon="open_in_new" label="檢視原文" />
         </q-stepper-navigation>
       </q-step>
     </q-stepper>
@@ -51,7 +51,7 @@ const relevantDocs = useCollection(
   ),
 );
 const sortedDocs = computed(() => orderBy(concat(relevantDocs.value, prosecutionDoc.value), ['publishedAt'], ['asc']).filter((o) => !!o));
-watch(step, v=>void router.push({ query: { c: v } }))
+watch(step, (v) => void router.push({ query: { c: v } }));
 
 function next() {
   stepper.value.next();
