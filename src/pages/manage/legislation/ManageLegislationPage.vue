@@ -7,7 +7,7 @@
 <script lang="ts" setup>
 import LegislationPage from 'pages/legislation/LegislationPage.vue';
 import { reactive, ref } from 'vue';
-import type { Addendum, History, Legislation, LegislationContent} from 'src/ts/models.ts';
+import type { Addendum, LegislationHistory, Legislation, LegislationContent} from 'src/ts/models.ts';
 import { LegislationCategory, legislationDocument, useLegislations } from 'src/ts/models.ts';
 import { date, Loading } from 'quasar';
 import LegislationDialog from 'components/legislation/LegislationDialog.vue';
@@ -45,7 +45,7 @@ async function submit() {
     const id = target.category.idPrefix + (last + 1).toString().padStart(3, '0');
     await setDoc(legislationDocument(id), {
       ...target,
-      history: [] as History[],
+      history: [] as LegislationHistory[],
       content: [] as LegislationContent[],
       addendum: [] as Addendum[],
       attachments: [] as string[],

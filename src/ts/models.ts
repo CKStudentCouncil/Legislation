@@ -8,7 +8,7 @@ export interface Legislation {
   content: LegislationContent[];
   createdAt: Date;
   name: string;
-  history: History[];
+  history: LegislationHistory[];
   addendum?: Addendum[];
   attachments?: Attachment[];
   frozenBy?: string;
@@ -434,6 +434,7 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
       history: legislation.history.map((history) => {
         history.content?.map(convertContentToFirebase).sort((a, b) => a.index - b.index);
         history.amendedAt = Timestamp.fromDate(history.amendedAt) as any;
+        if (!history.totalAmendment) delete history.totalAmendment;
         return history;
       }),
       addendum: legislation.addendum?.map((addendum) => {
@@ -455,6 +456,7 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
     data.history = data.history.map((history: any) => {
       history.content = history.content?.map(convertContentFromFirebase);
       history.amendedAt = history.amendedAt.toDate();
+      history.totalAmendment = !!history.totalAmendment;
       return history;
     });
     data.addendum = data.addendum?.map((addendum: any) => {
@@ -481,11 +483,12 @@ export function useLegislation(id: string) {
   return useDocument(legislationDocument(id));
 }
 
-export interface History {
+export interface LegislationHistory {
   content?: LegislationContent[];
   brief: string;
   amendedAt: Date;
   link?: string;
+  totalAmendment?: boolean;
 }
 
 export interface LegislationContent {

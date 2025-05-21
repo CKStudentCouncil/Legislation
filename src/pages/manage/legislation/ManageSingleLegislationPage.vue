@@ -90,10 +90,10 @@
         <q-input v-model="targetContent.title" label="標題" />
         <q-input v-model="targetContent.subtitle" :disable="targetContent.deleted" label="副標題 (無須加入中括號)" />
         <q-input
-          autofocus
           v-if="targetContent.type.firebase != ContentType.Chapter.firebase"
           v-model="targetContent.content"
           :disable="targetContent.deleted"
+          autofocus
           label="內容"
           type="textarea"
         />
@@ -104,7 +104,13 @@
           label="凍結或失效"
           @update:model-value="(v) => (v ? (targetContent.frozenBy = ' ') : (targetContent.frozenBy = undefined))"
         />
-        <q-input v-if="targetContent.frozenBy" ref="contentFrozenByRef" v-model="targetContent.frozenBy" :rules="[isUrl]" label="凍結或失效之依據公文" />
+        <q-input
+          v-if="targetContent.frozenBy"
+          ref="contentFrozenByRef"
+          v-model="targetContent.frozenBy"
+          :rules="[isUrl]"
+          label="凍結或失效之依據公文"
+        />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="contentAction = null" />
@@ -128,10 +134,11 @@
   <q-dialog :model-value="historyAction != null" persistent>
     <q-card style="min-width: 30vw">
       <q-card-section>
-        <q-date v-model="targetHistory.amendedAt" class="q-mb-md" label="日期" mask="YYYY-MM-DD" />
+        <q-date v-model="targetHistory.rawAmendedAt" class="q-mb-md" label="日期" mask="YYYY-MM-DD" />
         <q-input v-model="targetHistory.brief" label="簡述" />
         <q-input ref="historyLinkRef" v-model="targetHistory.link" :rules="[isUrl]" label="發布公文連結" />
         <q-checkbox v-model="targetHistory.recordCurrent" label="記錄目前法條內容為修改後內容" />
+        <q-checkbox v-model="targetHistory.totalAmendment" label="全文修正" />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="historyAction = null" />
@@ -156,12 +163,12 @@
       </q-card-actions>
     </q-card>
   </q-dialog>
-  <LegislationDialog v-model="target" :action="action" @canceled="action = null" @submit="submit" ref="frozenByRef" />
+  <LegislationDialog ref="frozenByRef" v-model="target" :action="action" @canceled="action = null" @submit="submit" />
 </template>
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
-import type { LegislationCategory } from 'src/ts/models.ts';
+import type { LegislationCategory, LegislationHistory } from 'src/ts/models.ts';
 import * as models from 'src/ts/models.ts';
 import { ContentType, convertContentToFirebase, legislationDocument, useLegislation } from 'src/ts/models.ts';
 import LegislationContent from 'components/legislation/LegislationContent.vue';
@@ -182,23 +189,28 @@ interface EditingLegislationContent extends models.LegislationContent {
   insertBefore: boolean;
 }
 
+interface EditingLegislationHistory extends LegislationHistory {
+  rawAmendedAt: string;
+  recordCurrent: boolean;
+  index: number;
+}
+
 const route = useRoute();
 const router = useRouter();
 const legislation = useLegislation(route.params.id! as string);
 const targetContent = reactive({} as EditingLegislationContent);
 const targetAddendum = reactive({} as { content: string[]; createdAt: string; index: number });
-const targetHistory = reactive(
+const targetHistory = reactive({} as EditingLegislationHistory);
+const targetAttachment = reactive({} as { description: string; urls: string[]; index: number });
+const target = reactive(
   {} as {
-    amendedAt: string;
-    brief: string;
-    link: string;
-    recordCurrent: boolean;
-    index: number;
-    content: models.LegislationContent[];
+    name: string;
+    category: LegislationCategory;
+    createdAt: string;
+    preface?: string;
+    frozenBy?: string;
   },
 );
-const targetAttachment = reactive({} as { description: string; urls: string[]; index: number });
-const target = reactive({} as { name: string; category: LegislationCategory; createdAt: string; preface?: string; frozenBy?: string });
 const contentAction = ref<'edit' | 'add' | null>(null);
 const addendumAction = ref<'edit' | 'add' | null>(null);
 const historyAction = ref<'edit' | 'add' | null>(null);
@@ -229,7 +241,7 @@ function addAddendum() {
 }
 
 function addHistory() {
-  targetHistory.amendedAt = date.formatDate(new Date(), 'YYYY-MM-DD');
+  targetHistory.rawAmendedAt = date.formatDate(new Date(), 'YYYY-MM-DD');
   targetHistory.brief = '';
   targetHistory.link = '';
   targetHistory.recordCurrent = true;
@@ -262,9 +274,9 @@ function editAddendum(addendum: models.Addendum) {
   addendumAction.value = 'edit';
 }
 
-function editHistory(history: models.History) {
-  targetHistory.amendedAt = date.formatDate(history.amendedAt, 'YYYY-MM-DD');
-  targetHistory.brief = history.brief;
+function editHistory(history: models.LegislationHistory) {
+  Object.assign(targetHistory, history);
+  targetHistory.rawAmendedAt = date.formatDate(history.amendedAt, 'YYYY-MM-DD');
   targetHistory.link = history.link ?? '';
   targetHistory.recordCurrent = false;
   targetHistory.index = legislation.value!.history.indexOf(history);
@@ -386,12 +398,15 @@ async function submitAddendum() {
 async function submitHistory(skipCheck: boolean = false) {
   if (!skipCheck && historyLinkRef.value?.validate() !== true) return;
   const mappedHistory = {
-    amendedAt: date.extractDate(targetHistory.amendedAt, 'YYYY-MM-DD'),
+    amendedAt: date.extractDate(targetHistory.rawAmendedAt, 'YYYY-MM-DD'),
     brief: targetHistory.brief,
     content: targetHistory.content,
-  } as models.History;
+  } as models.LegislationHistory;
   if (targetHistory.link) {
     mappedHistory.link = targetHistory.link;
+  }
+  if (targetHistory.totalAmendment) {
+    mappedHistory.totalAmendment = targetHistory.totalAmendment;
   }
   if (targetHistory.recordCurrent) {
     mappedHistory.content = legislation.value!.content;
@@ -410,6 +425,7 @@ async function submitHistory(skipCheck: boolean = false) {
         .value!.history.map((h) => {
           const copy = { ...h };
           copy.content = copy.content?.map(convertContentToFirebase) ?? [];
+          if (!copy.totalAmendment) delete copy.totalAmendment;
           return copy;
         })
         .slice(0); // Copying the array prevents firebase changing it midway for some reason
@@ -497,7 +513,7 @@ function removeAddendum(addendum: models.Addendum) {
   removeProperty('addendum', addendum, '附帶決議');
 }
 
-function removeHistory(history: models.History) {
+function removeHistory(history: models.LegislationHistory) {
   const copy = { ...history };
   copy.content = copy.content?.map(convertContentToFirebase);
   removeProperty('history', history, '立法沿革');
