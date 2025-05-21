@@ -10,16 +10,21 @@
         <q-btn color="negative" dense flat icon="delete" size="20px" @click="remove()"></q-btn>
       </div>
       <div v-if="legislation.preface">{{ legislation.preface }}</div>
-      <div class="text-h6">立法沿革</div>
+      <div>立法沿革</div>
       <q-btn color="positive" flat icon="add" label="新增立法沿革" @click="addHistory"></q-btn>
-      <div v-for="history of legislation.history.sort((a, b) => a.amendedAt.valueOf() - b.amendedAt.valueOf())" :key="history.amendedAt.valueOf()">
-        {{ history.amendedAt.toLocaleDateString() + ' ' + history.brief }}
-        <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px">
-          <q-tooltip>檢視發布公文</q-tooltip>
-        </q-btn>
-        <q-btn dense flat icon="edit" size="10px" @click="editHistory(history)" />
-        <q-btn color="negative" dense flat icon="delete" size="10px" @click="removeHistory(history)" />
-      </div>
+      <table>
+        <tr v-for="history of legislation.history.sort((a, b) => a.amendedAt.valueOf() - b.amendedAt.valueOf())" :key="history.amendedAt.valueOf()">
+          <th>{{ new Date(history.amendedAt).toLocaleDateString() }}</th>
+          <th>{{ history.brief }}</th>
+          <th class="no-print">
+            <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px">
+              <q-tooltip>檢視發布公文</q-tooltip>
+            </q-btn>
+            <q-btn dense flat icon="edit" size="10px" @click="editHistory(history)" />
+            <q-btn color="negative" dense flat icon="delete" size="10px" @click="removeHistory(history)" />
+          </th>
+        </tr>
+      </table>
       <q-btn color="positive" flat icon="add" label="新增內容" @click="addContent()"></q-btn>
       <q-toggle v-model="draggable.content" label="拖曳排序" />
       <VueDraggable
@@ -229,7 +234,7 @@ function addContent(index?: number) {
   targetContent.index = index ?? legislation.value!.content.length;
   targetContent.subtitle = '';
   targetContent.content = '';
-  targetContent.insertBefore = !!index;
+  targetContent.insertBefore = index !== undefined
   generateTitle();
   contentAction.value = 'add';
 }
@@ -246,6 +251,7 @@ function addHistory() {
   targetHistory.link = '';
   targetHistory.recordCurrent = true;
   targetHistory.content = [];
+  targetHistory.totalAmendment = false;
   historyAction.value = 'add';
 }
 
@@ -256,13 +262,7 @@ function addAttachment() {
 }
 
 function editContent(legislationContent: models.LegislationContent) {
-  targetContent.type = legislationContent.type;
-  targetContent.deleted = legislationContent.deleted;
-  targetContent.frozenBy = legislationContent.frozenBy;
-  targetContent.index = legislationContent.index;
-  targetContent.title = legislationContent.title;
-  targetContent.subtitle = legislationContent.subtitle;
-  targetContent.content = legislationContent.content;
+  Object.assign(targetContent, legislationContent);
   targetContent.insertBefore = false;
   contentAction.value = 'edit';
 }
@@ -578,4 +578,10 @@ async function rearrangeAttachment() {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+th {
+  font-weight: normal;
+  text-align: left;
+  vertical-align: top;
+}
+</style>
