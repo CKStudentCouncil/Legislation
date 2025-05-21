@@ -42,6 +42,7 @@ import { useDocumentStore } from 'stores/document.ts';
 import { useMeta } from 'quasar';
 import { DocumentType } from 'src/ts/models.ts';
 import { convertToChineseDay } from 'app/functions/src/utils.ts';
+import { event } from 'vue-gtag';
 
 const route = useRoute();
 const doc = ref();
@@ -75,6 +76,11 @@ onMounted(() => {
     .loadDocument(route.params.id as string)
     .then((d) => (doc.value = d))
     .catch((e) => console.error(e));
+  event('view_document' as any, {
+    id: route.params.id! as string,
+    subject: doc.value?.subject,
+    type: doc.value?.type.translation,
+  });
 });
 
 defineOptions({

@@ -31,11 +31,12 @@ import { DocumentConfidentiality, documentsCollection, useSpecificDocument } fro
 import { useRoute, useRouter } from 'vue-router';
 import { query, where } from 'firebase/firestore';
 import { useCollection } from 'vuefire';
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import orderBy from 'lodash/orderBy';
 import concat from 'lodash/concat';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { copyLink } from 'src/ts/utils.ts';
+import { event } from 'vue-gtag';
 
 const route = useRoute();
 const router = useRouter();
@@ -52,6 +53,11 @@ const relevantDocs = useCollection(
 );
 const sortedDocs = computed(() => orderBy(concat(relevantDocs.value, prosecutionDoc.value), ['publishedAt'], ['asc']).filter((o) => !!o));
 watch(step, (v) => void router.push({ query: { c: v } }));
+onMounted(() => {
+  event('view_lawsuit' as any, {
+    id: route.params.id! as string,
+  });
+});
 
 function next() {
   stepper.value.next();
