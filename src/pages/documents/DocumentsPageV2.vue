@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <q-no-ssr v-if="filters" :class="$q.screen.gt.xs ? 'row' : ''">
-      <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" class="col q-pr-sm" clearable debounce="500" :rules="[isReign]" />
+      <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" :rules="[isReign]" class="col q-pr-sm" clearable debounce="500" />
       <q-input
         v-model="before"
         :disabled="published === false"
@@ -105,7 +105,7 @@
             <q-separator />
             <q-card-actions>
               <q-btn v-if="manage" :to="`/manage/document/${doc.idPrefix}第${doc.idNumber}號`" color="secondary" flat label="編輯" />
-              <q-btn :to="`/document/${doc.idPrefix}第${doc.idNumber}號`" color="primary" flat icon="visibility" label="檢視" />
+              <q-btn :to="`/document/${doc.idPrefix}第${doc.idNumber}號`" color="primary" flat icon="visibility" label="檢視" role="link" />
               <q-btn color="primary" flat icon="link" label="複製連結" @click="copyDocLink(`${doc.idPrefix}第${doc.idNumber}號`)" />
             </q-card-actions>
           </div>

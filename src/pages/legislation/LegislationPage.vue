@@ -76,6 +76,7 @@
                     flat
                     icon="visibility"
                     label="檢視全文"
+                    role="link"
                     @click="sendEvent('view', item, 'Legislation viewed')"
                   />
                   <q-no-ssr>
@@ -85,9 +86,9 @@
                       icon="link"
                       label="複製連結"
                       @click="
-                      sendEvent('click', item, 'Legislation link copied');
-                      copyLawLink(item.objectID);
-                    "
+                        sendEvent('click', item, 'Legislation link copied');
+                        copyLawLink(item.objectID);
+                      "
                     />
                   </q-no-ssr>
                 </q-card-section>

@@ -26,6 +26,7 @@
             v-ripple
             :active="selected === endpoint.name"
             :to="endpoint.url"
+            role="link"
             @click="changeSelected(endpoint.name)"
           >
             <q-item-section avatar>
