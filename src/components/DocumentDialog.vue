@@ -147,7 +147,7 @@ function updateMeetingTime(tm: string | null) {
 function updateProsecutionId(id: any) {
   if (typeof id !== 'string') return;
   if (id.startsWith('http')) {
-    const matches = id.match(/^.*\/document\/(.*)$/);
+    const matches = decodeURI(id).match(/^.*\/document\/(.*)$/);
     if (matches == null || matches.length < 2) return;
     parentValue.value.prosecutionId = matches[1]?.trim();
   } else {
