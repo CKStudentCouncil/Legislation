@@ -107,6 +107,7 @@ import { aisMixin, searchClient } from 'boot/algolia.ts';
 import { getCurrentInstance, inject, onBeforeMount, onServerPrefetch, ref } from 'vue';
 import { copyLawLink } from 'src/ts/utils.ts';
 import { renderToString } from 'vue/server-renderer';
+import { useMeta } from 'quasar';
 
 const selected = ref('');
 defineProps({
@@ -135,6 +136,8 @@ onServerPrefetch(() => {
     console.error('Error during server-side rendering:', error);
   }
 });
+
+useMeta({ title: '檢視法令' });
 </script>
 
 <style>

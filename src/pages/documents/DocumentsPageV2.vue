@@ -128,6 +128,7 @@ import type { Document } from 'src/ts/models.ts';
 import { DocumentConfidentiality, DocumentGeneralIdentity, documentsCollection, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
 import { getCountFromServer, getDocs, limit, orderBy, query, startAt, Timestamp, where } from 'firebase/firestore';
 import { isReign, optionalDate } from 'src/ts/checks.ts';
+import { useMeta } from 'quasar';
 
 const props = defineProps({
   manage: {
@@ -269,6 +270,8 @@ function choosePublished() {
 }
 
 void updateTotal();
+
+useMeta({ title: '檢視公文' });
 </script>
 
 <style lang="scss" scoped>
