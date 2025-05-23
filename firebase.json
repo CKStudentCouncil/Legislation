@@ -12,7 +12,7 @@
     ],
     "rewrites": [
       {
-        "source": "index.html",
+        "source": "/",
         "run": {
           "serviceId": "cksc-legislation",
           "region": "asia-east1"
