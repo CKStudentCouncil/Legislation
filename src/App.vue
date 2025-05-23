@@ -1,5 +1,5 @@
 <template>
-  <div id="mainframe" :class="$q.dark.isActive ? 'auto-dark' : ''">
+  <div id="mainframe" class="auto-dark">
     <router-view />
   </div>
 </template>

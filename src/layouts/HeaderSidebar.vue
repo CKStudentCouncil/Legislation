@@ -105,6 +105,9 @@ function toggleLeftDrawer() {
 function toggleDark() {
   Dark.toggle();
   LocalStorage.set('dark', Dark.isActive);
+  if (!Dark.isActive) {
+    document.querySelector('#mainframe')?.classList.remove('auto-dark');
+  }
 }
 
 function changeSelected(name: string) {
