@@ -207,6 +207,33 @@ export class DocumentSpecificIdentity {
     DocumentGeneralIdentity.ExecutiveDepartment,
     '選舉委員會主任委員',
   );
+  static ElectoralCommitteeChairman = new DocumentSpecificIdentity(
+    'ElectoralCommitteeChairman',
+    '選舉委員會主任委員',
+    '選舉',
+    '07',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+    undefined,
+    DocumentSpecificIdentity.ElectoralCommission,
+  );
+  static ElectoralCommitteeViceChairman = new DocumentSpecificIdentity(
+    'ElectoralCommitteeViceChairman',
+    '選舉委員會副主任委員',
+    '選舉',
+    '07',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+    undefined,
+    DocumentSpecificIdentity.ElectoralCommission,
+  );
+  static ElectoralCommitteeMember = new DocumentSpecificIdentity(
+    'ElectoralCommitteeMember',
+    '選舉委員',
+    '選舉',
+    '07',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+    undefined,
+    DocumentSpecificIdentity.ElectoralCommission,
+  );
   // Judicial Committee
   static JudicialCommitteeChairman = new DocumentSpecificIdentity(
     'JudicialCommitteeChairman',
@@ -281,6 +308,9 @@ export class DocumentSpecificIdentity {
     DocumentationDivision: DocumentSpecificIdentity.DocumentationDivision,
     GeneralAffairsDivision: DocumentSpecificIdentity.GeneralAffairsDivision,
     ElectoralCommission: DocumentSpecificIdentity.ElectoralCommission,
+    ElectoralCommitteeChairman: DocumentSpecificIdentity.ElectoralCommitteeChairman,
+    ElectoralCommitteeViceChairman: DocumentSpecificIdentity.ElectoralCommitteeViceChairman,
+    ElectoralCommitteeMember: DocumentSpecificIdentity.ElectoralCommitteeMember,
     JudicialCommitteeChairman: DocumentSpecificIdentity.JudicialCommitteeChairman,
     JudicialCommitteeViceChairman: DocumentSpecificIdentity.JudicialCommitteeViceChairman,
     JudicialCommitteeMember: DocumentSpecificIdentity.JudicialCommitteeMember,
