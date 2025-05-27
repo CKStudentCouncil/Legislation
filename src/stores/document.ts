@@ -3,7 +3,7 @@ import type * as models from 'src/ts/models.ts';
 import { documentsCollection } from 'src/ts/models.ts';
 import { doc, getDoc } from 'firebase/firestore';
 
-export const useDocumentStore = defineStore('myStore', {
+export const useDocumentStore = defineStore('document', {
   state: () => ({
     document: {} as Record<string, models.Document>,
   }),
@@ -14,6 +14,9 @@ export const useDocumentStore = defineStore('myStore', {
           state.document[document].createdAt = new Date(state.document[document].createdAt);
           state.document[document].publishedAt = state.document[document].publishedAt ? new Date(state.document[document].publishedAt) : null;
           state.document[document].meetingTime = state.document[document].meetingTime ? new Date(state.document[document].meetingTime) : null;
+          state.document[document].getFullId = function () {
+            return `${this.idPrefix}第${this.idNumber}號`;
+          };
           return state.document[document];
         }
         return null;
