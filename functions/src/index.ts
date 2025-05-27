@@ -211,7 +211,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
         mailto: senderMail,
         sentBy: 'cksc77th@gmail.com'
       },
-      url: 'https://cksc-legislation.firebaseapp.com/document/' + docId
+      url: 'https://law.cksc.tw/document/' + docId
     });
     mailOptions.icalEvent = {
       filename: 'invite.ics',

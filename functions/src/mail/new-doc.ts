@@ -167,7 +167,7 @@ export function newDocMail(id: string, subject: string, user: string, from: stri
 <tr>
 <td class="pad" style="padding-bottom:15px;padding-left:40px;padding-right:40px;padding-top:20px;">
 <div style="color:#555555;font-family:Trebuchet MS, Lucida Grande, Lucida Sans Unicode, Lucida Sans, Tahoma, sans-serif;font-size:46px;font-weight:700;line-height:120%;text-align:center;mso-line-height-alt:55.199999999999996px;">
-<p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #003188;"><strong><a href="https://cksc-legislation.firebaseapp.com/document/${id}" rel="noopener" style="text-decoration: underline; color: #bb9765;" target="_blank"><span style="word-break: break-word; color: #003188;"><strong>您收到了新公文</strong></span></a></strong></span></p>
+<p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #003188;"><strong><a href="https://law.cksc.tw/document/${id}" rel="noopener" style="text-decoration: underline; color: #bb9765;" target="_blank"><span style="word-break: break-word; color: #003188;"><strong>您收到了新公文</strong></span></a></strong></span></p>
 </div>
 </td>
 </tr>
@@ -223,7 +223,7 @@ export function newDocMail(id: string, subject: string, user: string, from: stri
 <tr>
 <td class="pad" style="padding-bottom:10px;padding-left:40px;padding-right:40px;">
 <div style="color:#555555;font-family:Trebuchet MS, Lucida Grande, Lucida Sans Unicode, Lucida Sans, Tahoma, sans-serif;font-size:16px;font-weight:700;line-height:150%;text-align:left;mso-line-height-alt:24px;">
-<p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #003188;">若要檢視其內容，請至<a href="https://cksc-legislation.firebaseapp.com/document/${id}" rel="noopener" style="text-decoration: underline; color: #0068A5;" target="_blank">本會法律與公文系統</a>查閱。</span></p>
+<p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #003188;">若要檢視其內容，請至<a href="https://law.cksc.tw/document/${id}" rel="noopener" style="text-decoration: underline; color: #0068A5;" target="_blank">本會法律與公文系統</a>查閱。</span></p>
 </div>
 </td>
 </tr>
@@ -231,8 +231,8 @@ export function newDocMail(id: string, subject: string, user: string, from: stri
 <table border="0" cellpadding="10" cellspacing="0" class="button_block block-8" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt;" width="100%">
 <tr>
 <td class="pad">
-<div align="center" class="alignment"><a href="https://cksc-legislation.firebaseapp.com/document/${id}" style="color:#000000;text-decoration:none;" target="_blank"><!--[if mso]>
-<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"  href="https://cksc-legislation.firebaseapp.com/document/${id}"  style="height:42px;width:152px;v-text-anchor:middle;" arcsize="10%" fillcolor="#bb9765">
+<div align="center" class="alignment"><a href="https://law.cksc.tw/document/${id}" style="color:#000000;text-decoration:none;" target="_blank"><!--[if mso]>
+<v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word"  href="https://law.cksc.tw/document/${id}"  style="height:42px;width:152px;v-text-anchor:middle;" arcsize="10%" fillcolor="#bb9765">
 <v:stroke dashstyle="Solid" weight="0px" color="#bb9765"/>
 <w:anchorlock/>
 <v:textbox inset="0px,0px,0px,0px">

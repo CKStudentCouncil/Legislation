@@ -6,7 +6,7 @@
       <div v-if="doc.type.firebase==DocumentType.JudicialCommitteeDecision.firebase">評議委員會 決議文</div>
       <div v-if="doc.type.firebase==DocumentType.JudicialCommitteeExplanation.firebase">{{ doc.fromSpecific.translation }}</div>
     </div>
-    <div class="text-right">{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
+    <div class="text-right">{{ doc.getFullId() }}</div>
     <div v-html="customSanitize(doc.content)"></div>
   </div>
 </template>

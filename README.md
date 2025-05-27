@@ -2,6 +2,9 @@
 
 A platform for organizing and displaying laws, orders and documents of the student council of CKHS
 
+Note: There are two sites configured in Firebase Hosting, the one named `cksc-legislation` is a legacy domain, and was set to 301 redirect all routes to `cksc-law` over the `law.cksc.tw` domain.
+The active site is `cksc-law`, and all deployments should target that site instead.
+
 ## Install the dependencies
 ```bash
 yarn

@@ -22,11 +22,11 @@
             v-for="doc of sortedOptions"
             :key="doc.idNumber"
             v-ripple
-            :to="`/document/judicial/lawsuit/${doc.idPrefix}第${doc.idNumber}號`"
+            :to="`/document/judicial/lawsuit/${doc.getFullId()}`"
             clickable
           >
             <q-item-section>
-              <q-item-label class="text-h6" overline>{{ doc.idPrefix }}第{{ doc.idNumber }}號</q-item-label>
+              <q-item-label class="text-h6" overline>{{ doc.getFullId() }}</q-item-label>
               <q-item-label class="text-h6">{{ doc.subject }}</q-item-label>
               <q-item-label caption
                 >{{ htmlToText(doc.content).slice(0, 100) }}<span v-if="htmlToText(doc.content).length > 100">...</span>
@@ -64,6 +64,7 @@ import { query, where } from 'firebase/firestore';
 import { useCollection } from 'vuefire';
 import orderBy from 'lodash/orderBy';
 import { useRouter } from 'vue-router';
+import { useMeta } from 'quasar';
 
 const step = ref(0);
 const stepper = ref();
@@ -77,6 +78,8 @@ const sortedOptions = computed(() => orderBy(options.value, ['idNumber'], ['asc'
 const idPrefix = ref('憲啟字');
 const idNumber = ref();
 const router = useRouter();
+
+useMeta({ title: '訴訟檢索' });
 
 function chooseFindBy(type: 'select' | 'id') {
   findBy.value = type;

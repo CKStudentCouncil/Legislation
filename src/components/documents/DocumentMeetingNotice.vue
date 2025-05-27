@@ -2,7 +2,7 @@
   <div v-if="!doc">載入中...(或查無此公文)</div>
   <div v-else>
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">臺北市立建國中學班聯會 {{ title }} 開會通知單</div>
-    <div class="text-right">{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
+    <div class="text-right">{{ doc.getFullId() }}</div>
     <div class="text-h6">
       <div>發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : '尚未發布' }}</div>
       <div>密等：{{ doc.confidentiality.translation }}</div>

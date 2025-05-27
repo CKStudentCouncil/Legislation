@@ -51,7 +51,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/document/judicial',
-    component: () => import('layouts/MainLayout.vue'),
+    component: () => import('layouts/SSRLayout.vue'),
     children: [
       { path: '', component: () => import('pages/documents/judicial/JudicialDocumentsPage.vue') },
       {

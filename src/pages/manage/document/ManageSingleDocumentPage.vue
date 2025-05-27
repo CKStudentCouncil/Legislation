@@ -360,7 +360,7 @@ async function submitId() {
   const oldId = (docu.value as any).id;
   docu.value!.idPrefix = editingIdPrefix.value;
   docu.value!.idNumber = editingIdNumber.value;
-  const newId = `${editingIdPrefix.value}第${editingIdNumber.value}號`;
+  const newId = docu.value!.getFullId();
   try {
     await setDoc(doc(documentsCollection(), newId), docu.value);
     await router.push(newId);

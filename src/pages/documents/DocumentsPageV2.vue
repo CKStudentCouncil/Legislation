@@ -94,7 +94,7 @@
         <q-card :class="doc.published ? '' : 'bg-highlight'">
           <div v-if="!!doc">
             <q-card-section>
-              <div>{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
+              <div>{{ doc.getFullId() }}</div>
               <div v-if="!doc.published" class="text-amber-9">
                 <q-icon class="q-pr-sm" name="warning" />
                 未發布
@@ -104,9 +104,9 @@
             </q-card-section>
             <q-separator />
             <q-card-actions>
-              <q-btn v-if="manage" :to="`/manage/document/${doc.idPrefix}第${doc.idNumber}號`" color="secondary" flat label="編輯" />
-              <q-btn :to="`/document/${doc.idPrefix}第${doc.idNumber}號`" color="primary" flat icon="visibility" label="檢視" role="link" />
-              <q-btn color="primary" flat icon="link" label="複製連結" @click="copyDocLink(`${doc.idPrefix}第${doc.idNumber}號`)" />
+              <q-btn v-if="manage" :to="`/manage/document/${doc.getFullId()}`" color="secondary" flat label="編輯" />
+              <q-btn :to="`/document/${doc.getFullId()}`" color="primary" flat icon="visibility" label="檢視" role="link" />
+              <q-btn color="primary" flat icon="link" label="複製連結" @click="copyDocLink(doc.getFullId())" />
             </q-card-actions>
           </div>
         </q-card>
@@ -151,6 +151,10 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  meta: {
+    type: Boolean,
+    default: true,
+  }
 });
 const reign = ref(props.filters ? getCurrentReign() : null);
 const fromGeneric = ref(null) as Ref<DocumentGeneralIdentity | null>;
@@ -271,7 +275,9 @@ function choosePublished() {
 
 void updateTotal();
 
-useMeta({ title: '檢視公文' });
+if (props.meta)
+  useMeta({ title: '檢視公文' });
+//TODO: SSR
 </script>
 
 <style lang="scss" scoped>

@@ -12,7 +12,7 @@ on:
 env:
   PROJECT_ID: cksc-legislation
   GAR_LOCATION: asia-east1
-  SERVICE: cksc-legislation
+  SERVICE: cksc-law
   REGION: asia-east1
 
 jobs:
@@ -45,6 +45,7 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CKSC_LEGISLATION }}
           channelId: live
           projectId: cksc-legislation
+          target: cksc-law
       - name: Google Auth
         id: auth
         uses: 'google-github-actions/auth@v2'

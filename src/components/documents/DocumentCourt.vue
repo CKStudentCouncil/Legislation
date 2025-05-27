@@ -3,7 +3,7 @@
   <div v-else>
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">臺北市立建國中學班聯會</div>
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">{{ doc.fromSpecific.translation }}</div>
-    <div class="text-right">{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
+    <div class="text-right">{{ doc.getFullId() }}</div>
     <div v-html="customSanitize(doc.content)"></div>
   </div>
 </template>

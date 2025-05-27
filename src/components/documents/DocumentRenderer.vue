@@ -6,7 +6,7 @@
   <DocumentMeetingRecord v-else-if="doc.type.firebase == DocumentType.Record.firebase" :doc="doc" />
   <DocumentCourt v-else-if="doc.type.firebase.startsWith('Court')" :doc="doc" />
   <DocumentJudicialCommittee v-else-if="doc.type.firebase.startsWith('JudicialCommittee')" :doc="doc" />
-  <div v-else>本公文之資料有缺失，請將本公文號回報於管理員：{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
+  <div v-else>本公文之資料有缺失，請將本公文號回報於管理員：{{ doc.getFullId() }}</div>
 </template>
 
 <script setup lang="ts">

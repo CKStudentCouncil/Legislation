@@ -3,13 +3,13 @@
   <div v-else>
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">臺北市立建國中學班聯會</div>
     <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">{{ doc.fromSpecific.translation }} 函</div>
-    <div class="text-right">{{ doc.idPrefix }}第{{ doc.idNumber }}號</div>
+    <div class="text-right">{{ doc.getFullId() }}</div>
     <div class="text-h6">受文者：{{ readableTo }}</div>
     <div v-if="doc.ccSpecific.length > 0" class="text-h6">副本：{{ readableCC }}</div>
     <div class="text-h6">發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : '尚未發布' }}</div>
     <div class="text-h6">密等：{{ doc.confidentiality.translation }}</div>
     <div class="text-h6">主旨：{{ doc.subject }}</div>
-    <DocumentSeparator/>
+    <DocumentSeparator />
     <div class="text-h6">說明：</div>
     <div v-html="customSanitize(doc.content)"></div>
   </div>

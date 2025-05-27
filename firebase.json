@@ -3,55 +3,73 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "hosting": {
-    "public": "dist/spa",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/",
-        "run": {
-          "serviceId": "cksc-legislation",
-          "region": "asia-east1"
+  "hosting": [
+    {
+      "site": "cksc-law",
+      "rewrites": [
+        {
+          "source": "/",
+          "run": {
+            "serviceId": "cksc-legislation",
+            "region": "asia-east1"
+          }
+        },
+        {
+          "source": "/legislation",
+          "run": {
+            "serviceId": "cksc-legislation",
+            "region": "asia-east1"
+          }
+        },
+        {
+          "source": "/legislation/**",
+          "run": {
+            "serviceId": "cksc-legislation",
+            "region": "asia-east1"
+          }
+        },
+        {
+          "source": "/document",
+          "run": {
+            "serviceId": "cksc-legislation",
+            "region": "asia-east1"
+          }
+        },
+        {
+          "source": "/document/**",
+          "run": {
+            "serviceId": "cksc-legislation",
+            "region": "asia-east1"
+          }
+        },
+        {
+          "source": "**",
+          "destination": "/index.html"
         }
-      },
-      {
-        "source": "/legislation",
-        "run": {
-          "serviceId": "cksc-legislation",
-          "region": "asia-east1"
+      ],
+      "public": "dist/spa",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ]
+    },
+    {
+      "site": "cksc-legislation",
+      "redirects": [
+        {
+          "source": "/",
+          "destination": "https://law.cksc.tw/",
+          "type": 301
+        },
+        {
+          "source": "/:path*",
+          "destination": "https://law.cksc.tw/:path",
+          "type": 301
         }
-      },
-      {
-        "source": "/legislation/**",
-        "run": {
-          "serviceId": "cksc-legislation",
-          "region": "asia-east1"
-        }
-      },
-      {
-        "source": "/document",
-        "run": {
-          "serviceId": "cksc-legislation",
-          "region": "asia-east1"
-        }
-      },
-      {
-        "source": "/document/**",
-        "run": {
-          "serviceId": "cksc-legislation",
-          "region": "asia-east1"
-        }
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  },
+      ]
+    }
+  ],
   "functions": [
     {
       "source": "functions",

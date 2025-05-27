@@ -38,6 +38,8 @@ export interface Document {
   publishedAt?: Date | null;
   meetingTime?: Date | null;
   prosecutionId?: string;
+
+  getFullId(): string;
 }
 
 export interface MailingList {
@@ -275,7 +277,7 @@ export class DocumentSpecificIdentity {
     '憲',
     '03',
     DocumentGeneralIdentity.JudicialCommittee,
-    '審判長'
+    '審判長',
   );
   static SupremeCourt = new DocumentSpecificIdentity('SupremeCourt', '大法庭', '大', '04', DocumentGeneralIdentity.JudicialCommittee, '審判長');
   static ConstitutionalCensorCourt = new DocumentSpecificIdentity(
@@ -391,6 +393,7 @@ export function convertDocumentToFirebase(data: Document) {
 export const documentConverter: FirestoreDataConverter<Document | null> = {
   toFirestore(doc: Document) {
     const data = firestoreDefaultConverter.toFirestore(convertDocumentToFirebase(doc) as any);
+    delete data.getFullId;
     if (!data.location) delete data.location;
     if (!data.fromName) delete data.fromName;
     if (!data.secretarySpecific) delete data.secretarySpecific;
@@ -398,7 +401,7 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     if (!data.published) delete data.publishedAt;
     if (!data.meetingTime) delete data.meetingTime;
     if (!data.prosecutionId) delete data.prosecutionId;
-    return data
+    return data;
   },
   fromFirestore(snapshot, options) {
     const data = firestoreDefaultConverter.fromFirestore(snapshot, options);
@@ -412,6 +415,9 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     data.type = DocumentType.VALUES[data.type as keyof typeof DocumentType.VALUES];
     data.ccSpecific = data.ccSpecific.map((ccSpecific: any) => DocumentSpecificIdentity.VALUES[ccSpecific]);
     data.secretarySpecific = data.secretarySpecific ? DocumentSpecificIdentity.VALUES[data.secretarySpecific] : null;
+    data.getFullId = function () {
+      return `${this.idPrefix}第${this.idNumber}號`;
+    };
     return data as unknown as Document;
   },
 };

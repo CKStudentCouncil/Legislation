@@ -12,14 +12,14 @@
         :caption="doc.subject"
         :icon="doc.type.icon"
         :name="index"
-        :title="`${doc.idPrefix}第${doc.idNumber}號`"
+        :title="doc.getFullId()"
       >
         <DocumentRenderer :doc="doc" />
         <q-stepper-navigation align="right">
           <q-btn v-if="step !== sortedDocs.length - 1" color="primary" label="下一頁" @click="next" />
           <q-btn v-if="step !== 0" color="primary" flat label="上一頁" @click="previous" />
           <q-btn color="primary" flat icon="link" label="複製連結" @click="copyLink(step)" />
-          <q-btn :to="`/document/${doc.idPrefix}第${doc.idNumber}號`" color="primary" flat icon="open_in_new" label="檢視原文" />
+          <q-btn :to="`/document/${doc.getFullId()}`" color="primary" flat icon="open_in_new" label="檢視原文" rel="link" :alt="`${doc.getFullId()}：${doc.subject}`"/>
         </q-stepper-navigation>
       </q-step>
     </q-stepper>
