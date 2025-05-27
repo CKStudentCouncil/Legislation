@@ -12,13 +12,13 @@ export const useLegislationStore = defineStore('legislation', {
       return (legislation: string): Legislation | null => {
         const l = state.legislations[legislation];
         if (!l) return null;
-        l.history.map(h => {
+        l.history.map((h) => {
           h.amendedAt = new Date(h.amendedAt);
           return h;
-        })
-        l.addendum?.map(a => {
+        });
+        l.addendum?.map((a) => {
           a.createdAt = new Date(a.createdAt);
-        })
+        });
         return l;
       };
     },
