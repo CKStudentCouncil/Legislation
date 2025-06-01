@@ -43,6 +43,7 @@ import { useMeta } from 'quasar';
 import { DocumentType } from 'src/ts/models.ts';
 import { convertToChineseDay } from 'app/functions/src/utils.ts';
 import { event } from 'vue-gtag';
+import { getMeta, htmlToText } from 'src/ts/utils.ts';
 
 const route = useRoute();
 const doc = ref();
@@ -88,7 +89,7 @@ defineOptions({
     try {
       await useDocumentStore(store).loadDocument(currentRoute.params.id as string);
     } catch {
-      console.error(`Document loading failed (not found?): ${currentRoute.params.id as string}`)
+      console.error(`Document loading failed (not found?): ${currentRoute.params.id as string}`);
     }
   },
 });
@@ -97,7 +98,7 @@ onServerPrefetch(async () => {
   try {
     doc.value = await useDocumentStore().loadDocument(route.params.id as string);
   } catch {
-    console.error(`Document loading failed (not found?): ${route.params.id as string}`)
+    console.error(`Document loading failed (not found?): ${route.params.id as string}`);
   }
 });
 
@@ -112,11 +113,15 @@ useMeta(() => {
         t = new Date(t);
         t.setHours(t.getHours() + t.getTimezoneOffset() / 60); // Reset to UTC
         t.setHours(t.getHours() + 8); // Set to GMT+8
-        description = `會議時間：${t.getFullYear()}/${(t.getMonth()) + 1}/${t.getDate()} (${convertToChineseDay(t.getDay())}) ${t.getHours()}:${t.getMinutes()}
+        description = `會議時間：${t.getFullYear()}/${t.getMonth() + 1}/${t.getDate()} (${convertToChineseDay(t.getDay())}) ${t.getHours()}:${t.getMinutes()}
 會議地點：${d?.location}
 公文字號：${d?.getFullId()}號
 ${d?.fromName ? `會議主席：${d.fromSpecific.translation} ${d.fromName}` : ''}`;
       }
+      break;
+    }
+    default: {
+      if (d) description = htmlToText(d.content).slice(0, 200);
       break;
     }
   }
@@ -124,25 +129,14 @@ ${d?.fromName ? `會議主席：${d.fromSpecific.translation} ${d.fromName}` : '
   return {
     title: d?.subject,
     meta: {
-      description: {
-        name: 'description',
-        content: description,
-      },
+      ...getMeta(d?.subject, description),
       'last-modified': {
         'http-equiv': 'last-modified',
-        content: lastUpdated,
+        content: lastUpdated
       },
       'og:updated-time': {
         name: 'og:updated-time',
         content: lastUpdated
-      },
-      'og:title': {
-        name: 'og:title',
-        content: d?.subject,
-      },
-      'og:description': {
-        name: 'og:description',
-        content: description,
       },
     },
   };

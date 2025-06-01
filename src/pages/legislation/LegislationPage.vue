@@ -106,7 +106,7 @@
 import { LegislationCategory } from 'src/ts/models.ts';
 import { aisMixin, searchClient } from 'boot/algolia.ts';
 import { getCurrentInstance, inject, onBeforeMount, onServerPrefetch, ref, useSSRContext } from 'vue';
-import { copyLawLink } from 'src/ts/utils.ts';
+import { copyLawLink, getMeta } from 'src/ts/utils.ts';
 import { renderToString } from 'vue/server-renderer';
 import { useMeta } from 'quasar';
 import { useRoute } from 'vue-router';
@@ -151,7 +151,7 @@ onServerPrefetch(async function () {
 });
 
 if (useRoute().path !== '/') {
-  useMeta({ title: '檢視法令' });
+  useMeta({ title: '檢視法令', meta: getMeta('檢視法令') });
 }
 </script>
 

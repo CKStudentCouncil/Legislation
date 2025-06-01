@@ -30,21 +30,21 @@ export async function copyText(text: string) {
 export function translateNumber(str: string) {
   //@formatter:off
   const numChar = {
-    零: 0,
-    一: 1,
-    二: 2,
-    三: 3,
-    四: 4,
-    五: 5,
-    六: 6,
-    七: 7,
-    八: 8,
-    九: 9,
+    '零': 0,
+    '一': 1,
+    '二': 2,
+    '三': 3,
+    '四': 4,
+    '五': 5,
+    '六': 6,
+    '七': 7,
+    '八': 8,
+    '九': 9,
   } as Record<string, number>;
   const levelChar = {
-    十: 10,
-    百: 100,
-    千: 1000,
+    '十': 10,
+    '百': 100,
+    '千': 1000,
   } as Record<string, number>;
   //@formatter:on
   if (str.startsWith('十')) str = '一' + str;
@@ -165,6 +165,37 @@ export function customSanitize(text: string) {
 
 export function htmlToText(html: string, wordwrap: number = 130) {
   return convert(html, { wordwrap });
+}
+
+export function getMeta(title?: string, desc?: string) {
+  const parsedTitle = title ? `${title} - 建國中學班聯會法律與公文系統` : '建國中學班聯會法律與公文系統';
+  const description = desc ?? '建國中學班聯會內憲章、法律、命令、公文之中央儲存資料庫';
+  return {
+    title: {
+      name: 'title',
+      content: parsedTitle,
+    },
+    ogTitle: {
+      property: 'og:title',
+      content: parsedTitle,
+    },
+    twitterTitle: {
+      name: 'twitter:title',
+      content: parsedTitle,
+    },
+    description: {
+      name: 'description',
+      content: description,
+    },
+    ogDesc: {
+      property: 'og:description',
+      content: description,
+    },
+    twitterDesc: {
+      name: 'twitter:description',
+      content: description,
+    },
+  };
 }
 
 export function notifySuccess(message: string): void {

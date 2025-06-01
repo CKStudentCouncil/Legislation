@@ -121,7 +121,7 @@
 </template>
 
 <script lang="ts" setup>
-import { copyDocLink, getCurrentReign, notifyError } from 'src/ts/utils.ts';
+import { copyDocLink, getCurrentReign, getMeta, notifyError } from 'src/ts/utils.ts';
 import type { Ref } from 'vue';
 import { computed, reactive, ref, watch } from 'vue';
 import type { Document } from 'src/ts/models.ts';
@@ -275,7 +275,7 @@ function choosePublished() {
 
 void updateTotal();
 
-if (props.meta) useMeta({ title: '檢視公文' });
+if (props.meta) useMeta({ title: '檢視公文', meta: getMeta('檢視公文') });
 //TODO: SSR
 </script>
 

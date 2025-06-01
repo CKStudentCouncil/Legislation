@@ -56,7 +56,7 @@
 
 <script lang="ts" setup>
 import { computed, ref } from 'vue';
-import { getCurrentReign, htmlToText } from 'src/ts/utils.ts';
+import { getCurrentReign, getMeta, htmlToText } from 'src/ts/utils.ts';
 import { isReign } from 'src/ts/checks.ts';
 import * as models from 'src/ts/models.ts';
 import { DocumentConfidentiality, documentsCollection } from 'src/ts/models.ts';
@@ -79,7 +79,7 @@ const idPrefix = ref('憲啟字');
 const idNumber = ref();
 const router = useRouter();
 
-useMeta({ title: '訴訟檢索' });
+useMeta({ title: '訴訟檢索', meta: getMeta('訴訟檢索') });
 
 function chooseFindBy(type: 'select' | 'id') {
   findBy.value = type;

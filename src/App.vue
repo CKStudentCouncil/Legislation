@@ -7,6 +7,7 @@
 <script lang="ts" setup>
 import { Dark, LocalStorage, useMeta, useQuasar } from 'quasar';
 import { onMounted, useSSRContext } from 'vue';
+import { getMeta } from 'src/ts/utils.ts';
 
 defineOptions({
   name: 'App',
@@ -35,27 +36,6 @@ onMounted(() => {
 useMeta({
   title: 'null',
   titleTemplate: (title) => `${title !== 'null' ? title + ' - ' : ''}建國中學班聯會法律與公文系統`,
-  meta: {
-    description: {
-      name: 'description',
-      content: '建國中學班聯會內憲章、法律、命令、公文之中央儲存資料庫',
-    },
-    ogImage: {
-      name: 'og:image',
-      content: 'https://raw.githubusercontent.com/CKStudentCouncil/Legislation/refs/heads/main/mail/images/_1.png',
-    },
-    ogImageWidth: {
-      name: 'og:image:width',
-      content: '1920',
-    },
-    ogImageHeight: {
-      name: 'og:image:height',
-      content: '640',
-    },
-    twitterImage: {
-      name: 'twitter:image',
-      content: 'https://raw.githubusercontent.com/CKStudentCouncil/Legislation/refs/heads/main/mail/images/_1.png',
-    },
-  },
+  meta: getMeta(undefined, undefined)
 });
 </script>

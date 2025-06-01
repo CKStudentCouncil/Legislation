@@ -65,7 +65,7 @@ import { ContentType } from 'src/ts/models.ts';
 import { onMounted, onServerPrefetch, reactive, ref, watch } from 'vue';
 import { event } from 'vue-gtag';
 import LegislationContent from 'components/legislation/LegislationContent.vue';
-import { copyLink } from 'src/ts/utils.ts';
+import { copyLink, getMeta } from 'src/ts/utils.ts';
 import LegislationAddendum from 'components/legislation/LegislationAddendum.vue';
 import { useVueToPrint } from 'vue-to-print';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
@@ -159,7 +159,7 @@ onServerPrefetch(async () => {
 useMeta(() => {
   const store = useLegislationStore();
   const l = store.getLegislation(route.params.id as string);
-  let description = '' as string | null | undefined;
+  let description = undefined as string | undefined;
   const intHash = parseInt(hash.value ?? '0');
   const content = l?.content.find((c) => c.index === intHash);
   if (content) {
@@ -181,10 +181,7 @@ useMeta(() => {
   return {
     title: l?.name,
     meta: {
-      description: {
-        name: 'description',
-        content: description
-      },
+      ...getMeta(l?.name, description),
       'last-modified': {
         'http-equiv': 'last-modified',
         content: lastUpdated
@@ -193,14 +190,6 @@ useMeta(() => {
         name: 'og:updated-time',
         content: lastUpdated
       },
-      'og:title': {
-        name: 'og:title',
-        content: l?.name
-      },
-      'og:description': {
-        name: 'og:description',
-        content: description
-      }
     }
   };
 });

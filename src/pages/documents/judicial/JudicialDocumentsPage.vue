@@ -35,13 +35,13 @@
 import { DocumentType } from 'src/ts/models.ts';
 import { ref } from 'vue';
 import DocumentsPageV2 from 'pages/documents/DocumentsPageV2.vue';
-import { getCurrentReign } from 'src/ts/utils.ts';
+import { getCurrentReign, getMeta } from 'src/ts/utils.ts';
 import { isReign } from 'src/ts/checks.ts';
 import { useMeta } from 'quasar';
 
 const selected = ref(DocumentType.JudicialCommitteeExplanation.firebase);
 const reign = ref(getCurrentReign());
-useMeta({ title: '評委文書' });
+useMeta({ title: '評委文書', meta: getMeta('評委文書') });
 </script>
 
 <style scoped></style>
