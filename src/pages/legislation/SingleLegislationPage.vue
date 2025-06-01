@@ -2,7 +2,7 @@
   <q-page class="row items-center justify-evenly" padding>
     <div v-if="!legislation">查無此法 (或載入中)</div>
     <div v-if="legislation" ref="content" class="official-font-when-printing" style="max-width: min(1170px, 97vw)">
-      <div class="text-h4 flex-center q-pb-md text-center">
+      <h1 class="text-h4 q-mt-none flex-center text-center">
         <span v-if="legislation.frozenBy">(失效) </span>
         {{ legislation.name }}
         <q-no-ssr style="display: inline">
@@ -17,7 +17,7 @@
             <q-tooltip>展開所有條文</q-tooltip>
           </q-btn>
         </q-no-ssr>
-      </div>
+      </h1>
       <div v-if="legislation.frozenBy" class="text-h6">
         <q-icon class="q-mr-xs" name="warning" size="32px" />
         本法令部分或全文已遭凍結或失效，詳見

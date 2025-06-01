@@ -2,13 +2,13 @@
   <q-page class="row items-center justify-evenly" padding>
     <div v-if="!legislation">查無此法 (或載入中)</div>
     <div v-if="legislation" style="max-width: min(1170px, 97vw)">
-      <div class="text-h4 flex-center q-pb-md text-center">
+      <h1 class="text-h4 q-mt-none flex-center text-center">
         (編輯中)
         {{ legislation.name }}
         <q-btn dense flat icon="link" size="20px" @click="copyLink()"></q-btn>
         <q-btn dense flat icon="edit" size="20px" @click="edit()"></q-btn>
         <q-btn color="negative" dense flat icon="delete" size="20px" @click="remove()"></q-btn>
-      </div>
+      </h1>
       <div v-if="legislation.preface">{{ legislation.preface }}</div>
       <div>立法沿革</div>
       <q-btn color="positive" flat icon="add" label="新增立法沿革" @click="addHistory"></q-btn>

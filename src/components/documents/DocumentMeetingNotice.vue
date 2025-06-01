@@ -1,7 +1,7 @@
 <template>
   <div v-if="!doc">載入中...(或查無此公文)</div>
   <div v-else>
-    <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">臺北市立建國中學班聯會 {{ title }} 開會通知單</div>
+    <h1 class="text-h4 q-mt-none flex-center text-center" style="font-size: 32px">臺北市立建國中學班聯會 {{ title }} 開會通知單</h1>
     <div class="text-right">{{ doc.getFullId() }}</div>
     <div class="text-h6">
       <div>發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : '尚未發布' }}</div>

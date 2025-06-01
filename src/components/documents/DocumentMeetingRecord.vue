@@ -1,8 +1,8 @@
 <template>
   <div v-if="!doc">載入中...(或查無此公文)</div>
   <div v-else>
-    <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">臺北市立建國中學班聯會</div>
-    <div class="text-h4 flex-center q-pb-md text-center" style="font-size: 32px">{{ doc.subject }} 會議記錄</div>
+    <h1 class="text-h4 q-mt-none flex-center text-center" style="font-size: 32px">臺北市立建國中學班聯會</h1>
+    <h1 class="text-h4 q-mt-none flex-center text-center" style="font-size: 32px">{{ doc.subject }} 會議記錄</h1>
     <div class="text-right">{{ doc.getFullId() }}</div>
     <div class="text-h6">
       <div>會議主席：{{ doc.fromSpecific.signatureTitle ?? doc.fromSpecific.translation }} {{doc.fromName}}</div>

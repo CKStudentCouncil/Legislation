@@ -2,10 +2,10 @@
   <q-page class="row items-center justify-evenly" padding>
     <div v-if="!legislation">查無此法 (或載入中)</div>
     <div v-if="legislation" ref="content" class="official-font-when-printing" style="max-width: min(1170px, 97vw)">
-      <div class="text-h4 flex-center q-pb-md text-center">
+      <h1 class="text-h4 q-mt-none flex-center text-center">
         {{ legislation.name }}
         <q-btn class="no-print" dense flat icon="link" size="20px" @click="copyLink()" />
-      </div>
+      </h1>
       <div v-if="legislation.preface" class="text-h6 text-bold">{{ legislation.preface }}</div>
       <div v-if="legislation.history.length > 0">
         立法沿革
