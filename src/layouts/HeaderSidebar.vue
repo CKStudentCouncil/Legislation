@@ -26,6 +26,7 @@
             v-ripple
             :active="selected === endpoint.name"
             :to="endpoint.url"
+            :title="endpoint.name"
             role="link"
             @click="changeSelected(endpoint.name)"
           >
