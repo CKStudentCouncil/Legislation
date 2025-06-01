@@ -44,7 +44,7 @@
         },
         {
           "source": "**",
-          "destination": "/index.html"
+          "destination": "/main.html"
         }
       ],
       "public": "dist/spa",

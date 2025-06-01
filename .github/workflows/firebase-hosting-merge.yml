@@ -38,6 +38,7 @@ jobs:
       - run: yarn gcp-build
       - run: mkdir dist/spa/ssr-assets
       - run: mv ./dist/ssr/client/ssr-assets/* ./dist/spa/ssr-assets
+      - run: mv ./dist/spa/index.html ./dist/spa/main.html # This is to prevent Google from serving the root route with a non-SSR page
 
       - name: Firebase Hosting Deploy
         uses: FirebaseExtended/action-hosting-deploy@v0
