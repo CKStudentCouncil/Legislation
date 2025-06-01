@@ -105,7 +105,7 @@
             <q-separator />
             <q-card-actions>
               <q-btn v-if="manage" :to="`/manage/document/${doc.getFullId()}`" color="secondary" flat label="編輯" />
-              <q-btn :to="`/document/${doc.getFullId()}`" color="primary" flat icon="visibility" label="檢視" role="link" />
+              <q-btn :title="doc.subject" :to="`/document/${doc.getFullId()}`" color="primary" flat icon="visibility" label="檢視" role="link" />
               <q-btn color="primary" flat icon="link" label="複製連結" @click="copyDocLink(doc.getFullId())" />
             </q-card-actions>
           </div>
@@ -154,7 +154,7 @@ const props = defineProps({
   meta: {
     type: Boolean,
     default: true,
-  }
+  },
 });
 const reign = ref(props.filters ? getCurrentReign() : null);
 const fromGeneric = ref(null) as Ref<DocumentGeneralIdentity | null>;
@@ -275,8 +275,7 @@ function choosePublished() {
 
 void updateTotal();
 
-if (props.meta)
-  useMeta({ title: '檢視公文' });
+if (props.meta) useMeta({ title: '檢視公文' });
 //TODO: SSR
 </script>
 

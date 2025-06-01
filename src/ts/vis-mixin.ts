@@ -10,6 +10,7 @@ function defaultCloneComponent(componentInstance: any, { mixins = [] } = {}) {
     fetch: undefined,
     _base: undefined,
     name: 'ais-ssr-root-component',
+    template: '<div></div>',
   } as any;
 
   let app;

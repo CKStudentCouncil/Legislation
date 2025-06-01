@@ -77,6 +77,7 @@
                     icon="visibility"
                     label="檢視全文"
                     role="link"
+                    :title="item.name"
                     @click="sendEvent('view', item, 'Legislation viewed')"
                   />
                   <q-no-ssr>
@@ -104,10 +105,12 @@
 <script lang="ts" setup>
 import { LegislationCategory } from 'src/ts/models.ts';
 import { aisMixin, searchClient } from 'boot/algolia.ts';
-import { getCurrentInstance, inject, onBeforeMount, onServerPrefetch, ref } from 'vue';
+import { getCurrentInstance, inject, onBeforeMount, onServerPrefetch, ref, useSSRContext } from 'vue';
 import { copyLawLink } from 'src/ts/utils.ts';
 import { renderToString } from 'vue/server-renderer';
 import { useMeta } from 'quasar';
+import { useRoute } from 'vue-router';
+import { useAlgoliaStore } from 'stores/algolia.ts';
 
 const selected = ref('');
 defineProps({
@@ -120,24 +123,36 @@ defineProps({
 const instantsearch = inject<any>('$_ais_ssrInstantSearchInstance');
 
 onBeforeMount(() => {
-  if (typeof window === 'object' && window.__ALGOLIA_STATE__) {
-    aisMixin.data().instantsearch.instantsearch.hydrate(window.__ALGOLIA_STATE__);
-    delete window.__ALGOLIA_STATE__;
+  if (Object.values(useAlgoliaStore().getState()).length > 0) {
+    aisMixin.data().instantsearch.hydrate(useAlgoliaStore().getState());
+    useAlgoliaStore().clearState();
   }
 });
 
-onServerPrefetch(() => {
+onServerPrefetch(async function () {
   try {
-    instantsearch.findResultsState({
-      component: getCurrentInstance(),
-      renderToString,
-    });
+    const ctx = useSSRContext();
+    let state: any;
+    if (!useAlgoliaStore().hasState()) {
+      state = instantsearch.findResultsState({
+        component: getCurrentInstance(),
+        renderToString: (app: any) => renderToString(app, ctx),
+      });
+    } else {
+      state = await instantsearch.findResultsState({
+        component: getCurrentInstance(),
+        renderToString: (app: any) => renderToString(app, ctx),
+      });
+    }
+    useAlgoliaStore().setState(state);
   } catch (error) {
     console.error('Error during server-side rendering:', error);
   }
 });
 
-useMeta({ title: '檢視法令' });
+if (useRoute().path !== '/') {
+  useMeta({ title: '檢視法令' });
+}
 </script>
 
 <style>
