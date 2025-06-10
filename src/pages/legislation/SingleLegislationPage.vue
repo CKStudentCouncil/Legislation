@@ -58,6 +58,21 @@
       />
     </div>
   </q-page>
+  <q-drawer :breakpoint="500" :width="250" bordered show-if-above side="right">
+    <q-scroll-area class="fit">
+      <q-list v-if="!!legislation">
+        <q-item v-for="content of legislation.content" :key="content.title" class="q-py-none items-center" clickable dense @click="scrollTo(content.index.toString())">
+          <div
+            v-if="content.type.firebase !== ContentType.Clause.firebase && content.type.firebase !== ContentType.SpecialClause.firebase"
+            class="text-h6"
+          >
+            {{ content.title }} {{ content.subtitle }}
+          </div>
+          <div v-else class="q-py-none">{{ content.title }} 【{{ content.subtitle }}】</div>
+        </q-item>
+      </q-list>
+    </q-scroll-area>
+  </q-drawer>
 </template>
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
@@ -91,28 +106,26 @@ onMounted(() => {
     id: route.params.id! as string,
     name: legislation.value?.name,
     category: legislation.value?.category.translation,
-    type: legislation.value?.category.type.translation
+    type: legislation.value?.category.type.translation,
   });
 });
-watch(legislation, () => {
-  if (hash.value) {
-    // wait for the content to load
-    setTimeout(() => {
-      const el = document.getElementById(hash.value);
-      if (el) {
-        window.scrollTo({
-          top: el.offsetTop - 100,
-          behavior: 'smooth'
-        });
-      }
-    }, 250);
-  }
-  for (const content of legislation.value?.content ?? []) {
-    if (content.type.firebase === ContentType.SpecialClause.firebase) {
-      expanded[content.index] = true;
+watch(
+  legislation,
+  () => {
+    if (hash.value) {
+      // wait for the content to load
+      setTimeout(() => {
+        scrollTo(hash.value)
+      }, 250);
     }
-  }
-}, { once: true });
+    for (const content of legislation.value?.content ?? []) {
+      if (content.type.firebase === ContentType.SpecialClause.firebase) {
+        expanded[content.index] = true;
+      }
+    }
+  },
+  { once: true },
+);
 
 const { handlePrint } = useVueToPrint({
   content: content,
@@ -131,7 +144,7 @@ const { handlePrint } = useVueToPrint({
     setTimeout(() => {
       printing.value = false;
     }, 300);
-  }
+  },
 });
 
 function collapseAll() {
@@ -146,10 +159,21 @@ function expandAll() {
   }
 }
 
+function scrollTo(index: string) {
+  const el = document.getElementById(index);
+  if (el) {
+    hash.value = index
+    window.scrollTo({
+      top: el.offsetTop - 100,
+      behavior: 'smooth',
+    });
+  }
+}
+
 defineOptions({
   async preFetch({ store, currentRoute }) {
     await useLegislationStore(store).loadLegislation(currentRoute.params.id as string);
-  }
+  },
 });
 
 onServerPrefetch(async () => {
@@ -184,13 +208,13 @@ useMeta(() => {
       ...getMeta(l?.name, description),
       'last-modified': {
         'http-equiv': 'last-modified',
-        content: lastUpdated
+        content: lastUpdated,
       },
       'og:updated-time': {
         name: 'og:updated-time',
-        content: lastUpdated
+        content: lastUpdated,
       },
-    }
+    },
   };
 });
 </script>
