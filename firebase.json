@@ -43,6 +43,13 @@
           }
         },
         {
+          "source": "/sitemap.xml",
+          "run": {
+            "serviceId": "sitemap",
+            "region": "asia-east1"
+          }
+        },
+        {
           "source": "**",
           "destination": "/main.html"
         }

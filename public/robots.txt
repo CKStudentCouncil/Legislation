@@ -3,3 +3,4 @@ Allow: /
 Allow: /legislation
 Allow: /document
 Disallow: /manage
+Sitemap: https://law.cksc.tw/sitemap.xml

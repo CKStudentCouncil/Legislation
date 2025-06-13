@@ -9,8 +9,10 @@
 
 import * as admin from 'firebase-admin';
 admin.initializeApp(); // This must run before everything else
-import { HttpsError, onCall } from 'firebase-functions/https';
 
+import { FieldPath , FieldValue} from 'firebase-admin/firestore';
+import { HttpsError, onCall, onRequest } from 'firebase-functions/https';
+import { onDocumentCreated, onDocumentDeleted } from 'firebase-functions/firestore';
 import { drive_v3, google } from 'googleapis';
 import * as Stream from 'stream';
 import { addUserWithRole, checkRole, editUserClaims } from './auth';
@@ -21,11 +23,17 @@ import { newDocMail } from './mail/new-doc';
 import { MailOptions } from 'nodemailer/lib/smtp-pool';
 import ical, { ICalCalendarMethod } from 'ical-generator';
 import { newMeetingNotice } from './mail/new-meeting-notice';
+import { SitemapStream } from 'sitemap';
+import { createGzip } from 'zlib';
+import * as utf8 from 'utf8'
 
 
 const globalFunctionOptions = { region: 'asia-east1' };
-const auth = new google.auth.GoogleAuth({ keyFile: 'src/credential.json', scopes: ['https://www.googleapis.com/auth/drive.file'] });
-
+const auth = new google.auth.GoogleAuth({
+  keyFile: 'src/credential.json',
+  scopes: ['https://www.googleapis.com/auth/drive.file'],
+});
+const db = admin.firestore();
 const driveAPI = google.drive({ version: 'v3', auth }) as drive_v3.Drive;
 const gmailEmail = process.env.GMAIL_EMAIL;
 const gmailPassword = process.env.GMAIL_PASSWORD;
@@ -33,8 +41,8 @@ const mailTransport = createTransport({
   service: 'gmail',
   auth: {
     user: gmailEmail,
-    pass: gmailPassword
-  }
+    pass: gmailPassword,
+  },
 });
 
 export const addUser = onCall(globalFunctionOptions, async (request) => {
@@ -64,72 +72,75 @@ export const getAllUsers = onCall(globalFunctionOptions, async (request) => {
       uid: user.uid,
       email: user.email,
       roles: user.customClaims?.roles,
-      name: user.displayName
+      name: user.displayName,
     };
   });
 });
 
-export const uploadAttachment = onCall({
-  ...globalFunctionOptions,
-  memory: '512MiB'
-}, async (request) => {
-  if (request.auth == null) {
-    throw new HttpsError('unauthenticated', 'The function must be called while authenticated.');
-  }
-  const { name, content, mimeType } = request.data;
-  const buf = Buffer.from(content, 'base64');
-  const fileSize = buf.length;
-  if (fileSize > 25 * 1024 * 1024) {
-    throw new HttpsError('invalid-argument', 'File size exceeds 25MiB limit.');
-  }
-  const folderQuery = await driveAPI.files.list({
-    q: `mimeType='application/vnd.google-apps.folder' and name='${getCurrentReign()}'`,
-    fields: 'files(id)'
-  });
-  let folder: string | null | undefined = null;
-  if ((folderQuery.data.files?.length ?? 0) == 0) {
-    folder = (
-      await driveAPI.files.create({
-        requestBody: {
-          name: getCurrentReign(),
-          mimeType: 'application/vnd.google-apps.folder',
-          parents: ['1zNk5v8ZHJwAbDXCO_GswQoeY_CBCpb7m']
-        },
-        fields: 'id'
-      })
-    ).data.id;
-  } else {
-    folder = folderQuery.data.files?.[0].id;
-  }
-  const file = await driveAPI.files.create({
-    requestBody: {
-      name,
-      mimeType,
-      parents: [folder ?? '1zNk5v8ZHJwAbDXCO_GswQoeY_CBCpb7m']
-    },
-    media: {
-      mimeType,
-      body: new Stream.PassThrough().end(buf)
-    },
-    fields: 'id,webViewLink'
-  });
-  await driveAPI.permissions.create({
-    fileId: file.data.id ?? '',
-    requestBody: {
-      role: 'reader',
-      type: 'anyone'
+export const uploadAttachment = onCall(
+  {
+    ...globalFunctionOptions,
+    memory: '512MiB',
+  },
+  async (request) => {
+    if (request.auth == null) {
+      throw new HttpsError('unauthenticated', 'The function must be called while authenticated.');
     }
-  });
-  await driveAPI.permissions.create({
-    fileId: file.data.id ?? '',
-    requestBody: {
-      role: 'writer',
-      type: 'user',
-      emailAddress: 'cksc77th@gmail.com'
+    const { name, content, mimeType } = request.data;
+    const buf = Buffer.from(content, 'base64');
+    const fileSize = buf.length;
+    if (fileSize > 25 * 1024 * 1024) {
+      throw new HttpsError('invalid-argument', 'File size exceeds 25MiB limit.');
     }
-  });
-  return { success: true, url: file.data.webViewLink };
-});
+    const folderQuery = await driveAPI.files.list({
+      q: `mimeType='application/vnd.google-apps.folder' and name='${getCurrentReign()}'`,
+      fields: 'files(id)',
+    });
+    let folder: string | null | undefined = null;
+    if ((folderQuery.data.files?.length ?? 0) == 0) {
+      folder = (
+        await driveAPI.files.create({
+          requestBody: {
+            name: getCurrentReign(),
+            mimeType: 'application/vnd.google-apps.folder',
+            parents: ['1zNk5v8ZHJwAbDXCO_GswQoeY_CBCpb7m'],
+          },
+          fields: 'id',
+        })
+      ).data.id;
+    } else {
+      folder = folderQuery.data.files?.[0].id;
+    }
+    const file = await driveAPI.files.create({
+      requestBody: {
+        name,
+        mimeType,
+        parents: [folder ?? '1zNk5v8ZHJwAbDXCO_GswQoeY_CBCpb7m'],
+      },
+      media: {
+        mimeType,
+        body: new Stream.PassThrough().end(buf),
+      },
+      fields: 'id,webViewLink',
+    });
+    await driveAPI.permissions.create({
+      fileId: file.data.id ?? '',
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    });
+    await driveAPI.permissions.create({
+      fileId: file.data.id ?? '',
+      requestBody: {
+        role: 'writer',
+        type: 'user',
+        emailAddress: 'cksc77th@gmail.com',
+      },
+    });
+    return { success: true, url: file.data.webViewLink };
+  },
+);
 
 export const publishDocument = onCall(globalFunctionOptions, async (request) => {
   if (request.auth == null) {
@@ -182,7 +193,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
     from: '建中班聯會法律與公文系統 <cksc77th@gmail.com>',
     to: recipientsEmail,
     subject: `[公文] ${doc.subject}`,
-    html: newDocMail(docId, doc.subject, Array.from(new Set(names)).join('、'), senderName)
+    html: newDocMail(docId, doc.subject, Array.from(new Set(names)).join('、'), senderName),
   } as MailOptions;
   if (recipientsEmail.length == 0) {
     if (ccEmail.length != 0) {
@@ -209,14 +220,14 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
         name: senderName,
         email: senderMail,
         mailto: senderMail,
-        sentBy: 'cksc77th@gmail.com'
+        sentBy: 'cksc77th@gmail.com',
       },
-      url: 'https://law.cksc.tw/document/' + docId
+      url: 'https://law.cksc.tw/document/' + docId,
     });
     mailOptions.icalEvent = {
       filename: 'invite.ics',
       method: 'REQUEST',
-      content: cal.toString()
+      content: cal.toString(),
     };
     mailOptions.subject = `[開會通知] ${meetingTime.getMonth() + 1}/${meetingTime.getDate()} (${convertToChineseDay(meetingTime.getDay())}) ${doc.subject}`;
     mailOptions.html = newMeetingNotice(docId, doc.subject, Array.from(new Set(names)).join('、'), senderName, meetingTime, doc.location);
@@ -224,3 +235,76 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
   await mailTransport.sendMail(mailOptions);
   return { success: true };
 });
+
+export const buildIdCache = onCall(globalFunctionOptions, async (request) => {
+  await checkRole(request, 'Chairman');
+  const documents = await db.collection('documents').get();
+  const legislation = await db.collection('legislation').get();
+  const docCache = {} as { [id: string]: number };
+  const lawCache = {} as { [id: string]: number };
+  for (const doc of documents.docs) {
+    const data = doc.data();
+    docCache[doc.id] = data.publishedAt?.toMillis() ?? data.createdAt.toMillis();
+  }
+  for (const law of legislation.docs) {
+    const data = law.data();
+    lawCache[law.id] = data.createdAt.toMillis();
+  }
+  await db.doc('settings/cache').set({
+    documents: docCache,
+    legislation: lawCache,
+  })
+  return { success: true };
+});
+
+export const sitemap = onRequest(globalFunctionOptions, async (request, response) => {
+  response.header('Content-Type', 'application/xml');
+  response.header('Content-Encoding', 'gzip');
+
+  try {
+    const smStream = new SitemapStream({ hostname: 'https://law.cksc.tw/' })
+    const pipeline = smStream.pipe(createGzip())
+    const cache = await db.doc('settings/cache').get();
+
+    // pipe your entries or directly write them.
+    smStream.write({ url: '/', priority: 1.0 })
+    smStream.write({ url: '/legislation/', priority: 0.9 })
+    smStream.write({ url: '/document/', priority: 0.8 })
+    smStream.write({ url: '/document/judicial', priority: 0.7 })
+    smStream.write({ url: '/document/judicial/lawsuit', priority: 0.7 })
+    if (cache.data()) {
+      for (const doc of Object.entries(cache.data()!.legislation ?? {})) {
+        smStream.write({ url: `/legislation/${doc[0]}`, lastmod: new Date(doc[1] as number).toISOString(), priority: 0.6 })
+      }
+      for (const doc of Object.entries(cache.data()!.documents ?? {})) {
+        smStream.write({ url: `/document/${doc[0]}`, lastmod: new Date(doc[1] as number).toISOString(), priority: 0.5 })
+      }
+    }
+    /* or use
+    Readable.from([{url: '/page-1'}...]).pipe(smStream)
+    if you are looking to avoid writing your own loop.
+    */
+
+    // make sure to attach a write stream such as streamToPromise before ending
+    smStream.end()
+    // stream write the response
+    pipeline.pipe(response).on('error', (e) => {throw e})
+  } catch (e) {
+    console.error(e)
+    response.status(500).end()
+  }
+});
+
+export const updateIdCache = onDocumentCreated({ ...globalFunctionOptions, document: '{type}/{docId}' }, async (event) => {
+  const type = event.params.type;
+  if (type !== 'documents' && type !== 'legislation') throw new HttpsError('not-found', 'Type not found.');
+  const docId = utf8.decode(event.params.docId);
+  await db.doc('settings/cache').update(new FieldPath(type, docId), new Date().valueOf());
+});
+
+export const purgeIdCache = onDocumentDeleted({ ...globalFunctionOptions, document: '{type}/{docId}' }, async (event) => {
+  const type = event.params.type;
+  if (type !== 'documents' && type !== 'legislation') throw new HttpsError('not-found', 'Type not found.');
+  const docId = utf8.decode(event.params.docId);
+  await db.doc('settings/cache').update(new FieldPath(type, docId), FieldValue.delete());
+})
