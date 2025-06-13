@@ -59,7 +59,7 @@ export default defineConfig((ctx) => {
       // env: {},
       // rawDefine: {}
       // ignorePublicFolder: true,
-      // minify: false,
+      minify: 'terser',
       // polyfillModulePreload: true,
       // distDir
 
@@ -67,6 +67,11 @@ export default defineConfig((ctx) => {
         // SSR
         if ((ctx.mode as any).ssr) {
           viteConf.build!.assetsDir = 'ssr-assets';
+        }
+        viteConf.build!.terserOptions = {
+          format: {
+            comments: false
+          }
         }
       },
       // viteVuePluginOptions: {},
