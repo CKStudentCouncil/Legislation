@@ -25,6 +25,7 @@ function add() {
 async function submit() {
   try {
     Loading.show();
+    (adding as any).idNumber = null; // Clears the ID for regeneration in case of repeated creations
     const id = await create(adding);
     action.value = null;
     notifySuccess('起草公文成功');
