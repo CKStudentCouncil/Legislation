@@ -1,7 +1,7 @@
 import { Notify } from 'quasar';
 import type { DocumentType } from './models';
 import { documentsCollection, DocumentSpecificIdentity } from './models';
-import { getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import { getDocsFromServer, limit, orderBy, query, where } from 'firebase/firestore';
 import sanitize from 'sanitize-html';
 import { event } from 'vue-gtag';
 import { convert } from 'html-to-text';
@@ -120,13 +120,20 @@ export async function generateDocumentIdNumber(specific: DocumentSpecificIdentit
   if (r.length === 3) {
     r = '0' + r;
   }
-  const target = specific.shareIdWith ? specific.shareIdWith : specific;
+  const target = specific.shareIdWith ?? specific;
   let s = r + target.generic.code + target.code;
-  const lastDoc = await getDocs(
+  const sharedFrom = [target.firebase];
+
+  for (const i of Object.values(DocumentSpecificIdentity.VALUES)) {
+    if (i.shareIdWith?.firebase === target.firebase) {
+      sharedFrom.push(i.firebase);
+    }
+  }
+  const lastDoc = await getDocsFromServer(
     query(
       documentsCollection(),
       orderBy('createdAt', 'desc'),
-      where('fromSpecific', '==', target.firebase),
+      where('fromSpecific', 'in', sharedFrom),
       where('type', '==', type.firebase),
       limit(1),
     ),
