@@ -3,7 +3,7 @@ import type { DocumentType } from './models';
 import { documentsCollection, DocumentSpecificIdentity } from './models';
 import { getDocsFromServer, limit, orderBy, query, where } from 'firebase/firestore';
 import sanitize from 'sanitize-html';
-import { event } from 'vue-gtag';
+import { exception } from 'vue-gtag';
 import { convert } from 'html-to-text';
 
 export function copyLink(href?: string | number | null) {
@@ -214,19 +214,19 @@ export function notifySuccess(message: string): void {
   });
 }
 
-export function notifyError(message: string, exception?: any): void {
+export function notifyError(message: string, e?: any): void {
   Notify.create({
     message,
     color: 'negative',
     icon: 'report_problem',
     position: 'top',
   });
-  if (exception) {
-    console.error(exception);
-    event('exception', {
-      description: message + ': ' + exception?.message,
-      stack: exception?.stack,
+  if (e) {
+    console.error(e);
+    exception({
+      description: message + ': ' + e?.message,
       fatal: false,
-    });
+      stack: e?.stack,
+    })
   }
 }
