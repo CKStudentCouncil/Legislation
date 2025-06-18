@@ -17,17 +17,22 @@ export const firebaseApp = initializeApp({
 });
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
-export default boot(({ app }) => {
+export default boot(({ app, router }) => {
   app.use(VueFire, {
     firebaseApp,
     modules: [],
   });
-  app.use(
-    createGtag({
-      appName: 'CKSC Legislation Quasar App',
-      tagId: firebaseApp.options.measurementId!,
-    }),
-  );
+  if (!process.env.SERVER) {
+    app.use(
+      createGtag({
+        appName: 'CKSC Legislation Quasar App',
+        tagId: firebaseApp.options.measurementId!,
+        pageTracker: {
+          router,
+        },
+      }),
+    );
+  }
 });
 
 export function useFunction(name: string): HttpsCallable {
