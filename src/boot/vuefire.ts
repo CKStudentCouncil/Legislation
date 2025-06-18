@@ -17,7 +17,7 @@ export const firebaseApp = initializeApp({
 });
 // "async" is optional;
 // more info on params: https://v2.quasar.dev/quasar-cli/boot-files
-export default boot(({ app, router }) => {
+export default boot(({ app }) => {
   app.use(VueFire, {
     firebaseApp,
     modules: [],
@@ -26,10 +26,7 @@ export default boot(({ app, router }) => {
     app.use(
       createGtag({
         appName: 'CKSC Legislation Quasar App',
-        tagId: firebaseApp.options.measurementId!,
-        pageTracker: {
-          router,
-        },
+        tagId: firebaseApp.options.measurementId!
       }),
     );
   }
