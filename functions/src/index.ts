@@ -9,10 +9,9 @@
 
 import * as admin from 'firebase-admin';
 admin.initializeApp(); // This must run before everything else
-
-import { FieldPath , FieldValue} from 'firebase-admin/firestore';
+import { FieldPath, FieldValue } from 'firebase-admin/firestore';
 import { HttpsError, onCall, onRequest } from 'firebase-functions/https';
-import { onDocumentCreated, onDocumentDeleted } from 'firebase-functions/firestore';
+import { onDocumentWritten } from 'firebase-functions/firestore';
 import { drive_v3, google } from 'googleapis';
 import * as Stream from 'stream';
 import { addUserWithRole, checkRole, editUserClaims } from './auth';
@@ -25,8 +24,7 @@ import ical, { ICalCalendarMethod } from 'ical-generator';
 import { newMeetingNotice } from './mail/new-meeting-notice';
 import { SitemapStream } from 'sitemap';
 import { createGzip } from 'zlib';
-import * as utf8 from 'utf8'
-
+import * as utf8 from 'utf8';
 
 const globalFunctionOptions = { region: 'asia-east1' };
 const auth = new google.auth.GoogleAuth({
@@ -295,16 +293,16 @@ export const sitemap = onRequest(globalFunctionOptions, async (request, response
   }
 });
 
-export const updateIdCache = onDocumentCreated({ ...globalFunctionOptions, document: '{type}/{docId}' }, async (event) => {
-  const type = event.params.type;
-  if (type !== 'documents' && type !== 'legislation') throw new HttpsError('not-found', 'Type not found.');
-  const docId = utf8.decode(event.params.docId);
-  await db.doc('settings/cache').update(new FieldPath(type, docId), new Date().valueOf());
-});
-
-export const purgeIdCache = onDocumentDeleted({ ...globalFunctionOptions, document: '{type}/{docId}' }, async (event) => {
-  const type = event.params.type;
-  if (type !== 'documents' && type !== 'legislation') throw new HttpsError('not-found', 'Type not found.');
-  const docId = utf8.decode(event.params.docId);
-  await db.doc('settings/cache').update(new FieldPath(type, docId), FieldValue.delete());
-})
+export const updateIdCache = onDocumentWritten(
+  { ...globalFunctionOptions, document: '{type}/{docId}', },
+  async (event) => {
+    const type = event.params.type;
+    if (type !== 'documents' && type !== 'legislation') throw new HttpsError('not-found', 'Type not found.');
+    const docId = utf8.decode(event.params.docId);
+    let del = !event.data?.after.exists; // Check if it's a deletion
+    if (type === 'documents' && !del &&
+      (!event.data?.after.data()!.published || event.data?.after.data()!.confidentiality !== 'Public')) // Reject non-public docs
+      del = true;
+    await db.doc('settings/cache').update(new FieldPath(type, docId), del ? FieldValue.delete() : new Date().valueOf());
+  },
+);
