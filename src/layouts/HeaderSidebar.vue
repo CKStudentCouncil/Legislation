@@ -93,7 +93,7 @@ const endpoints = [
   { name: '編輯公文', url: '/manage/document', icon: 'draw', requireAuth: true },
   { name: '評委文書', url: '/document/judicial', icon: 'balance', requireAuth: false },
   { name: '管理帳號', url: '/manage/accounts', icon: 'badge', requireAuth: true, requireRole: DocumentSpecificIdentity.Chairman },
-  { name: '關於', url: '/about', icon: 'info', requireAuth: false },
+  { name: '關於與使用條款', url: '/about', icon: 'info', requireAuth: false },
 ];
 const selected = ref('Account Information');
 const loggedInUser = useCurrentUser();

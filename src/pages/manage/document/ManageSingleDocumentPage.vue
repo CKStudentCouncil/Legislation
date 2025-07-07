@@ -14,9 +14,15 @@
         </q-btn-dropdown>
         <q-btn v-if="!docu.published" color="secondary" icon="send" label="發布公文">
           <q-popup-proxy>
-            <div class="q-ma-lg">
-              確認發布公文？發布後將自動導向至檢視頁面
-              <q-btn class="q-ml-md" color="primary" label="確認" @click="publish" />
+            <div class="q-ma-lg row">
+              <div class="col-9">
+                確認發布公文？<br>
+                發布公文即視同您同意本系統之<a href="/about" target="_blank">《使用者條款》</a><br>
+                完成發布後將自動導向至檢視頁面
+              </div>
+              <div class="col-3 content-center">
+                <q-btn class="q-ml-md" color="primary" label="確認" @click="publish" />
+              </div>
             </div>
           </q-popup-proxy>
         </q-btn>
