@@ -201,6 +201,14 @@ export class DocumentSpecificIdentity {
     DocumentGeneralIdentity.ExecutiveDepartment,
     '總務股股長',
   );
+  static GeneralITDivision = new DocumentSpecificIdentity(
+    'GeneralITDivision',
+    '資訊股',
+    '資',
+    '08',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+    '資訊股股長',
+  );
   static ElectoralCommission = new DocumentSpecificIdentity(
     'ElectoralCommission',
     '選舉委員會',
@@ -309,6 +317,7 @@ export class DocumentSpecificIdentity {
     EventsDivision: DocumentSpecificIdentity.EventsDivision,
     DocumentationDivision: DocumentSpecificIdentity.DocumentationDivision,
     GeneralAffairsDivision: DocumentSpecificIdentity.GeneralAffairsDivision,
+    GeneralITDivision: DocumentSpecificIdentity.GeneralITDivision,
     ElectoralCommission: DocumentSpecificIdentity.ElectoralCommission,
     ElectoralCommitteeChairman: DocumentSpecificIdentity.ElectoralCommitteeChairman,
     ElectoralCommitteeViceChairman: DocumentSpecificIdentity.ElectoralCommitteeViceChairman,
