@@ -24,7 +24,7 @@
     "utf8": "^3.0.0"
   },
   "devDependencies": {
-    "@types/nodemailer": "^6.4.17",
+    "@types/nodemailer": "^7.0.1",
     "@types/utf8": "^3.0.3",
     "@typescript-eslint/parser": "^8.38.0",
     "eslint": "^9.33.0",
