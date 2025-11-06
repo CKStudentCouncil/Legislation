@@ -362,8 +362,12 @@ function editId() {
 }
 
 async function submitId() {
-  Loading.show();
   const oldId = (docu.value as any).id;
+  if (oldId === `${editingIdPrefix.value}第${editingIdNumber.value}號`) {
+    notifyError('新公文字號不可與舊公文字號相同');
+    return;
+  }
+  Loading.show();
   docu.value!.idPrefix = editingIdPrefix.value;
   docu.value!.idNumber = editingIdNumber.value;
   const newId = docu.value!.getFullId();
