@@ -19,12 +19,12 @@
     "firebase-functions": "^6.4.0",
     "googleapis": "^155.0.1",
     "ical-generator": "^9.0.0",
-    "nodemailer": "^7.0.5",
+    "nodemailer": "^7.0.6",
     "sitemap": "^8.0.0",
     "utf8": "^3.0.0"
   },
   "devDependencies": {
-    "@types/nodemailer": "^6.4.17",
+    "@types/nodemailer": "^7.0.1",
     "@types/utf8": "^3.0.3",
     "@typescript-eslint/parser": "^8.38.0",
     "eslint": "^9.33.0",
