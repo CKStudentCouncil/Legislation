@@ -4554,10 +4554,10 @@ instantsearch-ui-components@0.13.0:
     zod "^3.25.76 || ^4"
     zod-to-json-schema "3.24.6"
 
-instantsearch.css@^8.5.1:
-  version "8.5.1"
-  resolved "https://registry.yarnpkg.com/instantsearch.css/-/instantsearch.css-8.5.1.tgz#ece29d17048c282dda95b5eb35400041c519f97d"
-  integrity sha512-lu4gWSa2crIA1OAuFwtrNJy4d8oRvKmkY5gv8Dbf3tuedQMm6cf7K+1kXJKRAHLm4pZos9RXIH10m57UfDKbyg==
+instantsearch.css@^8.8.0:
+  version "8.8.0"
+  resolved "https://registry.yarnpkg.com/instantsearch.css/-/instantsearch.css-8.8.0.tgz#537feca0926863b95da7b31b0d2043b2a42eec56"
+  integrity sha512-JKoH5XiBayJEPFgcaqUBSPnX1qGuRoYUnpLtaJogABjAMx8BXBUHRIA5uZWlfDNT/ECtpfVhih+7ntVHa5KjbQ==
 
 instantsearch.js@4.82.0:
   version "4.82.0"
