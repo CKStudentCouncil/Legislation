@@ -7663,10 +7663,10 @@ vue-router@^4.5.1:
   dependencies:
     "@vue/devtools-api" "^6.6.4"
 
-vue-to-print@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/vue-to-print/-/vue-to-print-1.4.0.tgz#1ee09732893330636cdbd39f87c4eea92abd6522"
-  integrity sha512-HNq9BAvB7gTT3eQQasdvVfcsQzBcH/bfokFKToM8ABjZ35+brdKZXda5UCCB+9uiuKP8YEGfMzav8YeD3MtUPg==
+vue-to-print@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/vue-to-print/-/vue-to-print-1.5.1.tgz#eb500f4e17d8bda9bdb36d2359e9833908c15a18"
+  integrity sha512-Z8LeXBmw9J5zQrtcqNQeoFNprgs6ituih682SAOv06ExZljvIjt2CEAW7N1XAjLpgzx9LKMrl500G2ZeGugLUg==
 
 vue-tsc@^3.1.2:
   version "3.1.3"
