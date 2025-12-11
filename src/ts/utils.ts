@@ -84,12 +84,12 @@ export function translateNumberToChinese(num: number) {
 
 export function getReign(date: Date) {
   let year: number;
-  if (date.getMonth() < 8) {
+  if (date.getMonth() < 7) { // jan ~ july
     year = date.getFullYear() - 1945 - 1;
   } else {
     year = date.getFullYear() - 1945;
   }
-  if (date.getMonth() > 7 || date.getMonth() < 1) {
+  if (date.getMonth() > 6 || date.getMonth() == 0) { // aug ~ jan
     return `${year}-1`;
   }
   return `${year}-2`;
