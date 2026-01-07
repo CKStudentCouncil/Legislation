@@ -43,7 +43,7 @@
     "@types/node": "^25.0.3",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
-    "autoprefixer": "^10.4.21",
+    "autoprefixer": "^10.4.23",
     "eslint": "^9.33.0",
     "eslint-plugin-vue": "^10.6.2",
     "firebase-tools": "^15.0.0",
