@@ -20,7 +20,7 @@
     "googleapis": "^164.1.0",
     "ical-generator": "^9.0.0",
     "nodemailer": "^7.0.5",
-    "sitemap": "^8.0.0",
+    "sitemap": "^9.0.0",
     "utf8": "^3.0.0"
   },
   "devDependencies": {
