@@ -411,7 +411,7 @@ export class DocumentType {
   static Announcement = new DocumentType('Announcement', '公告', '公', '2');
   static Order = new DocumentType('Order', '命令', '令', '0');
   static Advisory = new DocumentType('Advisory', '函', '函', '1');
-  //static Message = new DocumentType('Message', '咨', '咨', '6');
+  static Message = new DocumentType('Message', '咨', '咨', '6');
   static Record = new DocumentType('Record', '會議記錄', '錄', '3');
   static MeetingNotice = new DocumentType('MeetingNotice', '開會通知', '通', '4');
   // Judicial Committee only
@@ -430,7 +430,7 @@ export class DocumentType {
     Announcement: DocumentType.Announcement,
     Order: DocumentType.Order,
     Advisory: DocumentType.Advisory,
-    //static Message = new DocumentType('Message', '咨', '咨', '6');
+    Message: DocumentType.Message,
     Record: DocumentType.Record,
     MeetingNotice: DocumentType.MeetingNotice,
     JudicialCommitteeDecision: DocumentType.JudicialCommitteeDecision,
