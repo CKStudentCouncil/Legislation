@@ -67,12 +67,14 @@ export class DocumentGeneralIdentity {
   static ExecutiveDepartment = new DocumentGeneralIdentity('ExecutiveDepartment', '行政部門', '建班政', '1');
   static StudentCouncil = new DocumentGeneralIdentity('StudentCouncil', '班代大會', '建班立', '2');
   static JudicialCommittee = new DocumentGeneralIdentity('JudicialCommittee', '評議委員會', '建班評', '3');
+  static SpecialCommittee = new DocumentGeneralIdentity('SpecialCommittee', '特殊時期會務委員會', '建班特委', '4');
   static VALUES = {
     Chairman: DocumentGeneralIdentity.Chairman,
     ViceChairman: DocumentGeneralIdentity.ViceChairman,
     ExecutiveDepartment: DocumentGeneralIdentity.ExecutiveDepartment,
     StudentCouncil: DocumentGeneralIdentity.StudentCouncil,
     JudicialCommittee: DocumentGeneralIdentity.JudicialCommittee,
+    SpecialCommittee: DocumentGeneralIdentity.SpecialCommittee,
   } as Record<string, DocumentGeneralIdentity>;
 
   constructor(
@@ -153,6 +155,14 @@ export class DocumentSpecificIdentity {
     DocumentGeneralIdentity.StudentCouncil,
   );
   // Executive Department
+  static ExecutiveDepartment = new DocumentSpecificIdentity(
+    'ExecutiveDepartment',
+    '行政部門',
+    '行',
+    '00',
+    DocumentGeneralIdentity.ExecutiveDepartment,
+    '主席',
+  );
   static StudentRightsDivision = new DocumentSpecificIdentity(
     'StudentRightsDivision',
     '學生權益股',
@@ -304,6 +314,44 @@ export class DocumentSpecificIdentity {
     DocumentGeneralIdentity.JudicialCommittee,
     '審查委員',
   );
+  // specialCommittee
+  static SpecialCommittee = new DocumentSpecificIdentity(
+    'SpecialCommittee',
+    '特殊時期會務委員會',
+    '特委',
+    '00',
+    DocumentGeneralIdentity.SpecialCommittee,
+    '特殊時期會務委員會主任委員',
+  );
+  static SpecialCommitteeChairman = new DocumentSpecificIdentity(
+    'SpecialCommitteeChairman',
+    '特殊時期會務委員會主任委員',
+    '特委主',
+    '01',
+    DocumentGeneralIdentity.SpecialCommittee,
+  );
+  static SpecialCommitteeExecutiveViceChairman = new DocumentSpecificIdentity(
+    'SpecialCommitteeExecutiveViceChairman',
+    '特殊時期會務委員會行政副主任委員',
+    '特委行副',
+    '02',
+    DocumentGeneralIdentity.SpecialCommittee,
+  );
+  static SpecialCommitteeLegislativeViceChairman = new DocumentSpecificIdentity(
+    'SpecialCommitteeLegislativeViceChairman',
+    '特殊時期會務委員會立法副主任委員',
+    '特委立副',
+    '03',
+    DocumentGeneralIdentity.SpecialCommittee,
+  );
+  static SpecialCommitteeJudicialViceChairman = new DocumentSpecificIdentity(
+    'SpecialCommitteeJudicialViceChairman',
+    '特殊時期會務委員會司法副主任委員',
+    '特委司副',
+    '04',
+    DocumentGeneralIdentity.SpecialCommittee,
+  );
+
   static Other = new DocumentSpecificIdentity('Other', '其他', '', '99', DocumentGeneralIdentity.StudentCouncil);
   static VALUES = {
     Chairman: DocumentSpecificIdentity.Chairman,
@@ -319,6 +367,7 @@ export class DocumentSpecificIdentity {
     InvestigationCommittee: DocumentSpecificIdentity.InvestigationCommittee,
     ElectionSupervisionCommittee: DocumentSpecificIdentity.ElectionSupervisionCommittee,
     StudentCouncilRepresentative: DocumentSpecificIdentity.StudentCouncilRepresentative,
+    ExecutiveDepartment: DocumentSpecificIdentity.ExecutiveDepartment,
     StudentRightsDivision: DocumentSpecificIdentity.StudentRightsDivision,
     PublicRelationsDivision: DocumentSpecificIdentity.PublicRelationsDivision,
     ServiceDivision: DocumentSpecificIdentity.ServiceDivision,
@@ -340,6 +389,11 @@ export class DocumentSpecificIdentity {
     SupremeCourt: DocumentSpecificIdentity.SupremeCourt,
     ConstitutionalCensorCourt: DocumentSpecificIdentity.ConstitutionalCensorCourt,
     Other: DocumentSpecificIdentity.Other,
+    SpecialCommittee: DocumentSpecificIdentity.SpecialCommittee,
+    SpecialCommitteeChairman: DocumentSpecificIdentity.SpecialCommitteeChairman,
+    SpecialCommitteeExecutiveViceChairman: DocumentSpecificIdentity.SpecialCommitteeExecutiveViceChairman,
+    SpecialCommitteeLegislativeViceChairman: DocumentSpecificIdentity.SpecialCommitteeLegislativeViceChairman,
+    SpecialCommitteeJudicialViceChairman: DocumentSpecificIdentity.SpecialCommitteeJudicialViceChairman,
   } as Record<string, DocumentSpecificIdentity>;
 
   constructor(
@@ -357,6 +411,7 @@ export class DocumentType {
   static Announcement = new DocumentType('Announcement', '公告', '公', '2');
   static Order = new DocumentType('Order', '命令', '令', '0');
   static Advisory = new DocumentType('Advisory', '函', '函', '1');
+  //static Message = new DocumentType('Message', '咨', '咨', '6');
   static Record = new DocumentType('Record', '會議記錄', '錄', '3');
   static MeetingNotice = new DocumentType('MeetingNotice', '開會通知', '通', '4');
   // Judicial Committee only
@@ -375,6 +430,7 @@ export class DocumentType {
     Announcement: DocumentType.Announcement,
     Order: DocumentType.Order,
     Advisory: DocumentType.Advisory,
+    //static Message = new DocumentType('Message', '咨', '咨', '6');
     Record: DocumentType.Record,
     MeetingNotice: DocumentType.MeetingNotice,
     JudicialCommitteeDecision: DocumentType.JudicialCommitteeDecision,
