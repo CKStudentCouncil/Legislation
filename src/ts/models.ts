@@ -296,6 +296,14 @@ export class DocumentSpecificIdentity {
     undefined,
     DocumentSpecificIdentity.JudicialCommitteeChairman,
   );
+  static JudicialAssistance = new DocumentSpecificIdentity(
+    'JudicialAssistance',
+    '司法助理',
+    '司助',
+    '04',
+    DocumentGeneralIdentity.JudicialCommittee,
+    '司法助理',
+  );
   static GeneralCourt = new DocumentSpecificIdentity('GeneralCourt', '一般法庭', '政', '02', DocumentGeneralIdentity.JudicialCommittee, '審判長');
   static ConstitutionalCourt = new DocumentSpecificIdentity(
     'ConstitutionalCourt',
@@ -383,6 +391,7 @@ export class DocumentSpecificIdentity {
     JudicialCommitteeChairman: DocumentSpecificIdentity.JudicialCommitteeChairman,
     JudicialCommitteeViceChairman: DocumentSpecificIdentity.JudicialCommitteeViceChairman,
     JudicialCommitteeMember: DocumentSpecificIdentity.JudicialCommitteeMember,
+    JudicialAssistance: DocumentSpecificIdentity.JudicialAssistance,
     JudicialCommittee: DocumentSpecificIdentity.JudicialCommittee,
     GeneralCourt: DocumentSpecificIdentity.GeneralCourt,
     ConstitutionalCourt: DocumentSpecificIdentity.ConstitutionalCourt,
