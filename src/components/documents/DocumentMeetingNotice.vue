@@ -5,7 +5,7 @@
     <div class="text-right">{{ doc.getFullId() }}</div>
     <div class="text-h6">
       <div>發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : '尚未發布' }}</div>
-      <div>密等：{{ doc.confidentiality.translation }}</div>
+      <div>密等：{{ doc.confidentiality.translation }}<span v-if="readableViewers"> (限 {{ readableViewers }} 閱覽)</span><span v-if="doc.declassifyAt"> (解密時間：{{ doc.declassifyAt.toLocaleString() }})</span></div>
       <DocumentSeparator />
       <div>出席人：{{ readableTo }}</div>
       <div v-if="doc.ccSpecific.length > 0">列席人：{{ readableCC }}</div>
@@ -36,6 +36,10 @@ const readableTo = computed(() => {
 });
 const readableCC = computed(() => {
   return getReadableRecipient(props.doc.ccSpecific, props.doc.ccOther);
+});
+const readableViewers = computed(() => {
+  if (props.doc.confidentiality.firebase !== 'Confidential' || !props.doc.viewers || props.doc.viewers.length === 0) return '';
+  return props.doc.viewers.map(v => v.translation).join('、');
 });
 const title = computed(() => {
   if (

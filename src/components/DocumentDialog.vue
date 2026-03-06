@@ -69,6 +69,21 @@
           :options="Object.values(DocumentConfidentiality.VALUES)"
           label="密等"
         />
+        <div v-if="parentValue.confidentiality && parentValue.confidentiality.firebase === DocumentConfidentiality.Confidential.firebase && !hideConfidentiality">
+          <q-select
+            v-model="parentValue.viewers"
+            label="指定閱覽人 (可多選，留空代表僅特定幹部可見)"
+            :option-label="(o) => o.translation"
+            :options="Object.values(DocumentSpecificIdentity.VALUES)"
+            multiple
+            use-chips
+          />
+          <q-toggle :model-value="hasDeclassifyAt" @update:model-value="updateHasDeclassifyAt" label="設定解密時間" />
+          <div v-if="hasDeclassifyAt" class="row q-gutter-sm">
+            <q-date :model-value="declassifyDate" class="col" mask="YYYY-MM-DD" @update:model-value="updateDeclassifyDate" />
+            <q-time :model-value="declassifyTime" class="col" format24h mask="HH:mm" @update:model-value="updateDeclassifyTime" />
+          </div>
+        </div>
         <q-input v-if="isJudicial&&!isProsecution" :model-value="parentValue.prosecutionId" label="啟訴書公文字號或連結" @update:model-value="updateProsecutionId" />
       </q-card-section>
       <q-card-actions align="right">
@@ -142,6 +157,36 @@ function updateMeetingTime(tm: string | null) {
     parentValue.value.meetingTime = new Date();
   }
   parentValue.value.meetingTime?.setHours(parseInt(t[0]!), parseInt(t[1]!), 0);
+}
+
+const hasDeclassifyAt = computed(() => parentValue.value.declassifyAt != null);
+
+function updateHasDeclassifyAt(val: boolean) {
+  if (val) {
+    parentValue.value.declassifyAt = new Date();
+  } else {
+    parentValue.value.declassifyAt = null;
+  }
+}
+
+const declassifyDate = computed(() => date.formatDate(parentValue.value.declassifyAt ?? new Date(), 'YYYY-MM-DD'));
+const declassifyTime = computed(() => date.formatDate(parentValue.value.declassifyAt ?? new Date(), 'HH:mm'));
+
+function updateDeclassifyDate(dt: string) {
+  const d = dt.split('-');
+  if (parentValue.value.declassifyAt == null || d.length < 3) {
+    parentValue.value.declassifyAt = new Date();
+  }
+  parentValue.value.declassifyAt?.setFullYear(parseInt(d[0]!), parseInt(d[1]!) - 1, parseInt(d[2]!));
+}
+
+function updateDeclassifyTime(tm: string | null) {
+  if (tm == null) return;
+  const t = tm.split(':');
+  if (parentValue.value.declassifyAt == null || t.length < 2) {
+    parentValue.value.declassifyAt = new Date();
+  }
+  parentValue.value.declassifyAt?.setHours(parseInt(t[0]!), parseInt(t[1]!), 0);
 }
 
 function updateProsecutionId(id: any) {

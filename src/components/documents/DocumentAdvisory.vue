@@ -7,7 +7,7 @@
     <div class="text-h6">受文者：{{ readableTo }}</div>
     <div v-if="doc.ccSpecific.length > 0" class="text-h6">副本：{{ readableCC }}</div>
     <div class="text-h6">發文日期：{{ doc.publishedAt ? doc.publishedAt.toLocaleDateString() : '尚未發布' }}</div>
-    <div class="text-h6">密等：{{ doc.confidentiality.translation }}</div>
+    <div class="text-h6">密等：{{ doc.confidentiality.translation }}<span v-if="readableViewers"> (限 {{ readableViewers }} 閱覽)</span><span v-if="doc.declassifyAt"> (解密時間：{{ doc.declassifyAt.toLocaleString() }})</span></div>
     <div class="text-h6">主旨：{{ doc.subject }}</div>
     <DocumentSeparator />
     <div class="text-h6">說明：</div>
@@ -29,6 +29,10 @@ const readableTo = computed(() => {
 });
 const readableCC = computed(() => {
   return getReadableRecipient(props.doc.ccSpecific, props.doc.ccOther);
+});
+const readableViewers = computed(() => {
+  if (props.doc.confidentiality.firebase !== 'Confidential' || !props.doc.viewers || props.doc.viewers.length === 0) return '';
+  return props.doc.viewers.map(v => v.translation).join('、');
 });
 </script>
 

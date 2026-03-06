@@ -59,6 +59,7 @@ async function proceed(content: string) {
           break;
         case 'toSpecific':
         case 'ccSpecific':
+        case 'viewers':
           parsedValue = (value as unknown as string[]).map((v) => DocumentSpecificIdentity.VALUES[v]);
           break;
         case 'type':
@@ -67,6 +68,7 @@ async function proceed(content: string) {
         case 'createdAt':
         case 'publishedAt':
         case 'meetingTime':
+        case 'declassifyAt':
           parsedValue = new Date(value as any);
           break;
         case 'confidentiality':

@@ -11,7 +11,28 @@ service cloud.firestore {
       allow write: if isSignedIn();
     }
     match /documents/{document=**} {
-      allow read: if resource.data.confidentiality == 'Public' || isSignedIn();
+      function isPublished() {
+        return !('published' in resource.data) || resource.data.published != false;
+      }
+      function isAuthor() {
+        return 'authorUid' in resource.data && resource.data.authorUid == request.auth.uid;
+      }
+      function isPublic() {
+        return resource.data.confidentiality == 'Public';
+      }
+      function isDeclassified() {
+        return 'declassifyAt' in resource.data && resource.data.declassifyAt != null && request.time >= resource.data.declassifyAt;
+      }
+      function isViewer() {
+        return 'viewers' in resource.data && resource.data.viewers.size() > 0 && request.auth.token.roles.hasAny(resource.data.viewers);
+      }
+      function canReadDocument() {
+        return (!isPublished() && isSignedIn() && isAuthor()) ||
+               (isPublished() && isPublic()) ||
+               (isPublished() && (!isPublic()) && isSignedIn() && (isDeclassified() || isAuthor() || isViewer()));
+      }
+
+      allow read: if canReadDocument();
       allow write: if isSignedIn();
     }
     match /settings/{setting=**} {

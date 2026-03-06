@@ -33,6 +33,9 @@ export interface Document {
   ccSpecific: DocumentSpecificIdentity[];
   ccOther: string[];
   confidentiality: DocumentConfidentiality;
+  viewers?: DocumentSpecificIdentity[];
+  declassifyAt?: Date | null;
+  authorUid?: string;
   read: string[];
   published: boolean;
   publishedAt?: Date | null;
@@ -480,6 +483,7 @@ export function convertDocumentToFirebase(data: Document) {
   if (data.secretarySpecific) data.secretarySpecific = data.secretarySpecific.firebase as any;
   data.type = data.type.firebase as any;
   data.ccSpecific = data.ccSpecific.map((ccSpecific) => ccSpecific.firebase as any);
+  if (data.viewers) data.viewers = data.viewers.map((viewer) => viewer.firebase as any);
   return data;
 }
 
@@ -494,6 +498,9 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     if (!data.published) delete data.publishedAt;
     if (!data.meetingTime) delete data.meetingTime;
     if (!data.prosecutionId) delete data.prosecutionId;
+    if (!data.declassifyAt) delete data.declassifyAt;
+    else data.declassifyAt = Timestamp.fromDate(data.declassifyAt) as any;
+    if (!data.authorUid) delete data.authorUid;
     return data;
   },
   fromFirestore(snapshot, options) {
@@ -501,12 +508,14 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     if (!data) return null;
     data.createdAt = new Date(data.createdAt.toMillis());
     data.publishedAt = data.publishedAt ? new Date(data.publishedAt.toMillis()) : null;
+    data.declassifyAt = data.declassifyAt ? new Date(data.declassifyAt.toMillis()) : null;
     data.meetingTime = data.meetingTime ? new Date(data.meetingTime.toMillis()) : null;
     data.confidentiality = DocumentConfidentiality.VALUES[data.confidentiality as keyof typeof DocumentConfidentiality.VALUES];
     data.fromSpecific = DocumentSpecificIdentity.VALUES[data.fromSpecific];
     data.toSpecific = data.toSpecific.map((toSpecific: any) => DocumentSpecificIdentity.VALUES[toSpecific]);
     data.type = DocumentType.VALUES[data.type as keyof typeof DocumentType.VALUES];
     data.ccSpecific = data.ccSpecific.map((ccSpecific: any) => DocumentSpecificIdentity.VALUES[ccSpecific]);
+    data.viewers = data.viewers ? data.viewers.map((viewer: any) => DocumentSpecificIdentity.VALUES[viewer]) : [];
     data.secretarySpecific = data.secretarySpecific ? DocumentSpecificIdentity.VALUES[data.secretarySpecific] : null;
     data.getFullId = function () {
       return `${this.idPrefix}第${this.idNumber}號`;
