@@ -131,6 +131,15 @@ export class DocumentSpecificIdentity {
     DocumentGeneralIdentity.StudentCouncil,
     '行政委員會召集委員',
   );
+  static ExecutiveCommitteeConsultant = new DocumentSpecificIdentity(
+    'ExecutiveCommitteeConsultant',
+    '行政委員會諮詢委員',
+    '行',
+    '06',
+    DocumentGeneralIdentity.StudentCouncil,
+    undefined,
+    DocumentSpecificIdentity.ExecutiveCommittee,
+  );
   static InvestigationCommittee = new DocumentSpecificIdentity(
     'InvestigationCommittee',
     '調查委員會',
@@ -372,6 +381,7 @@ export class DocumentSpecificIdentity {
     FinancialCommittee: DocumentSpecificIdentity.FinancialCommittee,
     LegislationCommittee: DocumentSpecificIdentity.LegislationCommittee,
     ExecutiveCommittee: DocumentSpecificIdentity.ExecutiveCommittee,
+    ExecutiveCommitteeConsultant: DocumentSpecificIdentity.ExecutiveCommitteeConsultant,
     InvestigationCommittee: DocumentSpecificIdentity.InvestigationCommittee,
     ElectionSupervisionCommittee: DocumentSpecificIdentity.ElectionSupervisionCommittee,
     StudentCouncilRepresentative: DocumentSpecificIdentity.StudentCouncilRepresentative,
