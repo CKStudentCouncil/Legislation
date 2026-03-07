@@ -65,13 +65,6 @@ const props = defineProps({
 defineEmits({
   'update:expanded': (value: boolean) => true,
 });
-
-async function copyResolutionUrl() {
-  const url = props.content.resolutionUrl;
-  if (!url) return;
-  await navigator.clipboard.writeText(url);
-  $q.notify({ message: '已複製決議文連結', color: 'positive' });
-}
 </script>
 
 <style scoped></style>

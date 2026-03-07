@@ -12,8 +12,26 @@
         <q-no-ssr>
           <q-btn aria-label="複製連結" class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index)" />
         </q-no-ssr>
-        <q-no-ssr v-if="$props.content.resolutionUrl">
-          <q-btn aria-label="複製決議文連結" class="no-print" dense flat icon="gavel" size="12px" @click="copyLink($props.content.resolutionUrl)" />
+        <q-no-ssr v-if="$props.content.resolutionUrls?.length">
+          <q-btn flat dense icon="gavel" size="12px" class="no-print">
+            <q-tooltip>決議文</q-tooltip>
+            <q-menu>
+              <q-list style="min-width: 150px">
+                <q-item
+                  v-for="(resolution, i) in $props.content.resolutionUrls"
+                  :key="i"
+                  clickable
+                  v-close-popup
+                  @click="openResolutionUrl(resolution.url)"
+                >
+                  <q-item-section>{{ resolution.title }}</q-item-section>
+                  <q-item-section side>
+                    <q-icon name="open_in_new" size="14px" />
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-menu>
+          </q-btn>
         </q-no-ssr>
       </div>
       <div v-if="showContent">
@@ -67,6 +85,10 @@ const lines = computed(() => props.content.content!.split('\n'));
 const cleanLines = computed(() =>
   props.content.content!.split('\n').filter((line) => line.match(/^[(]?（?[一二三四五六七八九十]*([）)、])/) == null),
 );
+
+function openResolutionUrl(url: string) {
+  window.open(url, '_blank');
+}
 </script>
 
 <style scoped>
