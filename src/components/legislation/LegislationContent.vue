@@ -44,8 +44,11 @@ import { ContentType } from 'src/ts/models.ts';
 import type { PropType } from 'vue';
 import LegislationContentClause from 'components/legislation/LegislationContentClause.vue';
 import LegislationContentGeneric from 'components/legislation/LegislationContentGeneric.vue';
+import { useQuasar } from 'quasar';
 
-defineProps({
+const $q = useQuasar();
+
+const props = defineProps({
   content: {
     type: Object as PropType<LegislationContent>,
     required: true,
@@ -62,6 +65,13 @@ defineProps({
 defineEmits({
   'update:expanded': (value: boolean) => true,
 });
+
+async function copyResolutionUrl() {
+  const url = props.content.resolutionUrl;
+  if (!url) return;
+  await navigator.clipboard.writeText(url);
+  $q.notify({ message: '已複製決議文連結', color: 'positive' });
+}
 </script>
 
 <style scoped></style>

@@ -550,9 +550,15 @@ export function convertContentToFirebase(data: LegislationContent) {
     title: data.title,
     type: data.type.firebase,
     index: data.index,
+    resolutionUrl: data.resolutionUrl,
   } as any;
   if (data.deleted) content.deleted = data.deleted; // this saves storage space, as most content is not deleted
   if (data.frozenBy) content.frozenBy = data.frozenBy;
+  if (content.resolutionUrl) {
+    content.resolutionUrl = data.resolutionUrl;
+  } else {
+    delete content.resolutionUrl;
+  }
   return content;
 }
 
@@ -638,6 +644,7 @@ export interface LegislationContent {
   title: string;
   type: ContentType;
   index: number;
+  resolutionUrl?: string; // only for Clause and SpecialClause
 }
 
 export class LegislationType {

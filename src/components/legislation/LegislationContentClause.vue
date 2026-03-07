@@ -12,6 +12,9 @@
         <q-no-ssr>
           <q-btn aria-label="複製連結" class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index)" />
         </q-no-ssr>
+        <q-no-ssr v-if="$props.content.resolutionUrl">
+          <q-btn aria-label="複製決議文連結" class="no-print" dense flat icon="gavel" size="12px" @click="copyLink($props.content.resolutionUrl)" />
+        </q-no-ssr>
       </div>
       <div v-if="showContent">
         <div v-if="countLines">
