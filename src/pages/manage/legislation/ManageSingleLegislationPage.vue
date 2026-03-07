@@ -116,7 +116,21 @@
           :rules="[isUrl]"
           label="凍結或失效之依據公文"
         />
-        <q-input ref="resolutionUrlRef" v-model="targetContent.resolutionUrl" :rule="[targetContent.resolutionUrl]" label="決議文連結" clearable />
+        <q-checkbox v-model="hasResolutionUrls" label="相關決議文" />
+        <div v-if="targetContent.resolutionUrls">
+          <q-list bordered>
+            <q-item v-for="(r, i) in targetContent.resolutionUrls" :key="i">
+              <q-item-section>{{ r.title }}</q-item-section>
+              <q-item-section side>
+                <div>
+                  <q-btn flat dense icon="edit" size="10px" @click="editResolution(i)" />
+                  <q-btn flat dense icon="delete" size="10px" color="negative" @click="removeResolution(i)" />
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
+          <q-btn flat dense icon="add" label="新增決議文" color="positive" @click="addResolution" />
+        </div>
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="contentAction = null" />
@@ -174,7 +188,7 @@
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
-import type { LegislationCategory, LegislationHistory } from 'src/ts/models.ts';
+import type { LegislationCategory, LegislationHistory, ResolutionUrl } from 'src/ts/models.ts';
 import * as models from 'src/ts/models.ts';
 import { ContentType, convertContentToFirebase, legislationDocument, useLegislation } from 'src/ts/models.ts';
 import LegislationContent from 'components/legislation/LegislationContent.vue';
@@ -183,7 +197,7 @@ import { date, Dialog, Loading } from 'quasar';
 import { arrayRemove, arrayUnion, deleteDoc, updateDoc } from 'firebase/firestore';
 import { VueDraggable } from 'vue-draggable-plus';
 import type { Ref } from 'vue';
-import { reactive, ref } from 'vue';
+import { reactive, ref, computed } from 'vue';
 import ListEditor from 'components/ListEditor.vue';
 import LegislationAddendum from 'components/legislation/LegislationAddendum.vue';
 import LegislationDialog from 'components/legislation/LegislationDialog.vue';
@@ -228,11 +242,20 @@ const historyLinkRef = ref();
 const contentFrozenByRef = ref();
 const frozenByRef = ref();
 const resolutionUrlRef = ref();
+const hasResolutionUrls = computed({
+  get() {
+    return !!targetContent.resolutionUrls;
+  },
+  set(v: boolean) {
+    targetContent.resolutionUrls = v ? [] : undefined;
+  },
+});
 
 function addContent(index?: number) {
   targetContent.type = models.ContentType.Clause;
   targetContent.deleted = false;
   targetContent.frozenBy = '';
+  targetContent.resolutionUrls = undefined;
   targetContent.index = index ?? legislation.value!.content.length;
   targetContent.subtitle = '';
   targetContent.content = '';
@@ -265,6 +288,7 @@ function addAttachment() {
 
 function editContent(legislationContent: models.LegislationContent) {
   Object.assign(targetContent, legislationContent);
+  targetContent.resolutionUrls = legislationContent.resolutionUrls ? legislationContent.resolutionUrls.slice() : undefined; // Clone
   targetContent.insertBefore = false;
   contentAction.value = 'edit';
 }
@@ -318,6 +342,53 @@ function generateTitle() {
   targetContent.title = `第 ${targetContent.type.arabicOrdinal ? last + 1 : translateNumberToChinese(last + 1)} ${targetContent.type.translation}`;
 }
 
+function addResolution() {
+  Dialog.create({
+    title: '新增決議文',
+    prompt: { model: '', label: '標題' },
+    persistent: true,
+    ok: true,
+    cancel: true,
+  }).onOk((title: string) => {
+    Dialog.create({
+      title: '新增決議文',
+      prompt: { model: '', label: '連結' },
+      persistent: true,
+      ok: true,
+      cancel: true,
+    }).onOk((url: string) => {
+      targetContent.resolutionUrls = [...(targetContent.resolutionUrls ?? []), { title, url }];
+    });
+  });
+}
+
+function editResolution(index: number) {
+  const current = targetContent.resolutionUrls![index]!;
+  Dialog.create({
+    title: '編輯決議文',
+    prompt: { model: current.title, label: '標題' },
+    persistent: true,
+    ok: true,
+    cancel: true,
+  }).onOk((title: string) => {
+    Dialog.create({
+      title: '編輯決議文',
+      prompt: { model: current.url, label: '連結' },
+      persistent: true,
+      ok: true,
+      cancel: true,
+    }).onOk((url: string) => {
+      const updated = [...targetContent.resolutionUrls!];
+      updated[index] = { title, url };
+      targetContent.resolutionUrls = updated;
+    });
+  });
+}
+
+function removeResolution(index: number) {
+  targetContent.resolutionUrls = targetContent.resolutionUrls!.filter((_: ResolutionUrl, i: number) => i !== index);
+}
+
 async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallback: () => Promise<void>, editCallback: () => Promise<void>) {
   Loading.show();
   try {
@@ -338,10 +409,8 @@ async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallba
 
 async function submitContent() {
   targetContent.frozenBy = targetContent.frozenBy?.trim();
-  if (!targetContent.resolutionUrl) {
-    targetContent.resolutionUrl = undefined;
-  } else if (resolutionUrlRef.value?.validate() !== true) {
-    return;
+  if (!targetContent.resolutionUrls || targetContent.resolutionUrls.length === 0) {
+    targetContent.resolutionUrls = undefined;
   }
   if (!targetContent.frozenBy) {
     targetContent.frozenBy = undefined;

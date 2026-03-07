@@ -2,13 +2,13 @@
   <q-btn class="q-mb-md" color="primary" label="新增項目" @click="addItem" />
   <q-list bordered>
     <VueDraggable v-model="parentValue" style="cursor: move">
-      <q-item v-for="(item, index) in parentValue" :key="item" class="q-mb-sm">
+      <q-item v-for="(item, index) in parentValue" :key="index as number" class="q-mb-sm">
         <q-item-section>
           {{ item }}
         </q-item-section>
         <q-item-section side>
-          <q-btn color="primary" icon="edit" dense @click="editItem(index)" />
-          <q-btn color="negative" icon="delete" dense @click="removeItem(index)" />
+          <q-btn color="primary" icon="edit" dense @click="editItem(index as number)" />
+          <q-btn color="negative" icon="delete" dense @click="removeItem(index as number)" />
         </q-item-section>
       </q-item>
     </VueDraggable>
@@ -24,7 +24,7 @@ const emit = defineEmits(['update:modelValue']);
 const props = defineProps(['modelValue']);
 const parentValue = computed({
   get() {
-    return props.modelValue;
+    return props.modelValue ?? [];
   },
   set(val) {
     emit('update:modelValue', val);
@@ -42,7 +42,7 @@ function addItem() {
     ok: true,
     cancel: true,
   }).onOk((data) => {
-    parentValue.value.push(data);
+    parentValue.value = [...parentValue.value, data];
   });
 }
 
@@ -58,12 +58,14 @@ function editItem(index: number) {
     ok: true,
     cancel: true,
   }).onOk((data) => {
+    const newVal = [...parentValue.value];
+    newVal[index] = data;
     parentValue.value[index] = data;
   });
 }
 
 function removeItem(index: number) {
-  parentValue.value.splice(index, 1);
+  parentValue.value = parentValue.value.filter((_: string, i: number) => i !== index);
 }
 </script>
 

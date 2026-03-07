@@ -530,14 +530,14 @@ export function convertContentToFirebase(data: LegislationContent) {
     title: data.title,
     type: data.type.firebase,
     index: data.index,
-    resolutionUrl: data.resolutionUrl,
+    resolutionUrls: data.resolutionUrls,
   } as any;
   if (data.deleted) content.deleted = data.deleted; // this saves storage space, as most content is not deleted
   if (data.frozenBy) content.frozenBy = data.frozenBy;
-  if (content.resolutionUrl) {
-    content.resolutionUrl = data.resolutionUrl;
+  if (content.resolutionUrls) {
+    content.resolutionUrls = data.resolutionUrls;
   } else {
-    delete content.resolutionUrl;
+    delete content.resolutionUrls;
   }
   return content;
 }
@@ -616,6 +616,11 @@ export interface LegislationHistory {
   totalAmendment?: boolean;
 }
 
+export interface ResolutionUrl {
+  title: string;
+  url: string;
+}
+
 export interface LegislationContent {
   content?: string; // null if type is ContentType.Chapter
   deleted: boolean; // null in firebase if not deleted
@@ -624,7 +629,7 @@ export interface LegislationContent {
   title: string;
   type: ContentType;
   index: number;
-  resolutionUrl?: string; // only for Clause and SpecialClause
+  resolutionUrls?: ResolutionUrl[]; // only for Clause and SpecialClause
 }
 
 export class LegislationType {
