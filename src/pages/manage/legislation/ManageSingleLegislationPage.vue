@@ -116,6 +116,7 @@
           :rules="[isUrl]"
           label="凍結或失效之依據公文"
         />
+        <q-input ref="resolutionUrlRef" v-model="targetContent.resolutionUrl" :rule="[targetContent.resolutionUrl]" label="決議文連結" clearable />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="contentAction = null" />
@@ -226,6 +227,7 @@ const draggable = reactive({ content: true, attachment: true });
 const historyLinkRef = ref();
 const contentFrozenByRef = ref();
 const frozenByRef = ref();
+const resolutionUrlRef = ref();
 
 function addContent(index?: number) {
   targetContent.type = models.ContentType.Clause;
@@ -234,7 +236,7 @@ function addContent(index?: number) {
   targetContent.index = index ?? legislation.value!.content.length;
   targetContent.subtitle = '';
   targetContent.content = '';
-  targetContent.insertBefore = index !== undefined
+  targetContent.insertBefore = index !== undefined;
   generateTitle();
   contentAction.value = 'add';
 }
@@ -336,6 +338,11 @@ async function submitProperty(determinant: Ref<'edit' | 'add' | null>, addCallba
 
 async function submitContent() {
   targetContent.frozenBy = targetContent.frozenBy?.trim();
+  if (!targetContent.resolutionUrl) {
+    targetContent.resolutionUrl = undefined;
+  } else if (resolutionUrlRef.value?.validate() !== true) {
+    return;
+  }
   if (!targetContent.frozenBy) {
     targetContent.frozenBy = undefined;
   } else if (contentFrozenByRef.value?.validate() !== true) {

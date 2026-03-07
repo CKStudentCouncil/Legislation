@@ -16,8 +16,8 @@
           <q-popup-proxy>
             <div class="q-ma-lg row">
               <div class="col-9">
-                確認發布公文？<br>
-                發布公文即視同您同意本系統之<a href="/about" target="_blank">《使用者條款》</a><br>
+                確認發布公文？<br />
+                發布公文即視同您同意本系統之<a href="/about" target="_blank">《使用者條款》</a><br />
                 完成發布後將自動導向至檢視頁面
               </div>
               <div class="col-3 content-center">
@@ -45,7 +45,7 @@
       </div>
       <DocumentRenderer :doc="docu" />
       <div v-if="docu.attachments.length > 0">
-        <DocumentSeparator/>
+        <DocumentSeparator />
         <q-toggle v-model="attachmentDraggable" label="拖曳排序" />
         <VueDraggable
           v-if="docu.attachments"
@@ -135,7 +135,7 @@
 
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
-import type { Attachment} from 'src/ts/models.ts';
+import type { Attachment } from 'src/ts/models.ts';
 import { documentsCollection } from 'src/ts/models.ts';
 import { arrayRemove, arrayUnion, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { date, Loading, useQuasar } from 'quasar';
