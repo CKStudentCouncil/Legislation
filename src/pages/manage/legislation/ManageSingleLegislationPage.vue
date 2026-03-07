@@ -204,6 +204,7 @@ import LegislationDialog from 'components/legislation/LegislationDialog.vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import AttachmentUploader from 'components/AttachmentUploader.vue';
 import { isUrl } from 'src/ts/checks.ts';
+import { deleteField } from 'firebase/firestore';
 
 interface EditingLegislationContent extends models.LegislationContent {
   insertBefore: boolean;
@@ -229,6 +230,7 @@ const target = reactive(
     createdAt: string;
     preface?: string;
     frozenBy?: string;
+    resolutionUrls?: ResolutionUrl[];
   },
 );
 const contentAction = ref<'edit' | 'add' | null>(null);
@@ -323,6 +325,7 @@ function edit() {
   target.createdAt = date.formatDate(legislation.value!.createdAt, 'YYYY-MM-DD');
   target.preface = legislation.value!.preface ?? '';
   target.frozenBy = legislation.value!.frozenBy;
+  target.resolutionUrls = legislation.value!.resolutionUrls ? [...legislation.value!.resolutionUrls] : undefined;
   action.value = 'edit';
 }
 
@@ -554,6 +557,11 @@ async function submit() {
       }
       if (target.frozenBy) {
         data.frozenBy = target.frozenBy;
+      }
+      if (target.resolutionUrls?.length) {
+        data.resolutionUrls = target.resolutionUrls;
+      } else {
+        data.resolutionUrls = deleteField();
       }
       await updateDoc(legislationDocument(route.params.id! as string), data);
     },
