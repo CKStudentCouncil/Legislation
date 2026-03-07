@@ -15,7 +15,10 @@ service cloud.firestore {
         return !('published' in resource.data) || resource.data.published != false;
       }
       function isAuthor() {
-        return 'authorUid' in resource.data && resource.data.authorUid == request.auth.uid;
+        return 'authorEmail' in resource.data && 'email' in request.auth.token && resource.data.authorEmail == request.auth.token.email;
+      }
+      function hasNoAuthor() {
+        return !('authorEmail' in resource.data) || resource.data.authorEmail == null || resource.data.authorEmail == 'legacy';
       }
       function isPublic() {
         return resource.data.confidentiality == 'Public';
@@ -24,12 +27,12 @@ service cloud.firestore {
         return 'declassifyAt' in resource.data && resource.data.declassifyAt != null && request.time >= resource.data.declassifyAt;
       }
       function isViewer() {
-        return 'viewers' in resource.data && resource.data.viewers.size() > 0 && request.auth.token.roles.hasAny(resource.data.viewers);
+        return 'viewers' in resource.data && 'roles' in request.auth.token && resource.data.viewers.hasAny(request.auth.token.roles);
       }
       function canReadDocument() {
-        return (!isPublished() && isSignedIn() && isAuthor()) ||
+        return (isSignedIn() && (isAuthor() || hasNoAuthor())) ||
                (isPublished() && isPublic()) ||
-               (isPublished() && (!isPublic()) && isSignedIn() && (isDeclassified() || isAuthor() || isViewer()));
+               (isPublished() && (!isPublic()) && isSignedIn() && (isDeclassified() || isViewer()));
       }
 
       allow read: if canReadDocument();

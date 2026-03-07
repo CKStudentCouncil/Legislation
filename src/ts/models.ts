@@ -35,7 +35,7 @@ export interface Document {
   confidentiality: DocumentConfidentiality;
   viewers?: DocumentSpecificIdentity[];
   declassifyAt?: Date | null;
-  authorUid?: string;
+  authorEmail?: string;
   read: string[];
   published: boolean;
   publishedAt?: Date | null;
@@ -326,6 +326,7 @@ export class DocumentSpecificIdentity {
     '審判長',
   );
   static SupremeCourt = new DocumentSpecificIdentity('SupremeCourt', '大法庭', '大', '04', DocumentGeneralIdentity.JudicialCommittee, '審判長');
+  static HighCourt = new DocumentSpecificIdentity('HighCourt', '高等法庭', '高', '06', DocumentGeneralIdentity.JudicialCommittee, '審判長');
   static ConstitutionalCensorCourt = new DocumentSpecificIdentity(
     'ConstitutionalCensorCourt',
     '審查庭',
@@ -500,7 +501,7 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     if (!data.prosecutionId) delete data.prosecutionId;
     if (!data.declassifyAt) delete data.declassifyAt;
     else data.declassifyAt = Timestamp.fromDate(data.declassifyAt) as any;
-    if (!data.authorUid) delete data.authorUid;
+    if (!data.authorEmail) delete data.authorEmail;
     return data;
   },
   fromFirestore(snapshot, options) {

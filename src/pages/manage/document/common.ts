@@ -21,7 +21,7 @@ export function getEmptyDocument() {
   adding.confidentiality = DocumentConfidentiality.Public;
   adding.viewers = [];
   adding.declassifyAt = null;
-  adding.authorUid = loggedInUser.value?.uid;
+  adding.authorEmail = loggedInUser.value?.email || undefined;
   adding.read = [];
   adding.published = false;
   return adding;
