@@ -86,6 +86,13 @@
         multiple
         use-chips
       />
+      <q-select
+        v-if="manage"
+        v-model="manageScope"
+        :options="manageScopes"
+        class="col q-pr-sm"
+        label="公文範圍"
+      />
       <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" @update:model-value="choosePublished" />
     </q-no-ssr>
     <div class="text-grey-6">共 {{ totalDocs }} 件公文符合查詢條件</div>
@@ -126,9 +133,10 @@ import type { Ref } from 'vue';
 import { computed, reactive, ref, watch } from 'vue';
 import type { Document } from 'src/ts/models.ts';
 import { DocumentConfidentiality, DocumentGeneralIdentity, documentsCollection, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
-import { getCountFromServer, getDocs, limit, orderBy, query, startAt, Timestamp, where } from 'firebase/firestore';
+import { getCountFromServer, getDocs, limit, orderBy, query, startAt, Timestamp, where, or, and } from 'firebase/firestore';
 import { isReign, optionalDate } from 'src/ts/checks.ts';
 import { useMeta } from 'quasar';
+import { loggedInUser, useCurrentClaims } from 'src/ts/auth.ts';
 
 const props = defineProps({
   manage: {
@@ -166,10 +174,11 @@ const after = ref(null) as Ref<string | null>;
 const type = ref(null) as Ref<DocumentType | null>;
 const published = ref(null) as Ref<boolean | null>;
 const searching = ref(false);
+const manageScopes = ['公開公文', '我起草的公文', '分享給我的密件', '所有我能檢視的公文'];
+const manageScope = ref('我起草的公文');
+const loggedInUserClaims = useCurrentClaims();
 const q = computed(() => {
-  return query(
-    documentsCollection(),
-    ...([
+  const filters = [
       props.filterReign || reign.value ? where('reign', '==', props.filterReign ?? reign.value) : null,
       fromGeneric.value && fromSpecific.value.length === 0
         ? where(
@@ -207,12 +216,67 @@ const q = computed(() => {
       after.value ? where('publishedAt', '>=', new Date(after.value + ' 23:59:59')) : null,
       type.value || props.filterType ? where('type', '==', type.value?.firebase ?? props.filterType) : null,
       published.value === null ? null : where('published', '==', published.value),
-      props.manage ? null : where('published', '==', true),
-      props.manage ? null : where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
+
+      ...(props.manage && manageScope.value === '公開公文'
+        ? [where('published', '==', true), where('confidentiality', '==', DocumentConfidentiality.Public.firebase)]
+        : []),
+
+      ...(props.manage && manageScope.value === '我起草的公文'
+        ? loggedInUser.value?.email
+          ? [where('authorEmail', '==', loggedInUser.value.email)]
+          : [
+              where('authorEmail', '==', '___NONE___'),
+              where('published', '==', true),
+              where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
+            ]
+        : []),
+      
+      ...(props.manage && manageScope.value === '分享給我的密件'
+        ? loggedInUserClaims?.roles?.length > 0
+          ? [
+              where('published', '==', true),
+              where('confidentiality', '==', DocumentConfidentiality.Confidential.firebase),
+              where('viewers', 'array-contains-any', loggedInUserClaims.roles),
+            ]
+          : [
+              where('authorEmail', '==', '___NONE___'),
+              where('published', '==', true),
+              where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
+            ]
+        : []),
+
+      ...(props.manage && manageScope.value === '所有我能檢視的公文'
+        ? [
+            or(
+              ...(loggedInUser.value?.email ? [where('authorEmail', 'in', [loggedInUser.value.email, 'legacy'])] : [where('authorEmail', '==', 'legacy')]),
+              and(where('published', '==', true), where('confidentiality', '==', DocumentConfidentiality.Public.firebase)),
+              ...(loggedInUserClaims?.roles?.length > 0
+                ? [
+                    and(
+                      where('published', '==', true),
+                      where('confidentiality', '==', DocumentConfidentiality.Confidential.firebase),
+                      where('viewers', 'array-contains-any', loggedInUserClaims.roles),
+                    ),
+                  ]
+                : []),
+            ),
+          ]
+        : []),
+
+      !props.manage ? where('published', '==', true) : null,
+      !props.manage ? where('confidentiality', '==', DocumentConfidentiality.Public.firebase) : null,
+  ].filter((i) => !!i) as any[];
+
+  const orderBys = [
       orderBy('published', 'asc'),
       orderBy('createdAt', 'desc'),
-    ].filter((i) => !!i) as any[]),
-  );
+  ];
+
+  if (filters.length > 0) {
+    return query(documentsCollection(), and(...filters), ...orderBys);
+  } else {
+    return query(documentsCollection(), ...orderBys);
+  }
 });
 const lastCreatedAt = ref(undefined) as Ref<number | undefined>;
 const lastPublished = ref(false);
