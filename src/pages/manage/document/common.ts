@@ -3,6 +3,7 @@ import { DocumentConfidentiality, documentsCollection, DocumentSpecificIdentity,
 import { generateDocumentIdNumber, getCurrentReign } from 'src/ts/utils.ts';
 import { meetingNoticeTemplate, meetingRecordTemplate } from 'src/ts/template.ts';
 import { doc, setDoc } from 'firebase/firestore';
+import { loggedInUser } from 'src/ts/auth.ts';
 
 export function getEmptyDocument() {
   const adding = {} as models.Document;
@@ -18,6 +19,9 @@ export function getEmptyDocument() {
   adding.attachments = [];
   adding.createdAt = new Date();
   adding.confidentiality = DocumentConfidentiality.Public;
+  adding.viewers = [];
+  adding.declassifyAt = null;
+  adding.authorEmail = loggedInUser.value?.email || undefined;
   adding.read = [];
   adding.published = false;
   return adding;
