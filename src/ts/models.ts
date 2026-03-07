@@ -12,6 +12,7 @@ export interface Legislation {
   addendum?: Addendum[];
   attachments?: Attachment[];
   frozenBy?: string;
+  resolutionUrls?: ResolutionUrl[];
 }
 
 export interface Document {
@@ -589,6 +590,11 @@ export const legislationConverter: FirestoreDataConverter<Legislation | null> = 
       attachments: legislation.attachments,
     };
     if (legislation.frozenBy) data.frozenBy = legislation.frozenBy; // To save storage space
+    if (legislation.resolutionUrls?.length) {
+      data.resolutionUrls = legislation.resolutionUrls;
+    } else {
+      delete data.resolutionUrls;
+    }
     return firestoreDefaultConverter.toFirestore(data);
   },
   fromFirestore(snapshot: any): Legislation {
