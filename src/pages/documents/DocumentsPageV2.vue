@@ -177,14 +177,16 @@ const docIdInput = ref(null) as Ref<string | null>;
 const q = computed(() => {
   if (docId.value?.trim()) {
     const start = docId.value.trim();
-    if (start.includes('第') || start.includes('字')) {
+    if (start.includes('第')) {
       return query(documentsCollection(), where('__name__', '==', start));
+    } else if (start.includes('字')) {
+      const prefix = start.replace('字', '');
+      return query(documentsCollection(), where('idPrefix', '==', prefix), orderBy('idNumber', 'asc'));
     } else {
       const end = start.slice(0, -1) + String.fromCharCode(start.charCodeAt(start.length - 1) + 1);
       return query(documentsCollection(), where('idNumber', '>=', start), where('idNumber', '<', end), orderBy('idNumber', 'asc'));
     }
   }
-
   const filters = [
     props.filterReign || reign.value ? where('reign', '==', props.filterReign ?? reign.value) : null,
     fromGeneric.value && fromSpecific.value.length === 0
@@ -348,7 +350,6 @@ void updateTotal();
 if (props.meta) useMeta({ title: '檢視公文', meta: getMeta('檢視公文') });
 //TODO: SSR
 </script>
-
 <style lang="scss" scoped>
 .col {
   min-width: 150px;
