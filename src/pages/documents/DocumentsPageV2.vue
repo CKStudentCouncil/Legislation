@@ -176,7 +176,13 @@ const docId = ref(null) as Ref<string | null>;
 const docIdInput = ref(null) as Ref<string | null>;
 const q = computed(() => {
   if (docId.value?.trim()) {
-    return query(documentsCollection(), where('__name__', '==', docId.value.trim()));
+    const start = docId.value.trim();
+    if (start.includes('第') || start.includes('字')) {
+      return query(documentsCollection(), where('__name__', '==', start));
+    } else {
+      const end = start.slice(0, -1) + String.fromCharCode(start.charCodeAt(start.length - 1) + 1);
+      return query(documentsCollection(), where('idNumber', '>=', start), where('idNumber', '<', end), orderBy('idNumber', 'asc'));
+    }
   }
 
   const filters = [
