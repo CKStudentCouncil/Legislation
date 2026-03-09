@@ -61,6 +61,7 @@ const routes: RouteRecordRaw[] = [
           { path: ':id', component: () => import('pages/documents/judicial/JudicialSingleLawsuitPage.vue') },
         ],
       },
+      { path: 'resolution', component: () => import('pages/documents/judicial/JudicialResolutionPage.vue') },
     ],
   },
   {
