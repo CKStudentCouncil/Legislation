@@ -92,7 +92,13 @@ const endpoints = [
   { name: '編輯法令', url: '/manage/legislation', icon: 'edit', requireAuth: true },
   { name: '編輯公文', url: '/manage/document', icon: 'draw', requireAuth: true },
   { name: '評委文書', url: '/document/judicial', icon: 'balance', requireAuth: false },
-  { name: '管理帳號', url: '/manage/accounts', icon: 'badge', requireAuth: true, requireRole: DocumentSpecificIdentity.Chairman },
+  {
+    name: '管理帳號',
+    url: '/manage/accounts',
+    icon: 'badge',
+    requireAuth: true,
+    requireRole: [DocumentSpecificIdentity.Chairman, DocumentSpecificIdentity.Speaker, DocumentSpecificIdentity.JudicialCommitteeChairman],
+  },
   { name: '關於與使用條款', url: '/about', icon: 'info', requireAuth: false },
 ];
 const selected = ref('Account Information');
@@ -123,7 +129,11 @@ function toggleFullscreen() {
   }
 }
 
-function hasRole(role: DocumentSpecificIdentity) {
-  return loggedInUserClaims.roles?.includes(role.firebase) || loggedInUser.value?.uid === '5MK7Kr4O9GVg76lHCsy6ex45kP03';
+function hasRole(role: DocumentSpecificIdentity | DocumentSpecificIdentity[]) {
+  if (loggedInUser.value?.uid === '5MK7Kr4O9GVg76lHCsy6ex45kP03') return true;
+  if (Array.isArray(role)) {
+    return role.some((r) => loggedInUserClaims.roles?.includes(r.firebase));
+  }
+  return loggedInUserClaims.roles?.includes(role.firebase);
 }
 </script>
