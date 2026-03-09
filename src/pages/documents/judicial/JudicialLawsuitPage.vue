@@ -2,6 +2,7 @@
   <q-tabs align="left">
     <q-route-tab label="文書查詢" to="/document/judicial" />
     <q-route-tab label="訴訟查詢" to="/document/judicial/lawsuit" />
+    <q-route-tab label="決議文" to="/document/judicial/resolution" />
   </q-tabs>
 
   <q-page padding>
