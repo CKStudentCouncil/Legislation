@@ -270,6 +270,7 @@ export const sitemap = onRequest(globalFunctionOptions, async (request, response
     smStream.write({ url: '/document/', priority: 0.8 })
     smStream.write({ url: '/document/judicial', priority: 0.7 })
     smStream.write({ url: '/document/judicial/lawsuit', priority: 0.7 })
+    smStream.write({ url: '/document/judicial/resolution', priority: 0.7 })
     if (cache.data()) {
       for (const doc of Object.entries(cache.data()!.legislation ?? {})) {
         smStream.write({ url: `/legislation/${doc[0]}`, lastmod: new Date(doc[1] as number).toISOString(), priority: 0.6 })
