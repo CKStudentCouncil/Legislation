@@ -19,13 +19,7 @@
       <q-step v-if="findBy === 'select'" :header-nav="false" :name="2" class="text-center" icon="checklist" title="選擇啟字公文">
         <q-spinner v-if="!q" color="primary" size="40px" />
         <q-list v-else bordered separator>
-          <q-item
-            v-for="doc of sortedOptions"
-            :key="doc.idNumber"
-            v-ripple
-            :to="`/document/judicial/lawsuit/${doc.getFullId()}`"
-            clickable
-          >
+          <q-item v-for="doc of sortedOptions" :key="doc.idNumber" v-ripple :to="`/document/judicial/lawsuit/${doc.getFullId()}`" clickable>
             <q-item-section>
               <q-item-label class="text-h6" overline>{{ doc.getFullId() }}</q-item-label>
               <q-item-label class="text-h6">{{ doc.subject }}</q-item-label>
@@ -41,28 +35,11 @@
       <q-step v-if="findBy === 'id'" :name="3" icon="search" title="輸入案件號">
         <q-select v-model="courtType" :options="courtTypeOptions" label="法庭類型" />
 
-        <q-select
-          v-if="courtType === '憲章法庭'"
-          v-model="idPrefix"
-          :options="constitutionalPrefixOptions"
-          label="案件號字首"
-          class="q-mt-md"
-        />
+        <q-select v-if="courtType === '憲章法庭'" v-model="idPrefix" :options="constitutionalPrefixOptions" label="案件號字首" class="q-mt-md" />
 
         <template v-if="courtType === '一般法庭'">
-          <q-select
-            v-model="generalCaseType"
-            :options="generalCaseTypeOptions"
-            label="訴訟案件類型"
-            class="q-mt-md"
-          />
-          <q-select
-            v-if="generalCaseType"
-            v-model="idPrefix"
-            :options="generalPrefixOptions"
-            label="案件號字首"
-            class="q-mt-md"
-          />
+          <q-select v-model="generalCaseType" :options="generalCaseTypeOptions" label="訴訟案件類型" class="q-mt-md" />
+          <q-select v-if="generalCaseType" v-model="idPrefix" :options="generalPrefixOptions" label="案件號字首" class="q-mt-md" />
         </template>
 
         <q-input v-model="idNumber" label="案件號" class="q-mt-md" />
@@ -104,14 +81,7 @@ const sortedOptions = computed(() => orderBy(options.value, ['idNumber'], ['asc'
 
 const courtTypeOptions = ['憲章法庭', '一般法庭'];
 const constitutionalPrefixOptions = ['憲字', '憲更字', '憲大字', '審大字', '憲大更字', '審大更字'];
-const generalCaseTypeOptions = [
-  '行政訴訟案件',
-  '職務訴訟案件',
-  '賠償訴訟案件',
-  '確認訴訟案件',
-  '選舉無效訴訟案件',
-  '其他訴訟案件',
-];
+const generalCaseTypeOptions = ['行政訴訟案件', '職務訴訟案件', '賠償訴訟案件', '確認訴訟案件', '選舉無效訴訟案件', '其他訴訟案件'];
 
 const generalCasePrefixMap: Record<string, string[]> = {
   行政訴訟案件: ['政字', '政更字', '政上字', '政大字', '政大更字'],
@@ -125,7 +95,7 @@ const generalCasePrefixMap: Record<string, string[]> = {
 const courtType = ref<'憲章法庭' | '一般法庭' | null>(null);
 const generalCaseType = ref<string | null>(null);
 const idPrefix = ref('');
-const idNumber = ref();
+const idNumber = ref<string | number>('');
 const router = useRouter();
 
 const generalPrefixOptions = computed(() => {
@@ -138,14 +108,14 @@ watch(courtType, (newValue) => {
   generalCaseType.value = null;
 
   if (newValue === '憲章法庭') {
-    idPrefix.value = constitutionalPrefixOptions[0];
+    idPrefix.value = constitutionalPrefixOptions[0] ?? '';
   }
 });
 
 watch(generalCaseType, (newValue) => {
   idPrefix.value = '';
   if (newValue && generalCasePrefixMap[newValue]?.length) {
-    idPrefix.value = generalCasePrefixMap[newValue][0];
+    idPrefix.value = generalCasePrefixMap[newValue][0] ?? '';
   }
 });
 

@@ -10,43 +10,19 @@
 
     <div class="row q-col-gutter-md q-mb-md">
       <div class="col-12 col-md-3">
-        <q-input
-          v-model="idNumber"
-          label="編號（例：1150308）"
-          clearable
-          debounce="400"
-          @keyup.enter="applyFilters"
-        />
+        <q-input v-model="idNumber" label="編號（例：1150308）" clearable debounce="400" @keyup.enter="applyFilters" />
       </div>
 
       <div class="col-12 col-md-3">
-        <q-input
-          v-model="subject"
-          label="主旨"
-          clearable
-          debounce="400"
-          @keyup.enter="applyFilters"
-        />
+        <q-input v-model="subject" label="主旨" clearable debounce="400" @keyup.enter="applyFilters" />
       </div>
 
       <div class="col-12 col-md-3">
-        <q-input
-          v-model="keyword"
-          label="關鍵字"
-          clearable
-          debounce="400"
-          @keyup.enter="applyFilters"
-        />
+        <q-input v-model="keyword" label="關鍵字" clearable debounce="400" @keyup.enter="applyFilters" />
       </div>
 
       <div class="col-12 col-md-3">
-        <q-input
-          v-model="reign"
-          label="屆次（例：80-2）"
-          clearable
-          debounce="400"
-          @keyup.enter="applyFilters"
-        />
+        <q-input v-model="reign" label="屆次（例：80-2）" clearable debounce="400" @keyup.enter="applyFilters" />
       </div>
     </div>
 
@@ -55,42 +31,32 @@
       <q-btn class="q-ml-sm" flat color="primary" icon="clear" label="清除條件" @click="resetFilters" />
     </div>
 
-    <div class="text-subtitle2 q-mb-md">
-      共 {{ filteredDocs.length }} 筆決議文
-    </div>
+    <div class="text-subtitle2 q-mb-md">共 {{ filteredDocs.length }} 筆決議文</div>
 
     <q-spinner v-if="loading" color="primary" size="40px" />
 
-    <div v-else-if="filteredDocs.length === 0" class="text-grey-7">
-      查無符合條件的決議文
-    </div>
+    <div v-else-if="filteredDocs.length === 0" class="text-grey-7">查無符合條件的決議文</div>
 
     <div v-else class="column q-gutter-md">
       <q-card v-for="doc of filteredDocs" :key="doc.getFullId()" bordered flat>
         <q-card-section>
           <div class="text-overline">{{ doc.getFullId() }}</div>
           <div class="text-h6">{{ doc.subject }}</div>
-          <div class="text-caption text-grey-7 q-mt-xs">
-            屆次：{{ doc.reign || '—' }}
-          </div>
+          <div class="text-caption text-grey-7 q-mt-xs">屆次：{{ doc.reign || '—' }}</div>
         </q-card-section>
 
         <q-separator />
 
         <q-card-section>
           <div class="text-body2">
-            <template v-for="plain in [htmlToText(doc.content)]">
+            <template v-for="plain in [htmlToText(doc.content)]" :key="plain">
               {{ plain.slice(0, 120) }}
               <span v-if="plain.length > 120">...</span>
             </template>
           </div>
         </q-card-section>
 
-        <q-expansion-item
-          icon="preview"
-          label="預覽內容"
-          expand-separator
-        >
+        <q-expansion-item icon="preview" label="預覽內容" expand-separator>
           <q-card flat>
             <q-card-section>
               <DocumentRenderer :doc="doc" />
@@ -101,13 +67,7 @@
         <q-separator />
 
         <q-card-actions align="right">
-          <q-btn
-            flat
-            color="primary"
-            icon="link"
-            label="複製連結"
-            @click="copyDocLink(doc)"
-          />
+          <q-btn flat color="primary" icon="link" label="複製連結" @click="copyDocLink(doc)" />
           <q-btn
             flat
             color="primary"
@@ -147,7 +107,7 @@ useMeta({ title: '決議文檢索', meta: getMeta('決議文檢索') });
 
 const q = query(
   documentsCollection(),
-  where('type', '==', DocumentType.JudicialDecision.firebase),
+  where('type', '==', DocumentType.JudicialCommitteeDecision.firebase),
   where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
   where('published', '==', true),
 );
@@ -156,11 +116,9 @@ const docs = useCollection(q);
 
 const loading = computed(() => docs.value === undefined);
 
-const sortedDocs = computed(() =>
-  orderBy(docs.value || [], ['idNumber'], ['desc']),
-);
+const sortedDocs = computed<any[]>(() => orderBy(docs.value || [], ['idNumber'], ['desc']));
 
-const filteredDocs = computed(() => {
+const filteredDocs = computed<any[]>(() => {
   let result = sortedDocs.value;
 
   if (appliedIdNumber.value.trim()) {
@@ -175,7 +133,9 @@ const filteredDocs = computed(() => {
   if (appliedSubject.value.trim()) {
     const target = appliedSubject.value.trim().toLowerCase();
     result = result.filter((doc: any) =>
-      String(doc.subject || '').toLowerCase().includes(target),
+      String(doc.subject || '')
+        .toLowerCase()
+        .includes(target),
     );
   }
 
@@ -191,7 +151,9 @@ const filteredDocs = computed(() => {
   if (appliedReign.value.trim()) {
     const target = appliedReign.value.trim().toLowerCase();
     result = result.filter((doc: any) =>
-      String(doc.reign || '').toLowerCase().includes(target),
+      String(doc.reign || '')
+        .toLowerCase()
+        .includes(target),
     );
   }
 
