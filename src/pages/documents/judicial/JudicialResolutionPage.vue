@@ -79,8 +79,10 @@
 
         <q-card-section>
           <div class="text-body2">
-            {{ htmlToText(doc.content).slice(0, 120) }}
-            <span v-if="htmlToText(doc.content).length > 120">...</span>
+            <template v-for="plain in [htmlToText(doc.content)]">
+              {{ plain.slice(0, 120) }}
+              <span v-if="plain.length > 120">...</span>
+            </template>
           </div>
         </q-card-section>
 
