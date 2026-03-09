@@ -14,9 +14,9 @@ export async function checkRole(request: https.CallableRequest, role: string | s
     return;
   }
   const user = await auth.getUser(request.auth.uid);
-  const userRoles = user.customClaims?.roles;
+  const userRoles = user.customClaims?.roles as string[] | undefined;
   const requiredRoles = Array.isArray(role) ? role : [role];
-  const hasRequiredRole = userRoles?.some((userRole) => requiredRoles.includes(userRole));
+  const hasRequiredRole = userRoles?.some((userRole: string) => requiredRoles.includes(userRole));
   if (userRoles == null || !hasRequiredRole) {
     throw new https.HttpsError(
       'permission-denied',
