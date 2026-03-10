@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <q-input v-model="docIdInput" class="col q-pr-sm" clearable label="以公文字號查詢" @keyup.enter="docId = docIdInput" @clear="docId = null" />
+    <q-input v-model="docIdInput" class="col q-pr-sm" clearable label="以公文字號查詢" debounce="500" />
     <q-no-ssr v-if="filters" :class="$q.screen.gt.xs ? 'row' : ''">
       <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" :rules="[isReign]" class="col q-pr-sm" clearable debounce="500" />
       <q-input
@@ -128,10 +128,13 @@ import type { Ref } from 'vue';
 import { computed, reactive, ref, watch } from 'vue';
 import type { Document } from 'src/ts/models.ts';
 import { DocumentConfidentiality, DocumentGeneralIdentity, documentsCollection, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
-import { getCountFromServer, getDocs, limit, orderBy, query, startAt, Timestamp, where, or, and, doc } from 'firebase/firestore';
+import { getCountFromServer, getDocs, limit, orderBy, query, startAfter, where, or, and } from 'firebase/firestore';
+import type { QueryDocumentSnapshot } from 'firebase/firestore';
 import { isReign, optionalDate } from 'src/ts/checks.ts';
 import { useMeta } from 'quasar';
 import { loggedInUser, useCurrentClaims } from 'src/ts/auth.ts';
+import type { LocationQuery, LocationQueryRaw } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const props = defineProps({
   manage: {
@@ -174,19 +177,112 @@ const manageScope = ref('我起草的公文');
 const loggedInUserClaims = useCurrentClaims();
 const docId = ref(null) as Ref<string | null>;
 const docIdInput = ref(null) as Ref<string | null>;
-const q = computed(() => {
-  if (docId.value?.trim()) {
-    const start = docId.value.trim();
-    if (start.includes('第')) {
-      return query(documentsCollection(), where('__name__', '==', start));
-    } else if (start.includes('字')) {
-      const prefix = start.replace('字', '');
-      return query(documentsCollection(), where('idPrefix', '==', prefix), orderBy('idNumber', 'asc'));
-    } else {
-      const end = start.slice(0, -1) + String.fromCharCode(start.charCodeAt(start.length - 1) + 1);
-      return query(documentsCollection(), where('idNumber', '>=', start), where('idNumber', '<', end), orderBy('idNumber', 'asc'));
-    }
+const route = useRoute();
+const router = useRouter();
+
+const FILTER_QUERY_KEYS = new Set([
+  'docId',
+  'reign',
+  'before',
+  'after',
+  'type',
+  'fromGeneric',
+  'fromSpecific',
+  'toGeneric',
+  'toSpecific',
+  'published',
+  'manageScope',
+]);
+
+function firstQueryValue(value: LocationQuery[string] | undefined) {
+  if (Array.isArray(value)) {
+    return value[0];
   }
+  return value;
+}
+
+function listQueryValues(value: LocationQuery[string] | undefined) {
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === 'string');
+  }
+  return typeof value === 'string' ? [value] : [];
+}
+
+function pickSpecificIdentities(values: string[]) {
+  const allSpecific = Object.values(DocumentSpecificIdentity.VALUES);
+  return allSpecific.filter((i) => values.includes(i.firebase));
+}
+
+function buildFilterQuery(): LocationQueryRaw {
+  const query: LocationQueryRaw = {};
+  if (docId.value?.trim()) query.docId = docId.value.trim();
+  if (reign.value?.trim()) query.reign = reign.value.trim();
+  if (before.value) query.before = before.value;
+  if (after.value) query.after = after.value;
+  if (type.value) query.type = type.value.firebase;
+  if (fromGeneric.value) query.fromGeneric = fromGeneric.value.firebase;
+  if (fromSpecific.value.length > 0) query.fromSpecific = fromSpecific.value.map((i) => i.firebase);
+  if (toGeneric.value) query.toGeneric = toGeneric.value.firebase;
+  if (toSpecific.value.length > 0) query.toSpecific = toSpecific.value.map((i) => i.firebase);
+  if (published.value !== null) query.published = String(published.value);
+  if (props.manage) query.manageScope = manageScope.value;
+  return query;
+}
+
+function normalizeQueryForCompare(query: LocationQuery | LocationQueryRaw) {
+  return Object.entries(query)
+    .filter(([, value]) => value !== undefined)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => {
+      if (Array.isArray(value)) {
+        return [key, [...value].map(String).sort()];
+      }
+      return [key, value === null ? null : String(value)];
+    });
+}
+
+let syncingFromRoute = false;
+
+function applyQueryToFilters(query: LocationQuery) {
+  syncingFromRoute = true;
+  const allType = Object.values(DocumentType.VALUES);
+  const allGeneric = Object.values(DocumentGeneralIdentity.VALUES);
+
+  const queryDocId = firstQueryValue(query.docId);
+  docId.value = queryDocId ?? null;
+  docIdInput.value = queryDocId ?? null;
+
+  reign.value = firstQueryValue(query.reign) ?? (props.filters ? getCurrentReign() : null);
+  before.value = firstQueryValue(query.before) ?? null;
+  after.value = firstQueryValue(query.after) ?? null;
+
+  const typeFirebase = firstQueryValue(query.type);
+  type.value = allType.find((i) => i.firebase === typeFirebase) ?? null;
+
+  const fromGenericFirebase = firstQueryValue(query.fromGeneric);
+  fromGeneric.value = allGeneric.find((i) => i.firebase === fromGenericFirebase) ?? null;
+  fromSpecific.value = pickSpecificIdentities(listQueryValues(query.fromSpecific));
+
+  const toGenericFirebase = firstQueryValue(query.toGeneric);
+  toGeneric.value = allGeneric.find((i) => i.firebase === toGenericFirebase) ?? null;
+  toSpecific.value = pickSpecificIdentities(listQueryValues(query.toSpecific));
+
+  const publishedValue = firstQueryValue(query.published);
+  if (publishedValue === 'true') {
+    published.value = true;
+  } else if (publishedValue === 'false') {
+    published.value = false;
+  } else {
+    published.value = null;
+  }
+
+  const queryManageScope = firstQueryValue(query.manageScope);
+  manageScope.value = queryManageScope && manageScopes.includes(queryManageScope) ? queryManageScope : '我起草的公文';
+  syncingFromRoute = false;
+}
+
+applyQueryToFilters(route.query);
+const q = computed(() => {
   const filters = [
     props.filterReign || reign.value ? where('reign', '==', props.filterReign ?? reign.value) : null,
     fromGeneric.value && fromSpecific.value.length === 0
@@ -278,7 +374,23 @@ const q = computed(() => {
     !props.manage ? where('confidentiality', '==', DocumentConfidentiality.Public.firebase) : null,
   ].filter((i) => !!i) as any[];
 
-  const orderBys = [orderBy('published', 'asc'), orderBy('createdAt', 'desc')];
+  let orderBys = [orderBy('published', 'asc'), orderBy('createdAt', 'desc')];
+
+  if (docId.value?.trim()) {
+    const start = docId.value.trim();
+    if (start.includes('第')) {
+      filters.push(where('__name__', '==', start));
+      orderBys = [];
+    } else if (start.includes('字')) {
+      const prefix = start.replace('字', '');
+      filters.push(where('idPrefix', '==', prefix));
+      orderBys = [orderBy('idNumber', 'asc')];
+    } else {
+      const end = start.slice(0, -1) + String.fromCharCode(start.charCodeAt(start.length - 1) + 1);
+      filters.push(where('idNumber', '>=', start), where('idNumber', '<', end));
+      orderBys = [orderBy('idNumber', 'asc')];
+    }
+  }
 
   if (filters.length > 0) {
     return query(documentsCollection(), and(...filters), ...orderBys);
@@ -286,22 +398,16 @@ const q = computed(() => {
     return query(documentsCollection(), ...orderBys);
   }
 });
-const lastCreatedAt = ref(undefined) as Ref<number | undefined>;
-const lastPublished = ref(false);
+const lastVisibleDoc = ref(undefined) as Ref<QueryDocumentSnapshot<Document | null> | undefined>;
 const totalDocs = ref(0);
 const scroll = ref();
 const paginatedQ = computed(() => {
-  if (lastCreatedAt.value) {
-    return query(q.value, limit(10), startAt(lastPublished.value, new Timestamp(lastCreatedAt.value / 1000 + 1, 0)));
-  } else {
-    return query(q.value, limit(10));
-  }
+  return lastVisibleDoc.value ? query(q.value, startAfter(lastVisibleDoc.value), limit(10)) : query(q.value, limit(10));
 });
 const allDocs = reactive({} as { [id: string]: Document });
 const updateTotal = async () => {
   try {
-    lastCreatedAt.value = undefined;
-    lastPublished.value = false;
+    lastVisibleDoc.value = undefined;
     Object.keys(allDocs).forEach((k) => delete allDocs[k]);
     totalDocs.value = (await getCountFromServer(q.value)).data().count;
     if (!process.env.SERVER) {
@@ -313,6 +419,42 @@ const updateTotal = async () => {
   }
 };
 watch(q, updateTotal, { deep: true });
+
+watch(
+  [docId, reign, before, after, type, fromGeneric, fromSpecific, toGeneric, toSpecific, published, manageScope],
+  async () => {
+    if (syncingFromRoute) {
+      return;
+    }
+
+    const nextFilterQuery = buildFilterQuery();
+    const preservedEntries = Object.entries(route.query).filter(([key]) => !FILTER_QUERY_KEYS.has(key));
+    const nextQuery = Object.fromEntries(preservedEntries) as LocationQueryRaw;
+    Object.assign(nextQuery, nextFilterQuery);
+
+    const currentNormalized = normalizeQueryForCompare(route.query);
+    const nextNormalized = normalizeQueryForCompare(nextQuery);
+    if (JSON.stringify(currentNormalized) === JSON.stringify(nextNormalized)) {
+      return;
+    }
+
+    await router.replace({ query: nextQuery });
+  },
+  { deep: true },
+);
+
+watch(
+  () => route.query,
+  (query) => {
+    applyQueryToFilters(query);
+  },
+  { deep: true },
+);
+
+watch(docIdInput, (value) => {
+  const trimmed = value?.trim() ?? '';
+  docId.value = trimmed.length > 0 ? trimmed : null;
+});
 
 async function loadMore(i: number, done: (stop?: boolean) => void) {
   if (searching.value) {
@@ -326,13 +468,7 @@ async function loadMore(i: number, done: (stop?: boolean) => void) {
     docs.forEach((doc) => {
       allDocs[doc.id] = doc.data() as Document;
     });
-    lastPublished.value = Object.values(allDocs).filter((d) => d.published).length > 0;
-    const newLast = Object.values(allDocs)
-      .filter((v) => (lastPublished.value ? v.published : true))
-      .sort((a, b) => (a.createdAt?.valueOf() ?? 0) - (b.createdAt?.valueOf() ?? 0))[0];
-    if (newLast) {
-      lastCreatedAt.value = newLast.createdAt?.valueOf();
-    }
+    lastVisibleDoc.value = docs.docs.at(-1);
     searching.value = false;
     done();
   }
