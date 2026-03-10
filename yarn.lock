@@ -4712,10 +4712,12 @@ instantsearch-ui-components@0.16.0:
     zod "^3.25.76 || ^4"
     zod-to-json-schema "3.24.6"
 
-instantsearch.css@^8.8.0:
-  version "8.8.0"
-  resolved "https://registry.yarnpkg.com/instantsearch.css/-/instantsearch.css-8.8.0.tgz#537feca0926863b95da7b31b0d2043b2a42eec56"
-  integrity sha512-JKoH5XiBayJEPFgcaqUBSPnX1qGuRoYUnpLtaJogABjAMx8BXBUHRIA5uZWlfDNT/ECtpfVhih+7ntVHa5KjbQ==
+instantsearch.css@^8.11.0:
+  version "8.11.0"
+  resolved "https://registry.yarnpkg.com/instantsearch.css/-/instantsearch.css-8.11.0.tgz#ad564e4bcd71f6924366a03ce6022de50a71048d"
+  integrity sha512-7QfIHUNHhbfw1QUT+QFRlsKkcPvWpFN3v3pLL9EN/r604OhXHpEAk3mB0bgTKPHxzM+/5DQe4gmgGkloPAIBYQ==
+  dependencies:
+    tweakpane "4.0.5"
 
 instantsearch.js@4.86.1:
   version "4.86.1"
@@ -7627,6 +7629,11 @@ tsscmp@^1.0.6:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/tsscmp/-/tsscmp-1.0.6.tgz#85b99583ac3589ec4bfef825b5000aa911d605eb"
   integrity sha512-LxhtAkPDTkVCMQjt2h6eBVY28KCjikZqZfMcC15YBeNjkgUpdCfBu5HoiOTDu86v6smE8yOjyEktJ8hlbANHQA==
+
+tweakpane@4.0.5:
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/tweakpane/-/tweakpane-4.0.5.tgz#696572c4294c48a11cc0a3c487ea89ad1491e09a"
+  integrity sha512-rxEXdSI+ArlG1RyO6FghC4ZUX8JkEfz8F3v1JuteXSV0pEtHJzyo07fcDG+NsJfN5L39kSbCYbB9cBGHyuI/tQ==
 
 type-check@^0.4.0, type-check@~0.4.0:
   version "0.4.0"
