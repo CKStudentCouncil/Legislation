@@ -1,5 +1,5 @@
 /* eslint-disable no-irregular-whitespace */
-import {convertToChineseDay} from '../utils';
+import { convertToChineseDay } from '../../../src/ts/utils';
 
 export function newMeetingNotice(id: string, subject: string, user: string, from: string, date: Date, location: string) {
   return `<!DOCTYPE html>

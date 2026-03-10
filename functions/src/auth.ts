@@ -1,6 +1,6 @@
 import { https } from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import { User } from './models';
+import { User } from '../../src/ts/models';
 import { randomChars } from './utils';
 
 const auth = admin.auth();

@@ -30,21 +30,21 @@ export async function copyText(text: string) {
 export function translateNumber(str: string) {
   //@formatter:off
   const numChar = {
-    '零': 0,
-    '一': 1,
-    '二': 2,
-    '三': 3,
-    '四': 4,
-    '五': 5,
-    '六': 6,
-    '七': 7,
-    '八': 8,
-    '九': 9,
+    零: 0,
+    一: 1,
+    二: 2,
+    三: 3,
+    四: 4,
+    五: 5,
+    六: 6,
+    七: 7,
+    八: 8,
+    九: 9,
   } as Record<string, number>;
   const levelChar = {
-    '十': 10,
-    '百': 100,
-    '千': 1000,
+    十: 10,
+    百: 100,
+    千: 1000,
   } as Record<string, number>;
   //@formatter:on
   if (str.startsWith('十')) str = '一' + str;
@@ -84,12 +84,14 @@ export function translateNumberToChinese(num: number) {
 
 export function getReign(date: Date) {
   let year: number;
-  if (date.getMonth() < 7) { // jan ~ july
+  if (date.getMonth() < 7) {
+    // jan ~ july
     year = date.getFullYear() - 1945 - 1;
   } else {
     year = date.getFullYear() - 1945;
   }
-  if (date.getMonth() > 6 || date.getMonth() == 0) { // aug ~ jan
+  if (date.getMonth() > 6 || date.getMonth() == 0) {
+    // aug ~ jan
     return `${year}-1`;
   }
   return `${year}-2`;
@@ -97,6 +99,10 @@ export function getReign(date: Date) {
 
 export function getCurrentReign() {
   return getReign(new Date());
+}
+
+export function convertToChineseDay(day: number) {
+  return ['日', '一', '二', '三', '四', '五', '六', '日'][day];
 }
 
 export function getReadableRecipient(specific: DocumentSpecificIdentity[], others: string[]) {
@@ -130,13 +136,7 @@ export async function generateDocumentIdNumber(specific: DocumentSpecificIdentit
     }
   }
   const lastDoc = await getDocsFromServer(
-    query(
-      documentsCollection(),
-      orderBy('createdAt', 'desc'),
-      where('fromSpecific', 'in', sharedFrom),
-      where('type', '==', type.firebase),
-      limit(1),
-    ),
+    query(documentsCollection(), orderBy('createdAt', 'desc'), where('fromSpecific', 'in', sharedFrom), where('type', '==', type.firebase), limit(1)),
   );
   if (lastDoc.docs[0] && lastDoc.docs[0].exists() && lastDoc.docs[0].data()?.idNumber.startsWith(r)) {
     const lastDocId = lastDoc.docs[0].id;
@@ -227,6 +227,6 @@ export function notifyError(message: string, e?: any): void {
       description: message + ': ' + e?.message,
       fatal: false,
       stack: e?.stack,
-    })
+    });
   }
 }

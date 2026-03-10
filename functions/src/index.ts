@@ -15,9 +15,7 @@ import { onDocumentWritten } from 'firebase-functions/firestore';
 import { drive_v3, google } from 'googleapis';
 import * as Stream from 'stream';
 import { addUserWithRole, checkRole, editUserClaims } from './auth';
-import { DocumentSpecificIdentity, User } from './models';
 import { createTransport } from 'nodemailer';
-import { convertToChineseDay, getCurrentReign } from './utils';
 import { newDocMail } from './mail/new-doc';
 import { MailOptions } from 'nodemailer/lib/smtp-pool';
 import ical, { ICalCalendarMethod } from 'ical-generator';
@@ -25,6 +23,8 @@ import { newMeetingNotice } from './mail/new-meeting-notice';
 import { SitemapStream } from 'sitemap';
 import { createGzip } from 'zlib';
 import * as utf8 from 'utf8';
+import { DocumentSpecificIdentity, User } from '../../src/ts/models';
+import { convertToChineseDay, getCurrentReign } from '../../src/ts/utils';
 
 const globalFunctionOptions = { region: 'asia-east1' };
 const ACCOUNT_MANAGER_ROLES = ['Chairman', 'Speaker', 'JudicialCommitteeChairman'];

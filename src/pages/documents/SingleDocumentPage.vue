@@ -24,7 +24,7 @@
           :key="attachment.description + attachment.urls.toString()"
           :attachment="attachment"
           :no-embed="!embed"
-          :order="index + 1"
+          :order="Number(index) + 1"
         />
       </div>
     </div>
@@ -41,9 +41,8 @@ import DocumentSeparator from 'components/DocumentSeparator.vue';
 import { useDocumentStore } from 'stores/document.ts';
 import { useMeta } from 'quasar';
 import { DocumentType } from 'src/ts/models.ts';
-import { convertToChineseDay } from 'app/functions/src/utils.ts';
 import { event } from 'vue-gtag';
-import { getMeta, htmlToText } from 'src/ts/utils.ts';
+import { convertToChineseDay, getMeta, htmlToText } from 'src/ts/utils.ts';
 
 const route = useRoute();
 const doc = ref();
