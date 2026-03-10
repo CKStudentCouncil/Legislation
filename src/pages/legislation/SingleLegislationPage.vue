@@ -54,14 +54,21 @@
         :key="attachment.description + attachment.urls.toString()"
         :attachment="attachment"
         :no-embed="printing"
-        :order="index + 1"
+        :order="Number(index) + 1"
       />
     </div>
   </q-page>
   <q-drawer :breakpoint="500" :width="250" bordered show-if-above side="right">
     <q-scroll-area class="fit">
       <q-list v-if="!!legislation">
-        <q-item v-for="content of legislation.content" :key="content.title" class="q-py-none items-center" clickable dense @click="scrollTo(content.index.toString())">
+        <q-item
+          v-for="content of legislation.content"
+          :key="content.title"
+          class="q-py-none items-center"
+          clickable
+          dense
+          @click="scrollTo(content.index.toString())"
+        >
           <div
             v-if="content.type.firebase !== ContentType.Clause.firebase && content.type.firebase !== ContentType.SpecialClause.firebase"
             class="text-h6"
@@ -115,7 +122,7 @@ watch(
     if (hash.value) {
       // wait for the content to load
       setTimeout(() => {
-        scrollTo(hash.value)
+        scrollTo(hash.value);
       }, 250);
     }
     for (const content of legislation.value?.content ?? []) {
@@ -162,7 +169,7 @@ function expandAll() {
 function scrollTo(index: string) {
   const el = document.getElementById(index);
   if (el) {
-    hash.value = index
+    hash.value = index;
     window.scrollTo({
       top: el.offsetTop - 100,
       behavior: 'smooth',

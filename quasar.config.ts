@@ -63,16 +63,16 @@ export default defineConfig((ctx) => {
       // polyfillModulePreload: true,
       // distDir
 
-      extendViteConf (viteConf) {
+      extendViteConf(viteConf) {
         // SSR
         if ((ctx.mode as any).ssr) {
           viteConf.build!.assetsDir = 'ssr-assets';
         }
         viteConf.build!.terserOptions = {
           format: {
-            comments: false
-          }
-        }
+            comments: false,
+          },
+        };
       },
       // viteVuePluginOptions: {},
 
@@ -81,12 +81,17 @@ export default defineConfig((ctx) => {
           'vite-plugin-checker',
           {
             vueTsc: true,
-            eslint: {
-              lintCommand: 'eslint -c ./eslint.config.js "./src*/**/*.{ts,js,mjs,cjs,vue}"',
-              useFlatConfig: true,
-            },
           },
           { server: false },
+        ],
+        [
+          'vite-plugin-eslint2',
+          {
+            lintInWorker: true,
+            lintOnStart: true,
+            include: ['src/**/*.{ts,js,mjs,cjs,vue}', 'quasar.config.ts', 'eslint.config.js'],
+          },
+          { server: true, client: false },
         ],
       ],
     },
