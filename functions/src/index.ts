@@ -207,6 +207,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
     const cal = ical();
     const meetingTime = doc.meetingTime.toDate() as Date;
     const endTime = new Date(meetingTime);
+    const organizerEmail = senderMail ?? 'cksc77th@gmail.com';
     endTime.setHours(endTime.getHours() + 1);
     cal.method(ICalCalendarMethod.REQUEST);
     cal.createEvent({
@@ -217,8 +218,8 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
       location: doc.location,
       organizer: {
         name: senderName,
-        email: senderMail,
-        mailto: senderMail,
+        email: organizerEmail,
+        mailto: organizerEmail,
         sentBy: 'cksc77th@gmail.com',
       },
       url: 'https://law.cksc.tw/document/' + docId,

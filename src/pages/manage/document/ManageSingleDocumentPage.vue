@@ -136,7 +136,7 @@
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
 import type { Attachment } from 'src/ts/models.ts';
-import { documentsCollection } from 'src/ts/models.ts';
+import { documentsCollection } from 'src/ts/model-converters.ts';
 import { arrayRemove, arrayUnion, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { date, Loading, useQuasar } from 'quasar';
 import ProEditor from 'components/ProEditor.vue';

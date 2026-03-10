@@ -1,6 +1,7 @@
 import { Notify } from 'quasar';
 import type { DocumentType } from './models';
-import { documentsCollection, DocumentSpecificIdentity } from './models';
+import { DocumentSpecificIdentity } from './models';
+import { documentsCollection } from './model-converters';
 import { getDocsFromServer, limit, orderBy, query, where } from 'firebase/firestore';
 import sanitize from 'sanitize-html';
 import { exception } from 'vue-gtag';

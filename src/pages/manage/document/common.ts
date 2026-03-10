@@ -1,5 +1,6 @@
 import * as models from 'src/ts/models.ts';
-import { DocumentConfidentiality, documentsCollection, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
+import { DocumentConfidentiality, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
+import { documentsCollection } from 'src/ts/model-converters.ts';
 import { generateDocumentIdNumber } from 'src/ts/utils.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { meetingNoticeTemplate, meetingRecordTemplate } from 'src/ts/template.ts';

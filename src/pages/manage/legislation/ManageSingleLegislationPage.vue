@@ -190,7 +190,8 @@
 import { useRoute, useRouter } from 'vue-router';
 import type { LegislationCategory, LegislationHistory, ResolutionUrl } from 'src/ts/models.ts';
 import * as models from 'src/ts/models.ts';
-import { ContentType, convertContentToFirebase, legislationDocument, useLegislation } from 'src/ts/models.ts';
+import { ContentType, convertContentToFirebase } from 'src/ts/models.ts';
+import { legislationDocument, useLegislation } from 'src/ts/model-converters.ts';
 import LegislationContent from 'components/legislation/LegislationContent.vue';
 import { copyLink, notifyError, notifySuccess, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';
 import { date, Dialog, Loading } from 'quasar';
