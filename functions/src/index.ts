@@ -24,7 +24,7 @@ import { SitemapStream } from 'sitemap';
 import { createGzip } from 'zlib';
 import * as utf8 from 'utf8';
 import { DocumentSpecificIdentity, User } from '../../src/ts/models';
-import { convertToChineseDay, getCurrentReign } from '../../src/ts/utils';
+import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils';
 
 const globalFunctionOptions = { region: 'asia-east1' };
 const ACCOUNT_MANAGER_ROLES = ['Chairman', 'Speaker', 'JudicialCommitteeChairman'];

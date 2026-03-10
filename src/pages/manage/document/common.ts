@@ -1,6 +1,7 @@
 import * as models from 'src/ts/models.ts';
 import { DocumentConfidentiality, documentsCollection, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
-import { generateDocumentIdNumber, getCurrentReign } from 'src/ts/utils.ts';
+import { generateDocumentIdNumber } from 'src/ts/utils.ts';
+import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { meetingNoticeTemplate, meetingRecordTemplate } from 'src/ts/template.ts';
 import { doc, setDoc } from 'firebase/firestore';
 import { loggedInUser } from 'src/ts/auth.ts';

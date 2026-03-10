@@ -5,6 +5,7 @@ import { getDocsFromServer, limit, orderBy, query, where } from 'firebase/firest
 import sanitize from 'sanitize-html';
 import { exception } from 'vue-gtag';
 import { convert } from 'html-to-text';
+import { getCurrentReign } from './shared-utils';
 
 export function copyLink(href?: string | number | null) {
   void copyText(location.protocol + '//' + location.host + location.pathname + (href ? '?c=' + href.toString() : ''));
@@ -80,29 +81,6 @@ export function translateNumberToChinese(num: number) {
   if (temp.startsWith('一十')) temp = temp.slice(1);
   if (temp.length > 1 && temp.endsWith('零')) temp = temp.slice(0, -1);
   return temp;
-}
-
-export function getReign(date: Date) {
-  let year: number;
-  if (date.getMonth() < 7) {
-    // jan ~ july
-    year = date.getFullYear() - 1945 - 1;
-  } else {
-    year = date.getFullYear() - 1945;
-  }
-  if (date.getMonth() > 6 || date.getMonth() == 0) {
-    // aug ~ jan
-    return `${year}-1`;
-  }
-  return `${year}-2`;
-}
-
-export function getCurrentReign() {
-  return getReign(new Date());
-}
-
-export function convertToChineseDay(day: number) {
-  return ['日', '一', '二', '三', '四', '五', '六', '日'][day];
 }
 
 export function getReadableRecipient(specific: DocumentSpecificIdentity[], others: string[]) {

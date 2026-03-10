@@ -123,7 +123,8 @@
 </template>
 
 <script lang="ts" setup>
-import { copyDocLink, getCurrentReign, getMeta, notifyError } from 'src/ts/utils.ts';
+import { copyDocLink, getMeta, notifyError } from 'src/ts/utils.ts';
+import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import type { Ref } from 'vue';
 import { computed, reactive, ref, watch } from 'vue';
 import type { Document } from 'src/ts/models.ts';
