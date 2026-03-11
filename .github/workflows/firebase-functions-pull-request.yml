@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'functions/**'
+      - 'src/ts/models.ts'
+      - 'src/ts/shared-utils.ts'
 permissions:
   checks: write
   contents: read

@@ -15,9 +15,7 @@ import { onDocumentWritten } from 'firebase-functions/firestore';
 import { drive_v3, google } from 'googleapis';
 import * as Stream from 'stream';
 import { addUserWithRole, checkRole, editUserClaims } from './auth';
-import { DocumentSpecificIdentity, User } from './models';
 import { createTransport } from 'nodemailer';
-import { convertToChineseDay, getCurrentReign } from './utils';
 import { newDocMail } from './mail/new-doc';
 import { MailOptions } from 'nodemailer/lib/smtp-pool';
 import ical, { ICalCalendarMethod } from 'ical-generator';
@@ -25,6 +23,8 @@ import { newMeetingNotice } from './mail/new-meeting-notice';
 import { SitemapStream } from 'sitemap';
 import { createGzip } from 'zlib';
 import * as utf8 from 'utf8';
+import { DocumentSpecificIdentity, User } from '../../src/ts/models';
+import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils';
 
 const globalFunctionOptions = { region: 'asia-east1' };
 const ACCOUNT_MANAGER_ROLES = ['Chairman', 'Speaker', 'JudicialCommitteeChairman'];
@@ -207,6 +207,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
     const cal = ical();
     const meetingTime = doc.meetingTime.toDate() as Date;
     const endTime = new Date(meetingTime);
+    const organizerEmail = senderMail ?? 'cksc77th@gmail.com';
     endTime.setHours(endTime.getHours() + 1);
     cal.method(ICalCalendarMethod.REQUEST);
     cal.createEvent({
@@ -217,8 +218,8 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
       location: doc.location,
       organizer: {
         name: senderName,
-        email: senderMail,
-        mailto: senderMail,
+        email: organizerEmail,
+        mailto: organizerEmail,
         sentBy: 'cksc77th@gmail.com',
       },
       url: 'https://law.cksc.tw/document/' + docId,

@@ -91,7 +91,8 @@ import orderBy from 'lodash/orderBy';
 import { useMeta } from 'quasar';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { copyLink, getMeta, htmlToText } from 'src/ts/utils.ts';
-import { DocumentConfidentiality, DocumentType, documentsCollection } from 'src/ts/models.ts';
+import { DocumentConfidentiality, DocumentType } from 'src/ts/models.ts';
+import { documentsCollection } from 'src/ts/model-converters.ts';
 
 const idNumber = ref('');
 const subject = ref('');

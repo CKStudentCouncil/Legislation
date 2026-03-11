@@ -11,9 +11,10 @@
 </template>
 
 <script lang="ts" setup>
-import { DocumentGeneralIdentity, DocumentSpecificIdentity, DocumentType, useDocuments, usePublicDocuments } from 'src/ts/models.ts';
+import { DocumentGeneralIdentity, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
+import { useDocuments, usePublicDocuments } from 'src/ts/model-converters.ts';
 import { computed, ref, watch } from 'vue';
-import { getCurrentReign } from 'src/ts/utils.ts';
+import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { Screen } from 'quasar';
 
 const props = defineProps({

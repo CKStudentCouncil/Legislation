@@ -59,10 +59,12 @@
 
 <script lang="ts" setup>
 import { computed, ref, watch } from 'vue';
-import { getCurrentReign, getMeta, htmlToText } from 'src/ts/utils.ts';
+import { getMeta, htmlToText } from 'src/ts/utils.ts';
+import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { isReign } from 'src/ts/checks.ts';
 import * as models from 'src/ts/models.ts';
-import { DocumentConfidentiality, documentsCollection } from 'src/ts/models.ts';
+import { DocumentConfidentiality } from 'src/ts/models.ts';
+import { documentsCollection } from 'src/ts/model-converters.ts';
 import { query, where } from 'firebase/firestore';
 import { useCollection } from 'vuefire';
 import orderBy from 'lodash/orderBy';

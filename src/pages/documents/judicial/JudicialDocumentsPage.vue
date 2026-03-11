@@ -36,7 +36,8 @@
 import { DocumentType } from 'src/ts/models.ts';
 import { ref } from 'vue';
 import DocumentsPageV2 from 'pages/documents/DocumentsPageV2.vue';
-import { getCurrentReign, getMeta } from 'src/ts/utils.ts';
+import { getMeta } from 'src/ts/utils.ts';
+import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { isReign } from 'src/ts/checks.ts';
 import { useMeta } from 'quasar';
 

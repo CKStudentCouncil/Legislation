@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import type * as models from 'src/ts/models.ts';
-import { documentsCollection } from 'src/ts/models.ts';
+import { documentsCollection } from 'src/ts/model-converters.ts';
 import { doc, getDoc } from 'firebase/firestore';
 
 export const useDocumentStore = defineStore('document', {

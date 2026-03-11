@@ -1,10 +1,12 @@
 import { Notify } from 'quasar';
 import type { DocumentType } from './models';
-import { documentsCollection, DocumentSpecificIdentity } from './models';
+import { DocumentSpecificIdentity } from './models';
+import { documentsCollection } from './model-converters';
 import { getDocsFromServer, limit, orderBy, query, where } from 'firebase/firestore';
 import sanitize from 'sanitize-html';
 import { exception } from 'vue-gtag';
 import { convert } from 'html-to-text';
+import { getCurrentReign } from './shared-utils';
 
 export function copyLink(href?: string | number | null) {
   void copyText(location.protocol + '//' + location.host + location.pathname + (href ? '?c=' + href.toString() : ''));
@@ -30,21 +32,21 @@ export async function copyText(text: string) {
 export function translateNumber(str: string) {
   //@formatter:off
   const numChar = {
-    '零': 0,
-    '一': 1,
-    '二': 2,
-    '三': 3,
-    '四': 4,
-    '五': 5,
-    '六': 6,
-    '七': 7,
-    '八': 8,
-    '九': 9,
+    零: 0,
+    一: 1,
+    二: 2,
+    三: 3,
+    四: 4,
+    五: 5,
+    六: 6,
+    七: 7,
+    八: 8,
+    九: 9,
   } as Record<string, number>;
   const levelChar = {
-    '十': 10,
-    '百': 100,
-    '千': 1000,
+    十: 10,
+    百: 100,
+    千: 1000,
   } as Record<string, number>;
   //@formatter:on
   if (str.startsWith('十')) str = '一' + str;
@@ -82,23 +84,6 @@ export function translateNumberToChinese(num: number) {
   return temp;
 }
 
-export function getReign(date: Date) {
-  let year: number;
-  if (date.getMonth() < 7) { // jan ~ july
-    year = date.getFullYear() - 1945 - 1;
-  } else {
-    year = date.getFullYear() - 1945;
-  }
-  if (date.getMonth() > 6 || date.getMonth() == 0) { // aug ~ jan
-    return `${year}-1`;
-  }
-  return `${year}-2`;
-}
-
-export function getCurrentReign() {
-  return getReign(new Date());
-}
-
 export function getReadableRecipient(specific: DocumentSpecificIdentity[], others: string[]) {
   let s = '';
   for (let i = 0; i < specific.length; i++) {
@@ -130,13 +115,7 @@ export async function generateDocumentIdNumber(specific: DocumentSpecificIdentit
     }
   }
   const lastDoc = await getDocsFromServer(
-    query(
-      documentsCollection(),
-      orderBy('createdAt', 'desc'),
-      where('fromSpecific', 'in', sharedFrom),
-      where('type', '==', type.firebase),
-      limit(1),
-    ),
+    query(documentsCollection(), orderBy('createdAt', 'desc'), where('fromSpecific', 'in', sharedFrom), where('type', '==', type.firebase), limit(1)),
   );
   if (lastDoc.docs[0] && lastDoc.docs[0].exists() && lastDoc.docs[0].data()?.idNumber.startsWith(r)) {
     const lastDocId = lastDoc.docs[0].id;
@@ -227,6 +206,6 @@ export function notifyError(message: string, e?: any): void {
       description: message + ': ' + e?.message,
       fatal: false,
       stack: e?.stack,
-    })
+    });
   }
 }
