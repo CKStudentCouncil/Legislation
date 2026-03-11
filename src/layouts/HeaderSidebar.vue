@@ -25,7 +25,7 @@
             v-if="(!endpoint.requireAuth || loggedIn) && (endpoint.requireRole === undefined || hasRole(endpoint.requireRole))"
             v-ripple
             :active="selected === endpoint.name"
-            :to="endpoint.url"
+            v-bind="endpointLinkProps(endpoint)"
             :title="endpoint.name"
             role="link"
             @click="changeSelected(endpoint.name)"
@@ -120,6 +120,20 @@ function toggleDark() {
 
 function changeSelected(name: string) {
   selected.value = name;
+}
+
+function endpointLinkProps(endpoint: { url: string; external?: boolean }) {
+  if (endpoint.external) {
+    return {
+      href: endpoint.url,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+    };
+  }
+
+  return {
+    to: endpoint.url,
+  };
 }
 
 function toggleFullscreen() {
