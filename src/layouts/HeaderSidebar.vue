@@ -132,6 +132,10 @@ function toggleDark() {
 }
 
 function changeSelected(name: string) {
+  const isExternal = endpoints.some((e) => e.name === name && e.external === true);
+  if (isExternal) {
+    return;
+  }
   selected.value = name;
 }
 
