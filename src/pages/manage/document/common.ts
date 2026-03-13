@@ -33,6 +33,8 @@ export async function create(adding: models.Document, template = true) {
   if (adding.type.judicialCommitteeOnly) {
     if (adding.type.firebase == DocumentType.JudicialCommitteeExplanation.firebase) {
       adding.idPrefix = adding.type.prefix + '字';
+    } else if (adding.type.firebase == DocumentType.CourtProsecutions.firebase) {
+      adding.idPrefix = adding.fromSpecific.prefix + '字';
     } else {
       adding.idPrefix = adding.fromSpecific.prefix + adding.type.prefix + '字';
     }
