@@ -1,7 +1,7 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import { getDoc } from 'firebase/firestore';
 import type { Legislation } from 'src/ts/models.ts';
-import { legislationDocument } from 'src/ts/models.ts';
+import { legislationDocument } from 'src/ts/model-converters.ts';
 
 export const useLegislationStore = defineStore('legislation', {
   state: () => ({

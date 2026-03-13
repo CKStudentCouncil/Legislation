@@ -15,9 +15,7 @@ import { onDocumentWritten } from 'firebase-functions/firestore';
 import { drive_v3, google } from 'googleapis';
 import * as Stream from 'stream';
 import { addUserWithRole, checkRole, editUserClaims } from './auth';
-import { DocumentSpecificIdentity, User } from './models';
 import { createTransport } from 'nodemailer';
-import { convertToChineseDay, getCurrentReign } from './utils';
 import { newDocMail } from './mail/new-doc';
 import { MailOptions } from 'nodemailer/lib/smtp-pool';
 import ical, { ICalCalendarMethod } from 'ical-generator';
@@ -25,8 +23,11 @@ import { newMeetingNotice } from './mail/new-meeting-notice';
 import { SitemapStream } from 'sitemap';
 import { createGzip } from 'zlib';
 import * as utf8 from 'utf8';
+import { DocumentSpecificIdentity, User } from '../../src/ts/models';
+import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils';
 
 const globalFunctionOptions = { region: 'asia-east1' };
+const ACCOUNT_MANAGER_ROLES = ['Chairman', 'Speaker', 'JudicialCommitteeChairman'];
 const auth = new google.auth.GoogleAuth({
   keyFile: 'src/credential.json',
   scopes: ['https://www.googleapis.com/auth/drive.file'],
@@ -44,26 +45,26 @@ const mailTransport = createTransport({
 });
 
 export const addUser = onCall(globalFunctionOptions, async (request) => {
-  await checkRole(request, 'Chairman');
+  await checkRole(request, ACCOUNT_MANAGER_ROLES);
   const user = request.data as User;
   await addUserWithRole(user);
   return { success: true };
 });
 
 export const deleteUser = onCall(globalFunctionOptions, async (request) => {
-  await checkRole(request, 'Chairman');
+  await checkRole(request, ACCOUNT_MANAGER_ROLES);
   await admin.auth().deleteUser(request.data.uid);
   return { success: true };
 });
 
 export const editUser = onCall(globalFunctionOptions, async (request) => {
-  await checkRole(request, 'Chairman');
+  await checkRole(request, ACCOUNT_MANAGER_ROLES);
   await editUserClaims(request.data.uid, request.data.claims);
   return { success: true };
 });
 
 export const getAllUsers = onCall(globalFunctionOptions, async (request) => {
-  await checkRole(request, 'Chairman');
+  await checkRole(request, ACCOUNT_MANAGER_ROLES);
   const users = await admin.auth().listUsers();
   return users.users.map((user) => {
     return {
@@ -206,6 +207,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
     const cal = ical();
     const meetingTime = doc.meetingTime.toDate() as Date;
     const endTime = new Date(meetingTime);
+    const organizerEmail = senderMail ?? 'cksc77th@gmail.com';
     endTime.setHours(endTime.getHours() + 1);
     cal.method(ICalCalendarMethod.REQUEST);
     cal.createEvent({
@@ -216,8 +218,8 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
       location: doc.location,
       organizer: {
         name: senderName,
-        email: senderMail,
-        mailto: senderMail,
+        email: organizerEmail,
+        mailto: organizerEmail,
         sentBy: 'cksc77th@gmail.com',
       },
       url: 'https://law.cksc.tw/document/' + docId,
@@ -251,7 +253,7 @@ export const buildIdCache = onCall(globalFunctionOptions, async (request) => {
   await db.doc('settings/cache').set({
     documents: docCache,
     legislation: lawCache,
-  })
+  });
   return { success: true };
 });
 
@@ -260,22 +262,23 @@ export const sitemap = onRequest(globalFunctionOptions, async (request, response
   response.header('Content-Encoding', 'gzip');
 
   try {
-    const smStream = new SitemapStream({ hostname: 'https://law.cksc.tw/' })
-    const pipeline = smStream.pipe(createGzip())
+    const smStream = new SitemapStream({ hostname: 'https://law.cksc.tw/' });
+    const pipeline = smStream.pipe(createGzip());
     const cache = await db.doc('settings/cache').get();
 
     // pipe your entries or directly write them.
-    smStream.write({ url: '/', priority: 1.0 })
-    smStream.write({ url: '/legislation/', priority: 0.9 })
-    smStream.write({ url: '/document/', priority: 0.8 })
-    smStream.write({ url: '/document/judicial', priority: 0.7 })
-    smStream.write({ url: '/document/judicial/lawsuit', priority: 0.7 })
+    smStream.write({ url: '/', priority: 1.0 });
+    smStream.write({ url: '/legislation/', priority: 0.9 });
+    smStream.write({ url: '/document/', priority: 0.8 });
+    smStream.write({ url: '/document/judicial', priority: 0.7 });
+    smStream.write({ url: '/document/judicial/lawsuit', priority: 0.7 });
+    smStream.write({ url: '/document/judicial/resolution', priority: 0.7 });
     if (cache.data()) {
       for (const doc of Object.entries(cache.data()!.legislation ?? {})) {
-        smStream.write({ url: `/legislation/${doc[0]}`, lastmod: new Date(doc[1] as number).toISOString(), priority: 0.6 })
+        smStream.write({ url: `/legislation/${doc[0]}`, lastmod: new Date(doc[1] as number).toISOString(), priority: 0.6 });
       }
       for (const doc of Object.entries(cache.data()!.documents ?? {})) {
-        smStream.write({ url: `/document/${doc[0]}`, lastmod: new Date(doc[1] as number).toISOString(), priority: 0.5 })
+        smStream.write({ url: `/document/${doc[0]}`, lastmod: new Date(doc[1] as number).toISOString(), priority: 0.5 });
       }
     }
     /* or use
@@ -284,25 +287,24 @@ export const sitemap = onRequest(globalFunctionOptions, async (request, response
     */
 
     // make sure to attach a write stream such as streamToPromise before ending
-    smStream.end()
+    smStream.end();
     // stream write the response
-    pipeline.pipe(response).on('error', (e) => {throw e})
+    pipeline.pipe(response).on('error', (e) => {
+      throw e;
+    });
   } catch (e) {
-    console.error(e)
-    response.status(500).end()
+    console.error(e);
+    response.status(500).end();
   }
 });
 
-export const updateIdCache = onDocumentWritten(
-  { ...globalFunctionOptions, document: '{type}/{docId}', },
-  async (event) => {
-    const type = event.params.type;
-    if (type !== 'documents' && type !== 'legislation') throw new HttpsError('not-found', 'Type not found.');
-    const docId = utf8.decode(event.params.docId);
-    let del = !event.data?.after.exists; // Check if it's a deletion
-    if (type === 'documents' && !del &&
-      (!event.data?.after.data()!.published || event.data?.after.data()!.confidentiality !== 'Public')) // Reject non-public docs
-      del = true;
-    await db.doc('settings/cache').update(new FieldPath(type, docId), del ? FieldValue.delete() : new Date().valueOf());
-  },
-);
+export const updateIdCache = onDocumentWritten({ ...globalFunctionOptions, document: '{type}/{docId}' }, async (event) => {
+  const type = event.params.type;
+  if (type !== 'documents' && type !== 'legislation') throw new HttpsError('not-found', 'Type not found.');
+  const docId = utf8.decode(event.params.docId);
+  let del = !event.data?.after.exists; // Check if it's a deletion
+  if (type === 'documents' && !del && (!event.data?.after.data()!.published || event.data?.after.data()!.confidentiality !== 'Public'))
+    // Reject non-public docs
+    del = true;
+  await db.doc('settings/cache').update(new FieldPath(type, docId), del ? FieldValue.delete() : new Date().valueOf());
+});

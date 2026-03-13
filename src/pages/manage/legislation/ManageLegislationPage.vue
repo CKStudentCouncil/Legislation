@@ -7,8 +7,9 @@
 <script lang="ts" setup>
 import LegislationPage from 'pages/legislation/LegislationPage.vue';
 import { reactive, ref } from 'vue';
-import type { Addendum, LegislationHistory, Legislation, LegislationContent} from 'src/ts/models.ts';
-import { LegislationCategory, legislationDocument, useLegislations } from 'src/ts/models.ts';
+import type { Addendum, LegislationHistory, Legislation, LegislationContent } from 'src/ts/models.ts';
+import { LegislationCategory } from 'src/ts/models.ts';
+import { legislationDocument, useLegislations } from 'src/ts/model-converters.ts';
 import { date, Loading } from 'quasar';
 import LegislationDialog from 'components/legislation/LegislationDialog.vue';
 import { useRouter } from 'vue-router';
@@ -38,7 +39,9 @@ async function submit() {
           if (!isNaN(num)) {
             last = Math.max(last, num);
           }
-        } catch (e) { /* empty */ }
+        } catch (e) {
+          /* empty */
+        }
       }
     }
     target.createdAt = date.extractDate(target.createdAt, 'YYYY-MM-DD') as any;

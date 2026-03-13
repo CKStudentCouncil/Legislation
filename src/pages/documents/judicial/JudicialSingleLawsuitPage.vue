@@ -2,6 +2,7 @@
   <q-tabs align="left">
     <q-route-tab label="文書查詢" to="/document/judicial" />
     <q-route-tab label="訴訟查詢" to="/document/judicial/lawsuit" />
+    <q-route-tab label="決議文" to="/document/judicial/resolution" />
   </q-tabs>
   <q-page padding>
     <q-stepper ref="stepper" v-model="step" :class="sortedDocs.length === 0 ? 'text-center' : ''" animated header-nav vertical>
@@ -19,7 +20,15 @@
           <q-btn v-if="step !== sortedDocs.length - 1" color="primary" label="下一頁" @click="next" />
           <q-btn v-if="step !== 0" color="primary" flat label="上一頁" @click="previous" />
           <q-btn color="primary" flat icon="link" label="複製連結" @click="copyLink(step)" />
-          <q-btn :to="`/document/${doc.getFullId()}`" color="primary" flat icon="open_in_new" label="檢視原文" rel="link" :alt="`${doc.getFullId()}：${doc.subject}`"/>
+          <q-btn
+            :to="`/document/${doc.getFullId()}`"
+            color="primary"
+            flat
+            icon="open_in_new"
+            label="檢視原文"
+            rel="link"
+            :alt="`${doc.getFullId()}：${doc.subject}`"
+          />
         </q-stepper-navigation>
       </q-step>
     </q-stepper>
@@ -27,7 +36,8 @@
 </template>
 
 <script lang="ts" setup>
-import { DocumentConfidentiality, documentsCollection, useSpecificDocument } from 'src/ts/models.ts';
+import { DocumentConfidentiality } from 'src/ts/models.ts';
+import { documentsCollection, useSpecificDocument } from 'src/ts/model-converters.ts';
 import { useRoute, useRouter } from 'vue-router';
 import { query, where } from 'firebase/firestore';
 import { useCollection } from 'vuefire';

@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { useLegislation } from 'src/ts/models.ts';
+import { useLegislation } from 'src/ts/model-converters.ts';
 import { useRoute } from 'vue-router';
 import { copyLink } from 'src/ts/utils.ts';
 import { Dark } from 'quasar';
@@ -47,6 +47,4 @@ const route = useRoute();
 const legislation = useLegislation(route.params.id as string);
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

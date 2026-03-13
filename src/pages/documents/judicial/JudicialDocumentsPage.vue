@@ -2,6 +2,7 @@
   <q-tabs align="left">
     <q-route-tab label="文書查詢" to="/document/judicial" />
     <q-route-tab label="訴訟查詢" to="/document/judicial/lawsuit" />
+    <q-route-tab label="決議文" to="/document/judicial/resolution" />
   </q-tabs>
   <q-page padding>
     <div class="row q-pr-none">
@@ -26,7 +27,7 @@
           </q-item>
         </q-list>
       </q-no-ssr>
-      <DocumentsPageV2 :dense="false" :filter-type="selected" :filters="false" class="col-12 col-sm" :meta="false"/>
+      <DocumentsPageV2 :dense="false" :filter-type="selected" :filters="false" class="col-12 col-sm" :meta="false" />
     </div>
   </q-page>
 </template>
@@ -35,7 +36,8 @@
 import { DocumentType } from 'src/ts/models.ts';
 import { ref } from 'vue';
 import DocumentsPageV2 from 'pages/documents/DocumentsPageV2.vue';
-import { getCurrentReign, getMeta } from 'src/ts/utils.ts';
+import { getMeta } from 'src/ts/utils.ts';
+import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { isReign } from 'src/ts/checks.ts';
 import { useMeta } from 'quasar';
 

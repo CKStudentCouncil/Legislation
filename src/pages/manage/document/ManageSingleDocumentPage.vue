@@ -136,7 +136,7 @@
 <script lang="ts" setup>
 import { useRoute, useRouter } from 'vue-router';
 import type { Attachment } from 'src/ts/models.ts';
-import { documentsCollection } from 'src/ts/models.ts';
+import { documentsCollection } from 'src/ts/model-converters.ts';
 import { arrayRemove, arrayUnion, deleteDoc, doc, setDoc, updateDoc } from 'firebase/firestore';
 import { date, Loading, useQuasar } from 'quasar';
 import ProEditor from 'components/ProEditor.vue';
@@ -148,7 +148,8 @@ import ListEditor from 'components/ListEditor.vue';
 import { VueDraggable } from 'vue-draggable-plus';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
-import { getReign, notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { getReign } from 'src/ts/shared-utils.ts';
 import { useDocument } from 'vuefire';
 import { useFunction } from 'boot/vuefire.ts';
 import DocumentSeparator from 'components/DocumentSeparator.vue';

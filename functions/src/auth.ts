@@ -1,11 +1,11 @@
-import {https} from 'firebase-functions';
+import { https } from 'firebase-functions';
 import * as admin from 'firebase-admin';
-import {User} from './models';
-import {randomChars} from './utils';
+import { User } from '../../src/ts/models';
+import { randomChars } from '../../src/ts/shared-utils';
 
 const auth = admin.auth();
 
-export async function checkRole(request: https.CallableRequest, role: string) {
+export async function checkRole(request: https.CallableRequest, role: string | string[]) {
   if (!request.auth) {
     throw new https.HttpsError('unauthenticated', 'You must be authenticated');
   }
@@ -14,11 +14,13 @@ export async function checkRole(request: https.CallableRequest, role: string) {
     return;
   }
   const user = await auth.getUser(request.auth.uid);
-  const userRoles = user.customClaims?.roles;
-  if (userRoles == null || !userRoles.includes(role)) {
+  const userRoles = user.customClaims?.roles as string[] | undefined;
+  const requiredRoles = Array.isArray(role) ? role : [role];
+  const hasRequiredRole = userRoles?.some((userRole: string) => requiredRoles.includes(userRole));
+  if (userRoles == null || !hasRequiredRole) {
     throw new https.HttpsError(
       'permission-denied',
-      `You do not have the required role (You:${userRoles?.join(',')}/Req:${role}) to perform this action`,
+      `You do not have the required role (You:${userRoles?.join(',')}/Req:${requiredRoles.join(',')}) to perform this action`,
     );
   }
 }
