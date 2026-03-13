@@ -101,18 +101,14 @@ const endpoints: Endpoint[] = [
   { name: '編輯法令', url: '/manage/legislation', icon: 'edit', requireAuth: true },
   { name: '編輯公文', url: '/manage/document', icon: 'draw', requireAuth: true },
   { name: '評委文書', url: '/document/judicial', icon: 'balance', requireAuth: false },
-  { name: '線上聲請平台', url: 'https://cksc-jc.notion.site/38a4465929c78260b6d681378aba8efc', icon: 'launch', external: true, requireAuth: false },
   {
     name: '管理帳號',
     url: '/manage/accounts',
     icon: 'badge',
     requireAuth: true,
-    requireRole: [
-      DocumentSpecificIdentity.Chairman,
-      DocumentSpecificIdentity.Speaker,
-      DocumentSpecificIdentity.JudicialCommitteeChairman,
-    ],
+    requireRole: [DocumentSpecificIdentity.Chairman, DocumentSpecificIdentity.Speaker, DocumentSpecificIdentity.JudicialCommitteeChairman],
   },
+  { name: '聲請平台', url: 'https://cksc-jc.notion.site/38a4465929c78260b6d681378aba8efc', icon: 'gavel', external: true, requireAuth: false },
   { name: '關於與使用條款', url: '/about', icon: 'info', requireAuth: false },
 ];
 const selected = ref('Account Information');
