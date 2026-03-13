@@ -40,7 +40,7 @@
     "@quasar/app-vite": "^2.4.1",
     "@types/html-to-text": "^9.0.4",
     "@types/lodash": "^4.17.24",
-    "@types/node": "^25.4.0",
+    "@types/node": "^25.5.0",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.7.0",
     "autoprefixer": "^10.4.27",
