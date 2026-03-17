@@ -5124,10 +5124,10 @@ install-artifact-from-github@^1.3.5:
   resolved "https://registry.yarnpkg.com/install-artifact-from-github/-/install-artifact-from-github-1.3.5.tgz#88c96fe40e5eb21d45586d564208c648a1dbf38d"
   integrity sha512-gZHC7f/cJgXz7MXlHFBxPVMsvIbev1OQN1uKQYKVJDydGNm9oYf9JstbU4Atnh/eSvk41WtEovoRm+8IF686xg==
 
-instantsearch-ui-components@0.21.0:
-  version "0.21.0"
-  resolved "https://registry.yarnpkg.com/instantsearch-ui-components/-/instantsearch-ui-components-0.21.0.tgz#a59c1fc37dde4f19c23f8ac664571a4a8b4f7abf"
-  integrity sha512-m9bacFV7qp/HZGSih+KFDUm/rfK8/Qk2VvzQZ3NOfPWxDQoBfgRFc//b7y70tkoLQAEdDy3AlzMDiBDcsqgl1w==
+instantsearch-ui-components@0.22.0:
+  version "0.22.0"
+  resolved "https://registry.yarnpkg.com/instantsearch-ui-components/-/instantsearch-ui-components-0.22.0.tgz#c1c627edae24573dc8a5297e402747e5a8002945"
+  integrity sha512-28V7ZmGuPpYB/XWQdxXdgpUErSMj87gK9VoTwyLaZcNCL1Qxr/rJmbJpkTluYFMAYT/tIAehYAoL+1lNT2BRnw==
   dependencies:
     "@swc/helpers" "0.5.18"
     markdown-to-jsx "^7.7.15"
@@ -5141,10 +5141,10 @@ instantsearch.css@^8.12.0:
   dependencies:
     tweakpane "4.0.5"
 
-instantsearch.js@4.91.0:
-  version "4.91.0"
-  resolved "https://registry.yarnpkg.com/instantsearch.js/-/instantsearch.js-4.91.0.tgz#89ba77cd3d2b524dea38c74318595e176e246c8e"
-  integrity sha512-kCR5TQozjyoTb71h1RG2sTJOaeY4KFeV/fJ5ksZjX5AhzQnTVE30hoSg9++kyfHoXrV2Bd6/Yp3belIw6MRwJw==
+instantsearch.js@4.92.0:
+  version "4.92.0"
+  resolved "https://registry.yarnpkg.com/instantsearch.js/-/instantsearch.js-4.92.0.tgz#419f6af1b0c86f3a6c4d5dffbf9a4e5c18b76627"
+  integrity sha512-mkbP3uPwk4NuW66vXRGFSRzOpWoztvIquQ1sh/gCa4BoiYQ27XFtj/5529nPLIdPAWYJyN0I6B+fs+wOmRPjOA==
   dependencies:
     "@algolia/events" "^4.0.1"
     "@swc/helpers" "0.5.18"
@@ -5155,7 +5155,7 @@ instantsearch.js@4.91.0:
     algoliasearch-helper "3.28.0"
     hogan.js "^3.0.2"
     htm "^3.0.0"
-    instantsearch-ui-components "0.21.0"
+    instantsearch-ui-components "0.22.0"
     preact "^10.10.0"
     qs "^6.5.1"
     react ">= 0.14.0"
@@ -8455,14 +8455,14 @@ vue-gtag@~3.7.0:
   resolved "https://registry.yarnpkg.com/vue-gtag/-/vue-gtag-3.7.0.tgz#18031fb505b364ac44773e961f7c92b63d66682c"
   integrity sha512-o/ng/NjiVgEnOBZlSnWyg9IsVzIXUWmSuwbd+lGRX/T/h8gxdYN1IMcz5MT8e7o6GYhextvWpsupVAsWbYb+Gg==
 
-vue-instantsearch@^4.24.1:
-  version "4.24.1"
-  resolved "https://registry.yarnpkg.com/vue-instantsearch/-/vue-instantsearch-4.24.1.tgz#2c7ddadfd02047b165f232ed173dd322e8b47896"
-  integrity sha512-paegISk2NUFNYPV3Xi8TE7ZXfB1o8mUny/UcadMdiH0jIOUA3Sk141rqN3EL0Tbqt+q9sHm92Bm2S91Q3+6DPg==
+vue-instantsearch@^4.24.2:
+  version "4.24.2"
+  resolved "https://registry.yarnpkg.com/vue-instantsearch/-/vue-instantsearch-4.24.2.tgz#e4d347331710603b0ccd7810b0b5bab47b40ddf3"
+  integrity sha512-JBqSnOmsSvUr8uwd7YitwDmsw0FEvdM7XdGePLCmfR9B6R1XtfZRNITb1XbrrUD8fSH0x2tcrEbE2aEq7AfT3g==
   dependencies:
     "@swc/helpers" "0.5.18"
-    instantsearch-ui-components "0.21.0"
-    instantsearch.js "4.91.0"
+    instantsearch-ui-components "0.22.0"
+    instantsearch.js "4.92.0"
     mitt "^2.1.0"
 
 vue-router@^5.0.3:
