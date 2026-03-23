@@ -1903,10 +1903,10 @@ https-proxy-agent@^7.0.1:
     agent-base "^7.0.2"
     debug "4"
 
-ical-generator@^10.0.0:
-  version "10.0.0"
-  resolved "https://registry.yarnpkg.com/ical-generator/-/ical-generator-10.0.0.tgz#15c195062f504fbbaa0695d6924ab5b280bb934b"
-  integrity sha512-YUQ7H4eZdLfYvx3zE/qN4AoG0qqwMZG37vLdWzysXFDn/YQEfctZ9tQuPSBncARKgv79d2smWf5Sh67k6xiZfg==
+ical-generator@^10.1.0:
+  version "10.1.0"
+  resolved "https://registry.yarnpkg.com/ical-generator/-/ical-generator-10.1.0.tgz#b34c2dd1029c7a9854fdd435290b9ab55051f3c9"
+  integrity sha512-VgWzox2svupw4HoZo9Ym0pmj50Cr7CO+By/TraNUVTXQL5Qh0p13iGNzizhXd/KDuzOHUSSXwUWIMZmBHQU65Q==
 
 iconv-lite@0.4.24:
   version "0.4.24"
