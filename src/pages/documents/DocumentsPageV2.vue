@@ -4,27 +4,6 @@
     <q-no-ssr v-if="filters" :class="$q.screen.gt.xs ? 'row' : ''">
       <q-input v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" :rules="[isReign]" class="col q-pr-sm" clearable debounce="500" />
       <q-input
-        v-model="before"
-        :disabled="published === false"
-        :rules="[optionalDate]"
-        class="col q-pr-sm"
-        label="發文日期早於"
-        mask="date"
-        shadow-text="可按右旁按鈕選擇"
-      >
-        <template v-slot:append>
-          <q-icon class="cursor-pointer" name="event">
-            <q-popup-proxy cover transition-hide="scale" transition-show="scale">
-              <q-date v-model="before">
-                <div class="row items-center justify-end">
-                  <q-btn v-close-popup color="primary" flat label="Close" />
-                </div>
-              </q-date>
-            </q-popup-proxy>
-          </q-icon>
-        </template>
-      </q-input>
-      <q-input
         v-model="after"
         :disabled="published === false"
         :rules="[optionalDate]"
@@ -37,6 +16,27 @@
           <q-icon class="cursor-pointer" name="event">
             <q-popup-proxy cover transition-hide="scale" transition-show="scale">
               <q-date v-model="after">
+                <div class="row items-center justify-end">
+                  <q-btn v-close-popup color="primary" flat label="Close" />
+                </div>
+              </q-date>
+            </q-popup-proxy>
+          </q-icon>
+        </template>
+      </q-input>
+      <q-input
+        v-model="before"
+        :disabled="published === false"
+        :rules="[optionalDate]"
+        class="col q-pr-sm"
+        label="發文日期早於"
+        mask="date"
+        shadow-text="可按右旁按鈕選擇"
+      >
+        <template v-slot:append>
+          <q-icon class="cursor-pointer" name="event">
+            <q-popup-proxy cover transition-hide="scale" transition-show="scale">
+              <q-date v-model="before">
                 <div class="row items-center justify-end">
                   <q-btn v-close-popup color="primary" flat label="Close" />
                 </div>
