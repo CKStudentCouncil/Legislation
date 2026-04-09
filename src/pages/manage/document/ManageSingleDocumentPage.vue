@@ -377,11 +377,17 @@ async function submitId() {
   docu.value!.idNumber = editingIdNumber.value;
   const newId = docu.value!.getFullId();
   try {
-    const existingDoc = await getDoc(doc(documentsCollection(), newId));
-    if (existingDoc.exists()) {
-      notifyError('該公文字號已存在，請使用其他公文字號');
-      Loading.hide();
-      return;
+    try {
+      const existingDoc = await getDoc(doc(documentsCollection(), newId));
+      if (existingDoc.exists()) {
+        notifyError('該公文字號已存在，請使用其他公文字號');
+        Loading.hide();
+        return;
+      }
+    } catch (e: any) {
+      if (e?.code !== 'permission-denied') {
+        throw e;
+      }
     }
     await setDoc(doc(documentsCollection(), newId), docu.value);
     await router.push(newId);
