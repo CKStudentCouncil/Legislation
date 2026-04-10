@@ -15,24 +15,24 @@
   },
   "main": "lib/functions/src/index.js",
   "dependencies": {
-    "firebase-admin": "^13.7.0",
-    "firebase-functions": "^7.2.2",
+    "firebase-admin": "^13.8.0",
+    "firebase-functions": "^7.2.5",
     "googleapis": "^171.4.0",
     "ical-generator": "^10.1.0",
-    "nodemailer": "^8.0.4",
+    "nodemailer": "^8.0.5",
     "sitemap": "^9.0.1",
     "utf8": "^3.0.0"
   },
   "devDependencies": {
-    "@types/nodemailer": "^7.0.11",
+    "@types/nodemailer": "^8.0.0",
     "@types/utf8": "^3.0.3",
-    "@typescript-eslint/parser": "^8.57.1",
-    "eslint": "^10.1.0",
+    "@typescript-eslint/parser": "^8.58.1",
+    "eslint": "^10.2.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.32.0",
     "firebase-functions-test": "^3.4.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.57.1"
+    "typescript-eslint": "^8.58.1"
   },
   "private": true
 }
