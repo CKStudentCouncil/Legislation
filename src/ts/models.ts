@@ -314,6 +314,8 @@ export class DocumentSpecificIdentity {
     '司法助理',
   );
   static GeneralCourt = new DocumentSpecificIdentity('GeneralCourt', '一般法庭', '政', '02', DocumentGeneralIdentity.JudicialCommittee, '審判長');
+  static LowerCourt = new DocumentSpecificIdentity('LowerCourt', '初等法庭', '政', '02', DocumentGeneralIdentity.JudicialCommittee, '審判長');
+  static SuperiorCourt = new DocumentSpecificIdentity('SuperiorCourt', '高等法庭', '政', '02', DocumentGeneralIdentity.JudicialCommittee, '審判長');
   static ConstitutionalCourt = new DocumentSpecificIdentity(
     'ConstitutionalCourt',
     '憲章法庭',
@@ -333,7 +335,7 @@ export class DocumentSpecificIdentity {
     '審查委員',
   );
   // specialCommittee
-  static SpecialCommittee = new DocumentSpecificIdentity(
+  /*static SpecialCommittee = new DocumentSpecificIdentity(
     'SpecialCommittee',
     '特殊時期會務委員會',
     '特委',
@@ -368,7 +370,7 @@ export class DocumentSpecificIdentity {
     '特委司副',
     '04',
     DocumentGeneralIdentity.SpecialCommittee,
-  );
+  );*/
 
   static Other = new DocumentSpecificIdentity('Other', '其他', '', '99', DocumentGeneralIdentity.StudentCouncil);
   static VALUES = {
@@ -405,15 +407,17 @@ export class DocumentSpecificIdentity {
     JudicialAssistance: DocumentSpecificIdentity.JudicialAssistance,
     JudicialCommittee: DocumentSpecificIdentity.JudicialCommittee,
     GeneralCourt: DocumentSpecificIdentity.GeneralCourt,
+    LowerCourt: DocumentSpecificIdentity.LowerCourt,
+    SuperiorCourt: DocumentSpecificIdentity.SuperiorCourt,
     ConstitutionalCourt: DocumentSpecificIdentity.ConstitutionalCourt,
     SupremeCourt: DocumentSpecificIdentity.SupremeCourt,
     ConstitutionalCensorCourt: DocumentSpecificIdentity.ConstitutionalCensorCourt,
     Other: DocumentSpecificIdentity.Other,
-    SpecialCommittee: DocumentSpecificIdentity.SpecialCommittee,
-    SpecialCommitteeChairman: DocumentSpecificIdentity.SpecialCommitteeChairman,
-    SpecialCommitteeExecutiveViceChairman: DocumentSpecificIdentity.SpecialCommitteeExecutiveViceChairman,
-    SpecialCommitteeLegislativeViceChairman: DocumentSpecificIdentity.SpecialCommitteeLegislativeViceChairman,
-    SpecialCommitteeJudicialViceChairman: DocumentSpecificIdentity.SpecialCommitteeJudicialViceChairman,
+    //SpecialCommittee: DocumentSpecificIdentity.SpecialCommittee,
+    //SpecialCommitteeChairman: DocumentSpecificIdentity.SpecialCommitteeChairman,
+    //SpecialCommitteeExecutiveViceChairman: DocumentSpecificIdentity.SpecialCommitteeExecutiveViceChairman,
+    //SpecialCommitteeLegislativeViceChairman: DocumentSpecificIdentity.SpecialCommitteeLegislativeViceChairman,
+    //SpecialCommitteeJudicialViceChairman: DocumentSpecificIdentity.SpecialCommitteeJudicialViceChairman,
   } as Record<string, DocumentSpecificIdentity>;
 
   constructor(
@@ -441,6 +445,9 @@ export class DocumentType {
   // Prefix Court: rendered with DocumentCourt.vue
   static CourtIndictment = new DocumentType('CourtIndictment', '起訴書', '訴', '5', false, 'edit_note');
   static CourtVerdict = new DocumentType('CourtVerdict', '裁判書', '判', '5', true, 'gavel');
+  static CourtReviewReport1 = new DocumentType('CourtReviewReport1', '作為憲章審查審查報告', '文', '5', true, 'assignment');
+  static CourtReviewReport2 = new DocumentType('CourtReviewReport2', '法規範憲章審查審查報告', '文', '5', true, 'assignment');
+  static CourtReviewReport3 = new DocumentType('CourtReviewReport3', '裁判憲章審查審查報告', '文', '5', true, 'assignment');
   static CourtNotification = new DocumentType('CourtNotification', '法庭文書-通', '通', '5', true, 'notifications');
   static CourtDocuments = new DocumentType('CourtDocuments', '法庭文書-文', '文', '5', true, 'description');
   static CourtScrolls = new DocumentType('CourtScrolls', '法庭文書-卷', '卷', '5', true, 'receipt_long');
@@ -457,6 +464,9 @@ export class DocumentType {
     JudicialCommitteeExplanation: DocumentType.JudicialCommitteeExplanation,
     CourtIndictment: DocumentType.CourtIndictment,
     CourtVerdict: DocumentType.CourtVerdict,
+    CourtReviewReport1: DocumentType.CourtReviewReport1,
+    CourtReviewReport2: DocumentType.CourtReviewReport2,
+    CourtReviewReport3: DocumentType.CourtReviewReport3,
     CourtNotification: DocumentType.CourtNotification,
     CourtDocuments: DocumentType.CourtDocuments,
     CourtScrolls: DocumentType.CourtScrolls,
@@ -514,7 +524,6 @@ export function convertHistoryToFirebase(data: LegislationHistory) {
   if (data.link) history.link = data.link;
   return history;
 }
-
 
 export function convertContentFromFirebase(data: any) {
   const content = { ...data } as LegislationContent;
