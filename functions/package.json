@@ -27,7 +27,7 @@
     "@types/nodemailer": "^8.0.0",
     "@types/utf8": "^3.0.3",
     "@typescript-eslint/parser": "^8.58.1",
-    "eslint": "^10.2.0",
+    "eslint": "^10.2.1",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.32.0",
     "firebase-functions-test": "^3.4.1",
