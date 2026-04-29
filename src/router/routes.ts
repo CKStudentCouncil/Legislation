@@ -49,9 +49,7 @@ const routes: RouteRecordRaw[] = [
       },
       {
         path: 'amendments',
-        children: [
-          { path: ':id', component: () => import('pages/manage/amendments/AmendmentReviewPage.vue') },
-        ],
+        children: [{ path: ':id', component: () => import('pages/manage/amendments/AmendmentReviewPage.vue') }],
       },
     ],
   },

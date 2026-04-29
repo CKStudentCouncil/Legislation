@@ -3,7 +3,7 @@ export function isUrl(s: string) {
 }
 
 export function optionalDate(s: string) {
- return !s || /^-?\d+\/[0-1]\d\/[0-3]\d$/.test(s) || '請輸入有效的日期'
+  return !s || /^-?\d+\/[0-1]\d\/[0-3]\d$/.test(s) || '請輸入有效的日期';
 }
 
 export function isReign(s: string) {

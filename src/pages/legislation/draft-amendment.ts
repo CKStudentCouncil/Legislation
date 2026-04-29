@@ -261,11 +261,12 @@ export const useDraftAmendmentStore = defineStore('draft-amendment', () => {
       legislationId,
       name: activeDraftName,
       amendmentType: amendmentType.value,
-      partialContent: amendmentType.value === 'partial'
-        ? partialContent.value.map((item) =>
-            item.status === 'unchanged' ? ({ status: 'unchanged', id: item.id, originalIndex: item.originalIndex } as any) : item
-          )
-        : undefined,
+      partialContent:
+        amendmentType.value === 'partial'
+          ? partialContent.value.map((item) =>
+              item.status === 'unchanged' ? ({ status: 'unchanged', id: item.id, originalIndex: item.originalIndex } as any) : item,
+            )
+          : undefined,
       fullContent: amendmentType.value === 'full' ? fullContent.value : undefined,
     };
   };

@@ -6,4 +6,3 @@ export const aisMixin = createServerRootMixin({
   searchClient,
   indexName: 'legislation',
 });
-

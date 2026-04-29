@@ -95,11 +95,7 @@ export default defineConfig((ctx) => {
                 return 'vendor-quasar';
               }
               // Diff / text-comparison libraries (used in legislation diff view)
-              if (
-                id.includes('node_modules/diff-match-patch/') ||
-                id.includes('node_modules/diff/') ||
-                id.includes('node_modules/fast-diff/')
-              ) {
+              if (id.includes('node_modules/diff-match-patch/') || id.includes('node_modules/diff/') || id.includes('node_modules/fast-diff/')) {
                 return 'vendor-diff';
               }
               // Drag-and-drop

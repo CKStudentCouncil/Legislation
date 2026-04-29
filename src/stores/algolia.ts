@@ -12,9 +12,9 @@ export const useAlgoliaStore = defineStore('algolia', {
     },
     hasState: (state) => {
       return (): boolean => {
-        return state.algoliaState && Object.values(state.algoliaState).length > 0
-      }
-    }
+        return state.algoliaState && Object.values(state.algoliaState).length > 0;
+      };
+    },
   },
   actions: {
     setState(algoliaState: any) {
@@ -22,7 +22,7 @@ export const useAlgoliaStore = defineStore('algolia', {
     },
     clearState() {
       this.algoliaState = {};
-    }
+    },
   },
 });
 

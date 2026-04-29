@@ -497,20 +497,15 @@ export function convertDocumentToFirebase(data: Document) {
 
 export function convertContentToFirebase(data: LegislationContent) {
   const content = {
-    content: data.content,
-    subtitle: data.subtitle,
     title: data.title,
     type: data.type.firebase,
     index: data.index,
-    resolutionUrls: data.resolutionUrls,
   } as any;
+  if (data.content !== undefined) content.content = data.content;
+  if (data.subtitle !== undefined) content.subtitle = data.subtitle;
   if (data.deleted) content.deleted = data.deleted; // this saves storage space, as most content is not deleted
-  if (data.frozenBy) content.frozenBy = data.frozenBy;
-  if (content.resolutionUrls) {
-    content.resolutionUrls = data.resolutionUrls;
-  } else {
-    delete content.resolutionUrls;
-  }
+  if (data.frozenBy !== undefined) content.frozenBy = data.frozenBy;
+  if (data.resolutionUrls !== undefined) content.resolutionUrls = data.resolutionUrls;
   return content;
 }
 

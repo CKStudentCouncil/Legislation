@@ -13,12 +13,7 @@
         title="Google 雲端附件預覽"
       ></iframe>
       <div v-else>
-        <a
-          v-if="isUrl(url)"
-          :href="url"
-          target="_blank"
-          style="word-wrap: break-word;"
-          >{{ url }}</a>
+        <a v-if="isUrl(url)" :href="url" target="_blank" style="word-wrap: break-word">{{ url }}</a>
         <p v-else>{{ url }}</p>
       </div>
     </div>

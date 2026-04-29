@@ -7,14 +7,11 @@ export function amendmentNotificationMail(
   reviewUrl: string,
   reviewerTitle: string,
 ) {
-  const lines = [
-    `系統收到一份針對 <strong>${legislationName}</strong> 的修正草案。`,
-    `提案人：${petitionerName}`,
-  ];
+  const lines = [`系統收到一份針對 <strong>${legislationName}</strong> 的修正草案。`, `提案人：${petitionerName}`];
   if (petitionerEmail) {
     lines.push(`聯絡信箱：${petitionerEmail}`);
   }
-  
+
   return getMailTemplate({
     title: '新的修正草案審查請求',
     titleLink: reviewUrl,

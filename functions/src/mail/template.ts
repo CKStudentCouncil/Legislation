@@ -19,10 +19,7 @@ export function getMailTemplate(options: MailTemplateOptions) {
     : `<span style="word-break: break-word; color: #003188;"><strong>${title}</strong></span>`;
 
   const renderContentLines = contentLines
-    .map(
-      (line) =>
-        `<p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #003188;">${line}</span></p>`
-    )
+    .map((line) => `<p style="margin: 0; word-break: break-word;"><span style="word-break: break-word; color: #003188;">${line}</span></p>`)
     .join('\n');
 
   const renderActionMessage = actionMessage
@@ -53,7 +50,9 @@ export function getMailTemplate(options: MailTemplateOptions) {
 </table>`;
   }
 
-  const renderActionBlock = (actionLink && actionText ? createButtonBlock(actionLink, actionText) : '') + (actionLink2 && actionText2 ? createButtonBlock(actionLink2, actionText2) : '');
+  const renderActionBlock =
+    (actionLink && actionText ? createButtonBlock(actionLink, actionText) : '') +
+    (actionLink2 && actionText2 ? createButtonBlock(actionLink2, actionText2) : '');
 
   const renderGreetingBlock = greeting
     ? `<table border="0" cellpadding="0" cellspacing="0" class="paragraph_block block-3" role="presentation" style="mso-table-lspace: 0pt; mso-table-rspace: 0pt; word-break: break-word;" width="100%">

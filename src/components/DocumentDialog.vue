@@ -69,7 +69,13 @@
           :options="Object.values(DocumentConfidentiality.VALUES)"
           label="密等"
         />
-        <div v-if="parentValue.confidentiality && parentValue.confidentiality.firebase === DocumentConfidentiality.Confidential.firebase && !hideConfidentiality">
+        <div
+          v-if="
+            parentValue.confidentiality &&
+            parentValue.confidentiality.firebase === DocumentConfidentiality.Confidential.firebase &&
+            !hideConfidentiality
+          "
+        >
           <q-select
             v-model="parentValue.viewers"
             label="指定閱覽人 (可多選，留空代表僅特定幹部可見)"
@@ -84,7 +90,12 @@
             <q-time :model-value="declassifyTime" class="col" format24h mask="HH:mm" @update:model-value="updateDeclassifyTime" />
           </div>
         </div>
-        <q-input v-if="isJudicial&&!isProsecution" :model-value="parentValue.prosecutionId" label="啟訴書公文字號或連結" @update:model-value="updateProsecutionId" />
+        <q-input
+          v-if="isJudicial && !isProsecution"
+          :model-value="parentValue.prosecutionId"
+          label="啟訴書公文字號或連結"
+          @update:model-value="updateProsecutionId"
+        />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="$emit('canceled')" />

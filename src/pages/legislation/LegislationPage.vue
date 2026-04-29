@@ -113,22 +113,8 @@
 <script lang="ts" setup>
 import { LegislationCategory } from 'src/ts/models.ts';
 import { aisMixin, searchClient } from 'boot/algolia.ts';
-import {
-  AisHighlight,
-  AisHits,
-  AisInstantSearchSsr,
-  AisMenu,
-  AisPanel,
-  AisSearchBox,
-} from 'vue-instantsearch/vue3/es';
-import {
-  getCurrentInstance,
-  onBeforeMount,
-  onServerPrefetch,
-  provide,
-  ref,
-  useSSRContext,
-} from 'vue';
+import { AisHighlight, AisHits, AisInstantSearchSsr, AisMenu, AisPanel, AisSearchBox } from 'vue-instantsearch/vue3/es';
+import { getCurrentInstance, onBeforeMount, onServerPrefetch, provide, ref, useSSRContext } from 'vue';
 import { copyLawLink, getMeta } from 'src/ts/utils.ts';
 import { renderToString } from 'vue/server-renderer';
 import { useMeta } from 'quasar';
@@ -154,7 +140,6 @@ const components = {
   AisPanel,
   AisHighlight,
 };
-
 
 onBeforeMount(() => {
   if (Object.values(useAlgoliaStore().getState()).length > 0) {

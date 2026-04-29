@@ -36,6 +36,6 @@ onMounted(() => {
 useMeta({
   title: 'null',
   titleTemplate: (title) => `${title !== 'null' ? title + ' - ' : ''}建國中學班聯會法律與公文系統`,
-  meta: getMeta(undefined, undefined)
+  meta: getMeta(undefined, undefined),
 });
 </script>

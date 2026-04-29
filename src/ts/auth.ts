@@ -1,7 +1,7 @@
 import { Loading } from 'quasar';
 import type { Auth, User } from 'firebase/auth';
 import type * as models from 'src/ts/models.ts';
-import type { Ref} from 'vue';
+import type { Ref } from 'vue';
 import { reactive, ref } from 'vue';
 import { useAuth, useFunctionAsync } from 'boot/vuefire.ts';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';

@@ -98,7 +98,7 @@ function check() {
 }
 
 function sizeLimitExceeded() {
-  notifyError('單一檔案不得超過25MB，請嘗試壓縮檔案後再繼續')
+  notifyError('單一檔案不得超過25MB，請嘗試壓縮檔案後再繼續');
 }
 
 defineExpose({

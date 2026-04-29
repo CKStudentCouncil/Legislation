@@ -14,5 +14,5 @@ export function meetingRecordTemplate() {
 
 export function meetingNoticeTemplate() {
   const date = new Date();
-  return `<div>一、___案</div><div>二、___案</div><br></div><div>備註：</div><div>一、請尚未加入本期間班級代表LINE社群的班代盡快加入，以便聯繫及接收最新開會資訊。</div><div>二、班代大會為本校重要學生自治機關，請各位班級代表務必出席，不勝感激。不克出席者請請假或由同班同學代理。</div><div>三、任何會議資料及會議相關事宜的更動皆會發布在本會社群。</div>`
+  return `<div>一、___案</div><div>二、___案</div><br></div><div>備註：</div><div>一、請尚未加入本期間班級代表LINE社群的班代盡快加入，以便聯繫及接收最新開會資訊。</div><div>二、班代大會為本校重要學生自治機關，請各位班級代表務必出席，不勝感激。不克出席者請請假或由同班同學代理。</div><div>三、任何會議資料及會議相關事宜的更動皆會發布在本會社群。</div>`;
 }

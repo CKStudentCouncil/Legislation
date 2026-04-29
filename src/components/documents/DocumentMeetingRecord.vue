@@ -5,10 +5,10 @@
     <h1 class="text-h4 q-mt-none flex-center text-center" style="font-size: 32px">{{ doc.subject }} 會議記錄</h1>
     <div class="text-right">{{ doc.getFullId() }}</div>
     <div class="text-h6">
-      <div>會議主席：{{ doc.fromSpecific.signatureTitle ?? doc.fromSpecific.translation }} {{doc.fromName}}</div>
-      <div>會議記錄：{{ doc.secretarySpecific?.signatureTitle ?? doc.secretarySpecific?.translation }} {{doc.secretaryName}}</div>
+      <div>會議主席：{{ doc.fromSpecific.signatureTitle ?? doc.fromSpecific.translation }} {{ doc.fromName }}</div>
+      <div>會議記錄：{{ doc.secretarySpecific?.signatureTitle ?? doc.secretarySpecific?.translation }} {{ doc.secretaryName }}</div>
       <div v-if="doc.meetingTime">會議時間：{{ doc.meetingTime.toLocaleString() }}</div>
-      <div>地點：{{doc.location}}</div>
+      <div>地點：{{ doc.location }}</div>
     </div>
     <DocumentSeparator />
     <SafeHtml :content="doc.content" />

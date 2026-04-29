@@ -13,7 +13,6 @@
 </template>
 
 <script setup lang="ts">
-
 import { DocumentSpecificIdentity } from 'src/ts/models.ts';
 import { computed } from 'vue';
 
@@ -22,7 +21,8 @@ const props = defineProps({
   modelValue: {
     type: Array,
   },
-  firebase: { // Whether to read & yield roles in .firebase format
+  firebase: {
+    // Whether to read & yield roles in .firebase format
     type: Boolean,
     default: true,
   },
@@ -37,6 +37,4 @@ const parentValue = computed({
 });
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>

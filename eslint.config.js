@@ -81,7 +81,7 @@ export default defineConfigWithVueTs(
       'no-debugger': process.env.NODE_ENV === 'production' ? 'error' : 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-misused-promises': 'off'
+      '@typescript-eslint/no-misused-promises': 'off',
     },
   },
 
