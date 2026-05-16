@@ -376,7 +376,7 @@ const q = computed(() => {
     !props.manage ? where('confidentiality', '==', DocumentConfidentiality.Public.firebase) : null,
   ].filter((i) => !!i) as any[];
 
-  let orderBys = [orderBy('published', 'asc'), orderBy('createdAt', 'desc')];
+  let orderBys = [orderBy('published', 'asc'), orderBy('publishedAt', 'desc'), orderBy('createdAt', 'desc')];
 
   if (docId.value?.trim()) {
     const start = docId.value.trim();
