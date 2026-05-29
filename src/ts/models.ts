@@ -38,8 +38,22 @@ export interface Document {
   publishedAt?: Date | null;
   meetingTime?: Date | null;
   prosecutionId?: string;
+  plaintiff: string;
+  Defendant: string;
+  AbsentMeeting1: string;
+  AbsentMeeting2: string;
+  AbsentMeeting3: string;
 
   getFullId(): string;
+}
+
+export interface indictment {
+  plaintiff: string;
+  Defendant: string;
+  AbsentMeeting1: string;
+  AbsentMeeting2: string;
+  AbsentMeeting3: string;
+  publushAt: Date;
 }
 
 export interface MailingList {
@@ -161,6 +175,13 @@ export class DocumentSpecificIdentity {
     '班級代表',
     '班代',
     '08',
+    DocumentGeneralIdentity.StudentCouncil,
+  );
+  static StudentCouncilPoliticalGroup = new DocumentSpecificIdentity(
+    'StudentCouncilPoliticalGroup',
+    '班代大會政團',
+    '政團',
+    '10',
     DocumentGeneralIdentity.StudentCouncil,
   );
   // Executive Department
@@ -388,6 +409,7 @@ export class DocumentSpecificIdentity {
     InvestigationCommittee: DocumentSpecificIdentity.InvestigationCommittee,
     ElectionSupervisionCommittee: DocumentSpecificIdentity.ElectionSupervisionCommittee,
     StudentCouncilRepresentative: DocumentSpecificIdentity.StudentCouncilRepresentative,
+    StudentCouncilPoliticalGroup: DocumentSpecificIdentity.StudentCouncilPoliticalGroup,
     ExecutiveDepartment: DocumentSpecificIdentity.ExecutiveDepartment,
     StudentRightsDivision: DocumentSpecificIdentity.StudentRightsDivision,
     PublicRelationsDivision: DocumentSpecificIdentity.PublicRelationsDivision,
