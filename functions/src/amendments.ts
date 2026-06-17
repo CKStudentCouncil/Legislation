@@ -20,20 +20,20 @@ const db = admin.firestore();
 function getApproverRoleForCategory(categoryId: string): string {
   // Mapping based on models.ts LegislationCategory and user requirements
   switch (categoryId) {
-    case 'StudentCouncilOrder':
-      return DocumentSpecificIdentity.Speaker.firebase;
-    case 'JudicialCommitteeOrder':
-      return DocumentSpecificIdentity.JudicialCommitteeChairman.firebase;
-    case 'VotingCommitteeOrder':
-      return DocumentSpecificIdentity.ElectoralCommitteeChairman.firebase;
-    case 'Constitution':
-    case 'Chairman':
-    case 'ExecutiveDepartment':
-    case 'StudentCouncil':
-    case 'JudicialCommittee':
-    case 'ExecutiveOrder':
-    default:
-      return DocumentSpecificIdentity.Chairman.firebase;
+  case 'StudentCouncilOrder':
+    return DocumentSpecificIdentity.Speaker.firebase;
+  case 'JudicialCommitteeOrder':
+    return DocumentSpecificIdentity.JudicialCommitteeChairman.firebase;
+  case 'VotingCommitteeOrder':
+    return DocumentSpecificIdentity.ElectoralCommitteeChairman.firebase;
+  case 'Constitution':
+  case 'Chairman':
+  case 'ExecutiveDepartment':
+  case 'StudentCouncil':
+  case 'JudicialCommittee':
+  case 'ExecutiveOrder':
+  default:
+    return DocumentSpecificIdentity.Chairman.firebase;
   }
 }
 
