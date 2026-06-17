@@ -9,6 +9,11 @@ on:
     paths-ignore:
       - 'functions/**'
 
+# Cancel an in-progress deploy when a newer commit lands on the same branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
   PROJECT_ID: cksc-legislation
   GAR_LOCATION: asia-east1
