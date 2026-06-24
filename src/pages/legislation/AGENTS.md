@@ -49,7 +49,7 @@ src/
 | `/manage/legislation`        | `MainLayout` | `ManageLegislationPage`       | Authenticated |
 | `/manage/legislation/:id`    | `MainLayout` | `ManageSingleLegislationPage` | Authenticated |
 
-> `/manage/*` routes are protected via Firebase Auth. Unauthenticated users are redirected by the router guard in `src/router/index.ts`.
+> **Note:** `/manage/*` routes are **not** protected by a router navigation guard — `src/router/index.ts` is the stock Quasar factory with no `beforeEach`. Authorization is enforced only at (a) the UI layer (`HeaderSidebar.vue` hides nav links based on auth/role) and (b) the data layer (`firestore.rules` + per-scope `where(...)` clauses in the page queries). Typing a `/manage/...` URL directly is not blocked at the route level; the `MainLayout` used by these routes is client-only (`<q-no-ssr>`) because Firebase Auth is unavailable during SSR.
 
 ---
 
