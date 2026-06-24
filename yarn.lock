@@ -1806,10 +1806,10 @@
   resolved "https://registry.yarnpkg.com/@protobufjs/utf8/-/utf8-1.1.0.tgz#a777360b5b39a1a2e5106f8e858f2fd2d060c570"
   integrity sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==
 
-"@quasar/app-vite@^2.6.0":
-  version "2.6.0"
-  resolved "https://registry.yarnpkg.com/@quasar/app-vite/-/app-vite-2.6.0.tgz#426cc97d8c323abc1bebc2bb8d3ee2ea22935392"
-  integrity sha512-531nyqZLJOikKwaCGaN5jLDC37ieX9MBdKxHHxhuII9cfo/GG1pJLISoCVMNK7vpa+BgmSFpKgNe7uU5EyDCdg==
+"@quasar/app-vite@^2.6.2":
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/@quasar/app-vite/-/app-vite-2.6.2.tgz#962201a9bdf17767f694b7d326f2a7d18eac9e2d"
+  integrity sha512-t+z0jh5ogJ5/ClX/rlyD5bfVKaP9Yi8WC5+7NZoiLRnBtD36cX5Z7aWV1wHqD3qfElYHSF0P6dH7A883E+tu/A==
   dependencies:
     "@quasar/render-ssr-error" "1.0.4"
     "@quasar/ssl-certificate" "2.0.0"
@@ -3464,20 +3464,7 @@ compressible@~2.0.18:
   dependencies:
     mime-db ">= 1.43.0 < 2"
 
-compression@^1.7.0, compression@^1.7.5:
-  version "1.8.0"
-  resolved "https://registry.yarnpkg.com/compression/-/compression-1.8.0.tgz#09420efc96e11a0f44f3a558de59e321364180f7"
-  integrity sha512-k6WLKfunuqCYD3t6AsuPGvQWaKwuLLh2/xHNcX4qE+vIfDNXpSqnrhwA7O53R7WVQUnt8dVAIW+YHr7xTgOgGA==
-  dependencies:
-    bytes "3.1.2"
-    compressible "~2.0.18"
-    debug "2.6.9"
-    negotiator "~0.6.4"
-    on-headers "~1.0.2"
-    safe-buffer "5.2.1"
-    vary "~1.1.2"
-
-compression@^1.8.1:
+compression@^1.7.0, compression@^1.7.5, compression@^1.8.1:
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/compression/-/compression-1.8.1.tgz#4a45d909ac16509195a9a28bd91094889c180d79"
   integrity sha512-9mAqGPHLakhCLeNyxPkK4xVo746zQ/czLH1Ky+vkitMnWfWZps8r0qXuwhwizagCRttsL4lfG4pIOvaWLpAP0w==
