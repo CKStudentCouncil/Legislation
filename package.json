@@ -27,7 +27,7 @@
     "js-confetti": "^0.13.1",
     "lodash": "^4.18.1",
     "pinia": "^3.0.4",
-    "quasar": "^2.19.3",
+    "quasar": "^2.20.1",
     "sanitize-html": "^2.17.3",
     "v-code-diff": "^1.13.1",
     "vue": "^3.5.38",
