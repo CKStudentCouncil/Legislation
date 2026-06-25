@@ -25,7 +25,13 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '24.x'
+          # Pinned to 24.16.0 (a 24.16.x patch), NOT 24.17+. Newer Node patches
+          # trip a node-fetch@2 gzip bug (nodejs/node#63989) that makes
+          # firebase-tools' OAuth token exchange fail with "Premature close",
+          # mislabelled "Failed to authenticate, have you run firebase login?".
+          # Maintainer-recommended workaround (firebase-tools#10692): use Node
+          # 22.22.x or 24.16.x. Functions require Node 24, so 24.16.0 it is.
+          node-version: '24.16.0'
           cache: 'npm'
 
       - name: Cache packages
