@@ -33,10 +33,12 @@ jobs:
           path: node_modules
       - uses: actions/setup-node@v4
         with:
-          # Version Spec of the version to use in SemVer notation.
-          # It also admits such aliases as lts, latest, nightly and canary builds
-          # Examples: 12.x, 10.15.1, >=10.15.0, lts/Hydrogen, 16-nightly, latest, node
-          node-version: '22.x'
+          # Pinned to 22.22.x, NOT 22.23+. Newer Node patches trip a node-fetch@2
+          # gzip bug (nodejs/node#63989) that makes firebase-tools' OAuth token
+          # exchange fail with "Premature close", which the CLI mislabels
+          # "Failed to authenticate, have you run firebase login?". Maintainer
+          # workaround (firebase-tools#10692): use Node 22.22.x or 24.16.x.
+          node-version: '22.22.x'
           cache: 'npm'
       - run: yarn install --frozen-lockfile
       - run: yarn spa-build
@@ -53,12 +55,12 @@ jobs:
           channelId: live
           projectId: ${{ env.PROJECT_ID }}
           target: ${{ env.HOSTING_SITE }}
-          # Pinned: firebase-tools 15.22.x regressed service-account auth with
-          # "Premature close" on the OAuth token exchange (upstream issue #10692),
-          # which the CLI mislabels "Failed to authenticate". 15.21.0 is the last
-          # known-good version (last green deploy 2026-06-17). Revert to `latest`
-          # once 15.22.x+ ships a fix.
-          firebaseToolsVersion: '15.22.2'
+          # Pinned to 15.21.0 to match the functions-deploy workflow (the version
+          # proven green in CI). The "Premature close" auth failure (issue #10692)
+          # is actually the Node gzip bug noted on setup-node above, not a
+          # firebase-tools regression — the Node pin is the real fix; this just
+          # keeps both deploy workflows on one known-good CLI version.
+          firebaseToolsVersion: '15.21.0'
       - name: Google Auth
         id: auth
         uses: 'google-github-actions/auth@v2'

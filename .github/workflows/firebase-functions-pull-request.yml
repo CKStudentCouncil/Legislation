@@ -18,8 +18,8 @@ jobs:
       - name: Cache packages
         uses: actions/cache@v3
         with:
-          key: ${{ runner.os }}-functions-yarn-${{ hashFiles('**/yarn.lock') }}
-          path: firebase/functions/node_modules
+          key: ${{ runner.os }}-functions-yarn-${{ hashFiles('functions/yarn.lock') }}
+          path: functions/node_modules
       - uses: actions/setup-node@v4
         with:
           node-version: '24.x'
