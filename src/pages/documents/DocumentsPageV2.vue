@@ -91,6 +91,16 @@
       <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" @update:model-value="choosePublished" />
     </q-no-ssr>
     <div class="text-grey-6">共 {{ totalDocs }} 件公文符合查詢條件</div>
+    <!-- SSR-rendered crawlable index of recent public documents. The interactive list
+         below is client-only (infinite scroll), so this gives crawlers / no-JS agents
+         real <a> links to follow. Visually hidden; sourced from serialized store state. -->
+    <nav v-if="showCrawlIndex && publicIndex.length" class="sr-only" aria-label="近期公文索引">
+      <ul>
+        <li v-for="d of publicIndex" :key="d.getFullId()">
+          <a :href="`/document/${d.getFullId()}`">{{ d.getFullId() }}：{{ d.subject }}</a>
+        </li>
+      </ul>
+    </nav>
     <q-infinite-scroll ref="scroll" :class="$q.screen.gt.sm ? 'row' : ''" @load="loadMore">
       <div v-for="doc of allDocs" :key="doc!.idPrefix + doc!.idNumber" :class="'q-mb-md q-pr-md ' + ($q.screen.gt.sm && dense ? 'col-6' : '')">
         <q-card :class="doc.published ? '' : 'bg-highlight'">
@@ -126,10 +136,12 @@
 import { copyDocLink, getMeta, notifyError } from 'src/ts/utils.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import type { Ref } from 'vue';
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, onServerPrefetch, reactive, ref, watch } from 'vue';
 import type { Document } from 'src/ts/models.ts';
 import { DocumentConfidentiality, DocumentGeneralIdentity, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
 import { documentsCollection } from 'src/ts/model-converters.ts';
+import { useDocumentStore } from 'stores/document.ts';
+import { itemListJsonLd, ldJsonScript, SITE } from 'src/ts/structured-data.ts';
 import { getCountFromServer, getDocs, limit, orderBy, query, startAfter, where, or, and } from 'firebase/firestore';
 import type { QueryDocumentSnapshot } from 'firebase/firestore';
 import { isReign, optionalDate } from 'src/ts/checks.ts';
@@ -181,6 +193,16 @@ const docId = ref(null) as Ref<string | null>;
 const docIdInput = ref(null) as Ref<string | null>;
 const route = useRoute();
 const router = useRouter();
+
+// Only the public /document index (meta + non-manage) gets the SSR crawl list + ItemList.
+const documentStore = useDocumentStore();
+const showCrawlIndex = !props.manage && props.meta;
+const publicIndex = computed(() => (showCrawlIndex ? documentStore.getPublicList : []));
+if (showCrawlIndex) {
+  onServerPrefetch(async () => {
+    await documentStore.loadPublicList(props.filterReign ?? getCurrentReign());
+  });
+}
 
 const FILTER_QUERY_KEYS = new Set([
   'docId',
@@ -485,8 +507,17 @@ function choosePublished() {
 
 void updateTotal();
 
-if (props.meta) useMeta({ title: '檢視公文', meta: getMeta('檢視公文') });
-//TODO: SSR
+if (props.meta)
+  useMeta(() => {
+    const base = { title: '檢視公文', meta: getMeta('檢視公文') };
+    if (!showCrawlIndex) return base;
+    const items = publicIndex.value.map((d) => ({
+      name: `${d.getFullId()}：${d.subject}`,
+      url: `${SITE}/document/${d.getFullId()}`,
+    }));
+    if (!items.length) return base;
+    return { ...base, script: { ldItemList: ldJsonScript(itemListJsonLd(items, { name: '公文', url: `${SITE}/document` })) } };
+  });
 </script>
 <style lang="scss" scoped>
 .col {

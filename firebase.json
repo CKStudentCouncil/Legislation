@@ -43,6 +43,13 @@
           }
         },
         {
+          "source": "/about",
+          "run": {
+            "serviceId": "cksc-legislation",
+            "region": "asia-east1"
+          }
+        },
+        {
           "source": "/sitemap.xml",
           "run": {
             "serviceId": "sitemap",

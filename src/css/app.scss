@@ -10,3 +10,18 @@
     font-family: '標楷體2', '標楷體', 'BiauKai', 'DFKai-sb', 'cwTeXKai', Times, serif;
   }
 }
+
+// Visually hidden but present in the DOM for crawlers / screen readers / answer engines.
+// Used for the canonical document-subject <h1> on formal documents whose visible heading
+// is a letterhead (institution + document type) rather than the subject itself.
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

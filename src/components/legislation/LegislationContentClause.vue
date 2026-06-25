@@ -33,6 +33,10 @@
             </q-menu>
           </q-btn>
         </q-no-ssr>
+        <!-- SSR-crawlable mirror of the resolution links (the dropdown above is client-only). -->
+        <span v-if="$props.content.resolutionUrls?.length" class="sr-only">
+          <a v-for="(resolution, i) in $props.content.resolutionUrls" :key="i" :href="resolution.url" rel="noopener">{{ resolution.title }}</a>
+        </span>
       </div>
       <div v-if="showContent">
         <div v-if="countLines">

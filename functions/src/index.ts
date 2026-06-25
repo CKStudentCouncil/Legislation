@@ -23,6 +23,7 @@ import ical, { ICalCalendarMethod } from 'ical-generator';
 import { newMeetingNotice } from './mail/new-meeting-notice';
 import { SitemapStream } from 'sitemap';
 import { createGzip } from 'zlib';
+import * as https from 'https';
 export { submitAmendmentRequest, resolveAmendmentRequest } from './amendments';
 import * as utf8 from 'utf8';
 import { DocumentSpecificIdentity, User } from '../../src/ts/models';
@@ -30,6 +31,10 @@ import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils'
 
 const globalFunctionOptions = { region: 'asia-east1' };
 const ACCOUNT_MANAGER_ROLES = ['Chairman', 'Speaker', 'JudicialCommitteeChairman'];
+// IndexNow: instantly notify Bing/Yandex (which feed ChatGPT & Perplexity) of changed
+// URLs. The key is verified via the matching public/<key>.txt file served at the domain root.
+const INDEXNOW_KEY = '1e97df272cbfcb532673b3550ccd6a16';
+const INDEXNOW_HOST = 'law.cksc.tw';
 const auth = new google.auth.GoogleAuth({
   keyFile: 'src/credential.json',
   scopes: ['https://www.googleapis.com/auth/drive.file'],
@@ -316,6 +321,7 @@ export const sitemap = onRequest(globalFunctionOptions, async (request, response
     smStream.write({ url: '/document/judicial', priority: 0.7 });
     smStream.write({ url: '/document/judicial/lawsuit', priority: 0.7 });
     smStream.write({ url: '/document/judicial/resolution', priority: 0.7 });
+    smStream.write({ url: '/about', priority: 0.5 });
     if (cache.data()) {
       for (const doc of Object.entries(cache.data()!.legislation ?? {})) {
         smStream.write({ url: `/legislation/${doc[0]}`, lastmod: new Date(doc[1] as number).toISOString(), priority: 0.6 });
@@ -341,6 +347,36 @@ export const sitemap = onRequest(globalFunctionOptions, async (request, response
   }
 });
 
+// Notify IndexNow of a newly-published/updated public URL. Failures are swallowed so a
+// flaky ping never blocks the cache write that triggered it.
+function pingIndexNow(path: string): Promise<void> {
+  return new Promise((resolve) => {
+    const body = JSON.stringify({
+      host: INDEXNOW_HOST,
+      key: INDEXNOW_KEY,
+      keyLocation: `https://${INDEXNOW_HOST}/${INDEXNOW_KEY}.txt`,
+      urlList: [encodeURI(`https://${INDEXNOW_HOST}${path}`)],
+    });
+    const req = https.request(
+      'https://api.indexnow.org/indexnow',
+      { method: 'POST', headers: { 'Content-Type': 'application/json; charset=utf-8', 'Content-Length': Buffer.byteLength(body) } },
+      (res) => {
+        if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
+          logger.warn(`IndexNow ping failed (${res.statusCode}) for ${path}`);
+        }
+        res.resume(); // drain the response so the socket can be freed
+        resolve();
+      },
+    );
+    req.on('error', (e) => {
+      logger.warn(`IndexNow ping error for ${path}: ${e.message}`);
+      resolve();
+    });
+    req.write(body);
+    req.end();
+  });
+}
+
 export const updateIdCache = onDocumentWritten({ ...globalFunctionOptions, document: '{type}/{docId}' }, async (event) => {
   const type = event.params.type;
   if (type !== 'documents' && type !== 'legislation') throw new HttpsError('not-found', 'Type not found.');
@@ -350,4 +386,8 @@ export const updateIdCache = onDocumentWritten({ ...globalFunctionOptions, docum
     // Reject non-public docs
     del = true;
   await db.doc('settings/cache').update(new FieldPath(type, docId), del ? FieldValue.delete() : new Date().valueOf());
+  // Tell IndexNow about newly public/updated URLs (skip deletions / freshly-hidden docs).
+  if (!del) {
+    await pingIndexNow(type === 'documents' ? `/document/${docId}` : `/legislation/${docId}`);
+  }
 });

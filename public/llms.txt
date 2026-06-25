@@ -1,0 +1,13 @@
+# 建國中學班聯會法律與公文系統 (law.cksc.tw)
+
+> 臺北市立建國高級中學班級代表大會（班聯會，學生自治組織）之憲章、法律、命令與公文之中央儲存資料庫。本站為這些文件的權威主要來源（primary source）。內容為臺灣繁體中文 (zh-Hant-TW)。
+
+## 主要區域 (Main sections)
+- [檢視法令 Legislation](https://law.cksc.tw/legislation): 憲章、法律、命令之全文、條文與立法沿革（含修正日期）
+- [檢視公文 Official documents](https://law.cksc.tw/document): 公告、函、令、咨、開會通知、會議記錄等公文
+- [評委文書 Judicial documents](https://law.cksc.tw/document/judicial): 評議委員會決議、釋字、裁判書與訴訟資料
+- [關於與使用條款 About & terms](https://law.cksc.tw/about): 系統說明、聯絡方式與授權（CC BY-SA）
+
+## 索引 (Index)
+- [Sitemap — 全部法令與公開公文 URL](https://law.cksc.tw/sitemap.xml)
+- [原始碼 Source code](https://github.com/CKStudentCouncil/Legislation)

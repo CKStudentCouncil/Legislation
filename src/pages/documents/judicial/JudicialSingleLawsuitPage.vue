@@ -36,37 +36,36 @@
 </template>
 
 <script lang="ts" setup>
-import { DocumentConfidentiality } from 'src/ts/models.ts';
-import { documentsCollection, useSpecificDocument } from 'src/ts/model-converters.ts';
 import { useRoute, useRouter } from 'vue-router';
-import { query, where } from 'firebase/firestore';
-import { useCollection } from 'vuefire';
-import { computed, onMounted, ref, watch } from 'vue';
-import orderBy from 'lodash/orderBy';
-import concat from 'lodash/concat';
+import { onMounted, onServerPrefetch, ref, watch } from 'vue';
+import type { Document } from 'src/ts/models.ts';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { copyLink } from 'src/ts/utils.ts';
+import { useDocumentStore } from 'stores/document.ts';
 import { event } from 'vue-gtag';
 
 const route = useRoute();
 const router = useRouter();
-const prosecutionDoc = useSpecificDocument(route.params.id as string);
+const store = useDocumentStore();
+const id = route.params.id as string;
+// Seed from serialized store state so the server-rendered thread hydrates without mismatch.
+const sortedDocs = ref<Document[]>(store.getLawsuit(id) ?? []);
 const step = ref(parseInt(route.query.c as string) || 0);
 const stepper = ref();
-const relevantDocs = useCollection(
-  query(
-    documentsCollection(),
-    where('prosecutionId', '==', route.params.id as string),
-    where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
-    where('published', '==', true),
-  ),
-);
-const sortedDocs = computed(() => orderBy(concat(relevantDocs.value, prosecutionDoc.value), ['publishedAt'], ['asc']).filter((o) => !!o));
+
+onServerPrefetch(async () => {
+  sortedDocs.value = await store.loadLawsuit(id);
+});
+
 watch(step, (v) => void router.push({ query: { c: v } }));
+
 onMounted(() => {
-  event('view_lawsuit' as any, {
-    id: route.params.id! as string,
-  });
+  // Refresh client-side so authorized users see any docs the anonymous SSR pass couldn't read.
+  store
+    .loadLawsuit(id, true)
+    .then((docs) => (sortedDocs.value = docs))
+    .catch((e) => console.error(e));
+  event('view_lawsuit' as any, { id });
 });
 
 function next() {

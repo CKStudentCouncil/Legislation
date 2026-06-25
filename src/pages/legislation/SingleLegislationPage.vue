@@ -25,41 +25,49 @@
       </div>
       <div v-if="legislation.preface" class="text-h6 text-bold">{{ legislation.preface }}</div>
       <div v-if="legislation.history.length > 0">
-        立法沿革
+        <h2 class="text-h6 q-my-none">立法沿革</h2>
         <table>
-          <tr v-for="history of sortedHistory" :key="history.amendedAt.valueOf()">
-            <th>{{ new Date(history.amendedAt).toLocaleDateString() }}</th>
-            <th>{{ history.brief }}</th>
-            <th class="no-print">
-              <div class="history-actions">
-                <q-btn
-                  v-if="history.contentId"
-                  dense
-                  flat
-                  icon="compare_arrows"
-                  size="10px"
-                  @click="openHistoryDiff(history)"
-                  aria-label="檢視修正差異"
-                >
-                  <q-tooltip>檢視修正差異</q-tooltip>
-                </q-btn>
-                <q-btn
-                  v-if="history.contentId"
-                  dense
-                  flat
-                  icon="merge_type"
-                  size="10px"
-                  @click="openHistoryDiff(history, 'current')"
-                  aria-label="比較目前版本"
-                >
-                  <q-tooltip>比較目前版本</q-tooltip>
-                </q-btn>
-                <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px" aria-label="檢視發布公文">
-                  <q-tooltip>檢視發布公文</q-tooltip>
-                </q-btn>
-              </div>
-            </th>
-          </tr>
+          <caption class="sr-only">
+            {{
+              legislation.name
+            }}
+            立法沿革
+          </caption>
+          <tbody>
+            <tr v-for="history of sortedHistory" :key="history.amendedAt.valueOf()">
+              <td>{{ new Date(history.amendedAt).toLocaleDateString() }}</td>
+              <td>{{ history.brief }}</td>
+              <td class="no-print">
+                <div class="history-actions">
+                  <q-btn
+                    v-if="history.contentId"
+                    dense
+                    flat
+                    icon="compare_arrows"
+                    size="10px"
+                    @click="openHistoryDiff(history)"
+                    aria-label="檢視修正差異"
+                  >
+                    <q-tooltip>檢視修正差異</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    v-if="history.contentId"
+                    dense
+                    flat
+                    icon="merge_type"
+                    size="10px"
+                    @click="openHistoryDiff(history, 'current')"
+                    aria-label="比較目前版本"
+                  >
+                    <q-tooltip>比較目前版本</q-tooltip>
+                  </q-btn>
+                  <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px" aria-label="檢視發布公文">
+                    <q-tooltip>檢視發布公文</q-tooltip>
+                  </q-btn>
+                </div>
+              </td>
+            </tr>
+          </tbody>
         </table>
       </div>
       <LegislationContent
@@ -120,10 +128,11 @@
 import { useRoute } from 'vue-router';
 import { ContentType } from 'src/ts/models.ts';
 import type { LegislationHistory } from 'src/ts/models.ts';
-import { computed, onMounted, onServerPrefetch, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onServerPrefetch, reactive, ref, useSSRContext, watch } from 'vue';
 import { event } from 'vue-gtag';
 import LegislationContent from 'components/legislation/LegislationContent.vue';
 import { copyLink, getMeta } from 'src/ts/utils.ts';
+import { legislationJsonLd, ldJsonScript } from 'src/ts/structured-data.ts';
 import LegislationAddendum from 'components/legislation/LegislationAddendum.vue';
 import LegislationHistoryDiffDialog from 'components/legislation/LegislationHistoryDiffDialog.vue';
 import { useVueToPrint } from 'vue-to-print';
@@ -139,6 +148,7 @@ const historyDiffDialog = ref(false);
 const selectedHistory = ref<LegislationHistory | null>(null);
 const diffCompareTarget = ref<'previous' | 'current'>('previous');
 const route = useRoute();
+const ssrContext = process.env.SERVER ? useSSRContext() : null;
 const hash = ref(route.hash?.substring(1));
 
 if (!hash.value || hash.value.length === 0) {
@@ -236,14 +246,24 @@ defineOptions({
 
 onServerPrefetch(async () => {
   legislation.value = await useLegislationStore().loadLegislation(route.params.id as string);
+  // Return a real 404 (instead of a 200 soft-404) when the legislation does not exist.
+  if (!legislation.value && ssrContext?.res) {
+    ssrContext.res.statusCode = 404;
+  }
 });
 
 useMeta(() => {
   const store = useLegislationStore();
   const l = store.getLegislation(route.params.id as string);
+  if (!l) {
+    return {
+      title: '查無此法',
+      meta: { ...getMeta('查無此法'), robots: { name: 'robots', content: 'noindex, follow' } },
+    };
+  }
   let description = undefined as string | undefined;
   const intHash = parseInt(hash.value ?? '0');
-  const contentItem = l?.content.find((c) => c.index === intHash);
+  const contentItem = l.content.find((c) => c.index === intHash);
   if (contentItem) {
     description = contentItem.title;
     switch (contentItem.type.firebase) {
@@ -259,26 +279,27 @@ useMeta(() => {
         break;
     }
   }
-  const lastUpdated = l?.history[l?.history.length - 1]?.amendedAt?.toISOString();
+  const sorted = [...(l.history ?? [])].sort((a, b) => new Date(a.amendedAt).valueOf() - new Date(b.amendedAt).valueOf());
+  const first = sorted[0];
+  const last = sorted[sorted.length - 1];
+  const published = first ? new Date(first.amendedAt).toISOString() : undefined;
+  const modified = last ? new Date(last.amendedAt).toISOString() : undefined;
   return {
-    title: l?.name,
+    title: l.name,
     meta: {
-      ...getMeta(l?.name, description),
-      'last-modified': {
-        'http-equiv': 'last-modified',
-        content: lastUpdated,
-      },
-      'og:updated-time': {
-        name: 'og:updated-time',
-        content: lastUpdated,
-      },
+      ...getMeta(l.name, description),
+      ogType: { property: 'og:type', content: 'article' },
+      articlePublished: { property: 'article:published_time', content: published },
+      articleModified: { property: 'article:modified_time', content: modified },
     },
+    script: { ldLegislation: ldJsonScript(legislationJsonLd(l, route.params.id as string)) },
   };
 });
 </script>
 
 <style scoped>
-th {
+th,
+td {
   font-weight: normal;
   text-align: left;
   vertical-align: top;

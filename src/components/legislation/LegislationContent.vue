@@ -23,17 +23,17 @@
       </div>
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Volume.firebase">
-      <legislation-content-generic :content="content" class="text-h4 text-bold" style="line-height: 65px" />
+      <legislation-content-generic :content="content" class="text-h4 text-bold" heading-tag="h2" style="line-height: 65px" />
       <div v-if="$props.content.content?.length ?? 0 > 0" class="text-h6 text-bold">{{ $props.content.content }}</div>
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Chapter.firebase">
-      <legislation-content-generic :content="content" class="text-h5 text-bold" style="line-height: 65px" />
+      <legislation-content-generic :content="content" class="text-h5 text-bold" heading-tag="h3" style="line-height: 65px" />
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Section.firebase">
-      <legislation-content-generic :content="content" class="text-h6 text-bold" style="line-height: 45px" />
+      <legislation-content-generic :content="content" class="text-h6 text-bold" heading-tag="h4" style="line-height: 45px" />
     </div>
     <div v-if="$props.content.type.firebase == ContentType.Subsection.firebase">
-      <legislation-content-generic :content="content" class="text-h6 text-bold" style="line-height: 30px" />
+      <legislation-content-generic :content="content" class="text-h6 text-bold" heading-tag="h5" style="line-height: 30px" />
     </div>
   </div>
 </template>

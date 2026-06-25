@@ -138,31 +138,6 @@ export async function generateDocumentIdNumber(specific: DocumentSpecificIdentit
   return s;
 }
 
-export async function customSanitize(text: string) {
-  const { default: sanitize } = await import('sanitize-html');
-  const sanitizeDefaults = (sanitize as any).defaults;
-
-  return sanitize(text, {
-    allowedTags: sanitizeDefaults.allowedTags.concat(['font']),
-    allowedAttributes: Object.assign(sanitizeDefaults.allowedAttributes, {
-      font: ['color', 'size'],
-      div: ['style'],
-    }),
-    allowedStyles: {
-      '*': {
-        // Match HEX and RGB
-        color: [/^#(0x)?[0-9a-f]+$/i, /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/],
-        'text-align': [/^left$/, /^right$/, /^center$/],
-        // Match any number with px, em, %, or small, medium, large
-        'font-size': [/^\d+(px|em|%)$/, /^(small|medium|large)$/],
-      },
-      p: {
-        'font-size': [/^\d+(px|em|%)$/, /^(small|medium|large)$/],
-      },
-    },
-  });
-}
-
 export async function htmlToText(html: string, wordwrap: number = 130) {
   const { convert } = await import('html-to-text');
   return convert(html, { wordwrap });

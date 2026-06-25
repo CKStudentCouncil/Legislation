@@ -2,6 +2,7 @@
   <q-page class="row items-center justify-evenly" padding>
     <div v-if="!doc">載入中...(或查無此公文)</div>
     <div v-else ref="content" class="official-font-when-printing" style="max-width: min(1170px, 97vw)">
+      <h1 class="sr-only">{{ doc.subject }}</h1>
       <div>
         <q-no-ssr>
           <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
@@ -26,6 +27,7 @@
           :no-embed="!embed"
           :order="Number(index) + 1"
         />
+        <!--        hide attachments by default when >= 3, to prevent crashing-->
       </div>
     </div>
   </q-page>
@@ -34,7 +36,7 @@
 <script lang="ts" setup>
 import { useRoute } from 'vue-router';
 import { useVueToPrint } from 'vue-to-print';
-import { onMounted, onServerPrefetch, ref } from 'vue';
+import { onMounted, onServerPrefetch, ref, useSSRContext } from 'vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import DocumentSeparator from 'components/DocumentSeparator.vue';
@@ -43,9 +45,11 @@ import { useMeta } from 'quasar';
 import { DocumentType } from 'src/ts/models.ts';
 import { event } from 'vue-gtag';
 import { getMeta, stripHtml } from 'src/ts/utils.ts';
+import { documentJsonLd, ldJsonScript } from 'src/ts/structured-data.ts';
 import { convertToChineseDay } from 'src/ts/shared-utils.ts';
 
 const route = useRoute();
+const ssrContext = process.env.SERVER ? useSSRContext() : null;
 const doc = ref();
 const content = ref();
 const size = ref(100); // %
@@ -100,13 +104,24 @@ onServerPrefetch(async () => {
   } catch {
     console.error(`Document loading failed (not found?): ${route.params.id as string}`);
   }
+  // Return a real 404 (instead of a 200 soft-404) when the document does not exist,
+  // so crawlers and answer engines don't index the empty "查無此公文" shell.
+  if (!doc.value && ssrContext?.res) {
+    ssrContext.res.statusCode = 404;
+  }
 });
 
 useMeta(() => {
   const store = useDocumentStore();
   const d = store.getDocument(route.params.id as string);
+  if (!d) {
+    return {
+      title: '查無此公文',
+      meta: { ...getMeta('查無此公文'), robots: { name: 'robots', content: 'noindex, follow' } },
+    };
+  }
   let description = '';
-  switch (d?.type.firebase) {
+  switch (d.type.firebase) {
     case DocumentType.MeetingNotice.firebase: {
       let t = d.meetingTime;
       if (t) {
@@ -114,31 +129,27 @@ useMeta(() => {
         t.setHours(t.getHours() + t.getTimezoneOffset() / 60); // Reset to UTC
         t.setHours(t.getHours() + 8); // Set to GMT+8
         description = `會議時間：${t.getFullYear()}/${t.getMonth() + 1}/${t.getDate()} (${convertToChineseDay(t.getDay())}) ${t.getHours()}:${t.getMinutes()}
-會議地點：${d?.location}
-公文字號：${d?.getFullId()}號
-${d?.fromName ? `會議主席：${d.fromSpecific.translation} ${d.fromName}` : ''}`;
+會議地點：${d.location}
+公文字號：${d.getFullId()}號
+${d.fromName ? `會議主席：${d.fromSpecific.translation} ${d.fromName}` : ''}`;
       }
       break;
     }
     default: {
-      if (d) description = stripHtml(d.content).slice(0, 200);
+      description = stripHtml(d.content).slice(0, 200);
       break;
     }
   }
-  const lastUpdated = d?.publishedAt?.toISOString();
+  const timestamp = (d.publishedAt ?? d.createdAt)?.toISOString();
   return {
-    title: d?.subject,
+    title: d.subject,
     meta: {
-      ...getMeta(d?.subject, description),
-      'last-modified': {
-        'http-equiv': 'last-modified',
-        content: lastUpdated,
-      },
-      'og:updated-time': {
-        name: 'og:updated-time',
-        content: lastUpdated,
-      },
+      ...getMeta(d.subject, description),
+      ogType: { property: 'og:type', content: 'article' },
+      articlePublished: { property: 'article:published_time', content: timestamp },
+      articleModified: { property: 'article:modified_time', content: timestamp },
     },
+    script: { ldDocument: ldJsonScript(documentJsonLd(d, route.params.id as string)) },
   };
 });
 

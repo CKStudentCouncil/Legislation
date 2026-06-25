@@ -17,6 +17,14 @@ export default defineSsrMiddleware(({ app, resolve, render, serve }) => {
 
     render(/* the ssrContext: */ { req, res })
       .then((html) => {
+        // Cache successfully-rendered pages at the Firebase Hosting CDN (honors
+        // s-maxage) so crawlers and repeat visitors don't trigger a cold Cloud Run
+        // render + Firestore read every time. Content is invalidated on write via
+        // the updateIdCache Firestore trigger, so a short s-maxage + SWR is safe.
+        // Not-found pages (statusCode 404, set in onServerPrefetch) are left uncached.
+        if (res.statusCode === 200) {
+          res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=600, stale-while-revalidate=86400');
+        }
         // now let's send the rendered html to the client
         res.send(html);
       })

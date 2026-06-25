@@ -1,8 +1,10 @@
 <!doctype html>
-<html>
+<html lang="zh-Hant-TW">
   <head>
     <meta charset="utf-8" />
-    <% if (process.env.SERVER===true) { %>
+    <% if (process.env.SERVER !== true) { %>
+    <!-- Default head for the static SPA-fallback shell (main.html), which never runs the
+         SSR meta path. On SSR-rendered routes the Quasar Meta plugin owns title/description. -->
     <title>建國中學班聯會法律與公文系統</title>
     <meta name="description" content="<%= productDescription %>" />
     <% } %>
@@ -10,16 +12,22 @@
     <meta name="msapplication-tap-highlight" content="no" />
     <meta
       name="viewport"
-      content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width<% if (ctx.mode.cordova || ctx.mode.capacitor) { %>, viewport-fit=cover<% } %>"
+      content="initial-scale=1, width=device-width<% if (ctx.mode.cordova || ctx.mode.capacitor) { %>, viewport-fit=cover<% } %>"
     />
     <meta name="google-site-verification" content="ftkf4uS4ti7uUj6th-tWbDwgO4-NsOSUSmNrMQYlA5c" />
     <meta name="theme-color" content="#198964" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta property="og:type" content="article" />
-    <meta property="og:image" content="https://raw.githubusercontent.com/CKStudentCouncil/Legislation/refs/heads/main/mail/images/_1s.png" />
+    <!-- og:type / og:url / og:locale are managed per-route by the Quasar Meta plugin (see App.vue / detail pages) -->
+    <meta property="og:image" content="https://law.cksc.tw/og-image.png" />
+    <meta property="og:image:alt" content="建國中學班聯會法律與公文系統" />
     <meta property="og:site_name" content="建國中學班聯會法律與公文系統" />
 
     <link rel="icon" href="/favicon.ico" />
+
+    <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
+    <link rel="dns-prefetch" href="https://firestore.googleapis.com" />
+    <link rel="dns-prefetch" href="https://0YZRXQ3XUQ-dsn.algolia.net" />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
     <style>
       @media (prefers-color-scheme: dark) {
         .auto-dark {
@@ -31,9 +39,29 @@
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "建國中學班聯會法律與公文系統",
-        "url": "https://law.cksc.tw/"
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://law.cksc.tw/#website",
+            "name": "建國中學班聯會法律與公文系統",
+            "alternateName": "建中班聯會法律與公文系統",
+            "url": "https://law.cksc.tw/",
+            "inLanguage": "zh-Hant-TW",
+            "publisher": { "@id": "https://law.cksc.tw/#organization" }
+          },
+          {
+            "@type": "Organization",
+            "@id": "https://law.cksc.tw/#organization",
+            "name": "建國中學班聯會",
+            "alternateName": "臺北市立建國高級中學班聯會",
+            "url": "https://law.cksc.tw/",
+            "logo": "https://law.cksc.tw/og-image.png",
+            "parentOrganization": {
+              "@type": "EducationalOrganization",
+              "name": "臺北市立建國高級中學"
+            }
+          }
+        ]
       }
     </script>
   </head>

@@ -1,6 +1,20 @@
 User-agent: *
 Allow: /
-Allow: /legislation
-Allow: /document
 Disallow: /manage
+
+# AI answer/search crawlers are explicitly welcomed on the public legal corpus so this
+# primary source can be retrieved and cited. The auth-only /manage area stays disallowed.
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /manage
+
 Sitemap: https://law.cksc.tw/sitemap.xml

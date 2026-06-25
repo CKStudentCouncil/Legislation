@@ -1,5 +1,6 @@
 <template>
   <q-page padding>
+    <h1 class="sr-only">關於建國中學班聯會法律與公文系統</h1>
     <q-img v-if="$q.dark.isActive" src="https://raw.githubusercontent.com/CKStudentCouncil/Legislation/refs/heads/main/mail/images/_1d.png" />
     <q-img v-else src="https://raw.githubusercontent.com/CKStudentCouncil/Legislation/refs/heads/main/mail/images/_1.png" />
     <div class="q-pb-xs">
@@ -15,7 +16,7 @@
     <div class="q-pb-xs">聯絡方式：<a href="mailto:cksc77th@gmail.com">cksc77th@gmail.com</a></div>
     <div class="q-pb-xs">使用本系統檢視、編輯、發布本校班聯會公文、法律者，須同意以下使用者條款：</div>
     <br />
-    <div class="text-h4 text-center">臺北市立建國高級中學班聯會法律與公文系統使用者條款</div>
+    <h2 class="text-h4 text-center">臺北市立建國高級中學班聯會法律與公文系統使用者條款</h2>
     <p>
       歡迎您使用臺北市立建國高級中學班聯會法律與公文系統（以下簡稱「本系統」）。為保障使用者權益並維護系統運作秩序，請您在使用本系統前，詳閱以下使用者條款。當您使用本系統，即表示您已閱讀、瞭解並同意遵守本條款之所有內容。
     </p>
