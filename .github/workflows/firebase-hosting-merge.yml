@@ -58,7 +58,7 @@ jobs:
           # which the CLI mislabels "Failed to authenticate". 15.21.0 is the last
           # known-good version (last green deploy 2026-06-17). Revert to `latest`
           # once 15.22.x+ ships a fix.
-          firebaseToolsVersion: '15.21.0'
+          firebaseToolsVersion: '15.22.2'
       - name: Google Auth
         id: auth
         uses: 'google-github-actions/auth@v2'
