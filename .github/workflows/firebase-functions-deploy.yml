@@ -49,11 +49,15 @@ jobs:
         env:
           FUNCTIONS_CREDENTIAL_JSON: ${{ secrets.FUNCTIONS_CREDENTIAL_JSON }}
 
-      - name: Google Auth
-        # Exports GOOGLE_APPLICATION_CREDENTIALS so the Firebase CLI deploys via ADC.
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CKSC_LEGISLATION }}
+      - name: Write deploy service-account key
+        # The Firebase CLI authenticates from a service-account key file pointed to by
+        # GOOGLE_APPLICATION_CREDENTIALS — the same mechanism the hosting deploy's
+        # action-hosting-deploy uses internally. (google-github-actions/auth's credential
+        # file isn't consumed by firebase-tools, which falls through to "firebase login".)
+        # Written to RUNNER_TEMP, outside the repo, so it never ships with the source.
+        run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-sa.json"
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CKSC_LEGISLATION }}
 
       - name: Install Firebase CLI
         run: npm install -g firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
@@ -61,3 +65,9 @@ jobs:
       - name: Deploy functions
         # predeploy hooks (lint + tsc build) run automatically from firebase.json.
         run: firebase deploy --only functions --project ${{ env.PROJECT_ID }} --non-interactive
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-sa.json
+
+      - name: Remove deploy service-account key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-sa.json"
