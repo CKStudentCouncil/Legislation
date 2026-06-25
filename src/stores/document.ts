@@ -3,7 +3,7 @@ import type * as models from 'src/ts/models.ts';
 import { DocumentConfidentiality } from 'src/ts/models.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { documentsCollection } from 'src/ts/model-converters.ts';
-import { and, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import { and, doc, getCountFromServer, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 
 /**
  * Re-attach the `getFullId` method and turn serialized date strings back into `Date`s.
@@ -23,8 +23,10 @@ function rehydrate(d: models.Document): models.Document {
 export const useDocumentStore = defineStore('document', {
   state: () => ({
     document: {} as Record<string, models.Document>,
-    // First page of public, published documents for SSR crawl discovery on /document.
+    // First page of public, published documents, SSR-rendered as the visible list on /document.
     publicList: [] as models.Document[],
+    // Total count matching the default public query (the "共 N 件" figure).
+    publicListTotal: 0,
     // Per-prosecution document threads for SSR-rendered judicial lawsuit pages.
     lawsuits: {} as Record<string, models.Document[]>,
   }),
@@ -58,22 +60,22 @@ export const useDocumentStore = defineStore('document', {
     },
     async loadPublicList(reign?: string): Promise<models.Document[]> {
       if (this.publicList.length) return this.getPublicList;
-      // Exact filter/order shape of DocumentsPageV2's default public query, so the
-      // existing composite index covers it.
-      const snap = await getDocs(
-        query(
-          documentsCollection(),
-          and(
-            where('reign', '==', reign ?? getCurrentReign()),
-            where('published', '==', true),
-            where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
-          ),
-          orderBy('published', 'asc'),
-          orderBy('createdAt', 'desc'),
-          limit(10),
+      // Exact filter/order shape of DocumentsPageV2's default public query, so the existing
+      // composite index covers it — and so the first page can be SSR-rendered as the visible
+      // list (not just a crawl hint). The count feeds the "共 N 件" total.
+      const base = query(
+        documentsCollection(),
+        and(
+          where('reign', '==', reign ?? getCurrentReign()),
+          where('published', '==', true),
+          where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
         ),
+        orderBy('published', 'asc'),
+        orderBy('createdAt', 'desc'),
       );
+      const [snap, count] = await Promise.all([getDocs(query(base, limit(10))), getCountFromServer(base)]);
       this.publicList = snap.docs.map((d) => d.data() as models.Document);
+      this.publicListTotal = count.data().count;
       return this.getPublicList;
     },
     async loadLawsuit(id: string, refresh = false): Promise<models.Document[]> {

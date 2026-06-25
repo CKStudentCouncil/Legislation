@@ -91,16 +91,6 @@
       <q-checkbox v-if="manage" v-model="published" class="col q-pr-sm" label="已發布" @update:model-value="choosePublished" />
     </q-no-ssr>
     <div class="text-grey-6">共 {{ totalDocs }} 件公文符合查詢條件</div>
-    <!-- SSR-rendered crawlable index of recent public documents. The interactive list
-         below is client-only (infinite scroll), so this gives crawlers / no-JS agents
-         real <a> links to follow. Visually hidden; sourced from serialized store state. -->
-    <nav v-if="showCrawlIndex && publicIndex.length" class="sr-only" aria-label="近期公文索引">
-      <ul>
-        <li v-for="d of publicIndex" :key="d.getFullId()">
-          <a :href="`/document/${d.getFullId()}`">{{ d.getFullId() }}：{{ d.subject }}</a>
-        </li>
-      </ul>
-    </nav>
     <q-infinite-scroll ref="scroll" :class="$q.screen.gt.sm ? 'row' : ''" @load="loadMore">
       <div v-for="doc of allDocs" :key="doc!.idPrefix + doc!.idNumber" :class="'q-mb-md q-pr-md ' + ($q.screen.gt.sm && dense ? 'col-6' : '')">
         <q-card :class="doc.published ? '' : 'bg-highlight'">
@@ -136,7 +126,7 @@
 import { copyDocLink, getMeta, notifyError } from 'src/ts/utils.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import type { Ref } from 'vue';
-import { computed, onServerPrefetch, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onServerPrefetch, reactive, ref, watch } from 'vue';
 import type { Document } from 'src/ts/models.ts';
 import { DocumentConfidentiality, DocumentGeneralIdentity, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
 import { documentsCollection } from 'src/ts/model-converters.ts';
@@ -194,15 +184,20 @@ const docIdInput = ref(null) as Ref<string | null>;
 const route = useRoute();
 const router = useRouter();
 
-// Only the public /document index (meta + non-manage) gets the SSR crawl list + ItemList.
+// Only the public /document index (meta + non-manage) gets the SSR first page + ItemList.
 const documentStore = useDocumentStore();
 const showCrawlIndex = !props.manage && props.meta;
 const publicIndex = computed(() => (showCrawlIndex ? documentStore.getPublicList : []));
-if (showCrawlIndex) {
-  onServerPrefetch(async () => {
-    await documentStore.loadPublicList(props.filterReign ?? getCurrentReign());
-  });
-}
+
+// SSR-prefetch the first page so both the visible list and the ItemList JSON-LD (which
+// useMeta evaluates synchronously at setup, before onServerPrefetch would run) are populated
+// before render. preFetch only fires for the /document route component — the manage/judicial
+// pages embed this as a child, so it is skipped there.
+defineOptions({
+  async preFetch({ store }) {
+    await useDocumentStore(store).loadPublicList();
+  },
+});
 
 const FILTER_QUERY_KEYS = new Set([
   'docId',
@@ -505,7 +500,33 @@ function choosePublished() {
   }
 }
 
-void updateTotal();
+// On the default public index the first page was SSR-prefetched into the store; seed the
+// visible list + total from it so it renders server-side and hydrates without a flash. The
+// client infinite scroll then re-fetches page 1 (idempotent — keyed by doc id) and continues.
+// Any active filter falls back to the live count query + client-side load (as before).
+const hasActiveFilters = Object.keys(route.query).some((k) => FILTER_QUERY_KEYS.has(k));
+const seededFromSSR = showCrawlIndex && !hasActiveFilters && documentStore.getPublicList.length > 0;
+if (seededFromSSR) {
+  documentStore.getPublicList.forEach((d) => (allDocs[d.getFullId()] = d));
+  totalDocs.value = documentStore.publicListTotal;
+} else if (!process.env.SERVER) {
+  void updateTotal();
+}
+
+// For a filtered public view (not seeded) await the count during SSR so "共 N 件" is correct in
+// the server HTML. Manage/judicial views render client-side (q-no-ssr), so they load there.
+onServerPrefetch(async () => {
+  if (showCrawlIndex && !seededFromSSR) await updateTotal();
+});
+
+onMounted(() => {
+  // The non-seeded path resumes the infinite scroll inside updateTotal; do the same here so
+  // seeded views can still paginate past the first page.
+  if (seededFromSSR && scroll.value) {
+    scroll.value.updateScrollTarget();
+    scroll.value.resume();
+  }
+});
 
 if (props.meta)
   useMeta(() => {
