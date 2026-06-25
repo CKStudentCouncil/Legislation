@@ -43,8 +43,13 @@ export const recordDocumentHistory = onDocumentWritten({ ...globalFunctionOption
   const beforeData = before?.exists ? before.data()! : null;
   if (!meaningfulChange(beforeData, afterData)) return;
 
-  const docId = event.params.docId as string;
-  const historyCol = db.collection('documents').doc(docId).collection('history');
+  // NOTE: event.params values are URL-encoded in v2 Firestore triggers, so a Chinese doc ID
+  // (建班…字第…號) arrives percent-encoded. Rebuilding the path from it via db.collection(...).doc(docId)
+  // points at a different, non-existent document and writes history under the wrong ID. Use the
+  // written snapshot's own ref — it is the actual, correctly-decoded DocumentReference.
+  const docRef = after.ref;
+  const docId = docRef.id;
+  const historyCol = docRef.collection('history');
   const existing = await historyCol.orderBy('editedAt', 'desc').get();
   const existingIds = existing.docs.map((d) => d.id);
   const parentVersionId = existing.docs[0]?.id;

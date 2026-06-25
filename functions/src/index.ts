@@ -21,6 +21,7 @@ import { newDocMail } from './mail/new-doc';
 import { MailOptions } from 'nodemailer/lib/smtp-pool';
 import ical, { ICalCalendarMethod } from 'ical-generator';
 import { newMeetingNotice } from './mail/new-meeting-notice';
+import { accessGrantedMail } from './mail/access-granted';
 import { SitemapStream } from 'sitemap';
 import { createGzip } from 'zlib';
 import * as https from 'https';
@@ -307,6 +308,68 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
   }
   await mailTransport.sendMail(mailOptions);
   return { success: true };
+});
+
+// Notify newly-granted collaborators by email. The message is a fixed system template (no
+// caller-supplied content) to remove any injection/phishing surface, and recipients are limited
+// to addresses that are actually granted on the document so this can't be used as an open relay.
+export const notifyDocumentAccess = onCall(globalFunctionOptions, async (request) => {
+  if (request.auth == null) {
+    throw new HttpsError('unauthenticated', 'The function must be called while authenticated.');
+  }
+  const docId = request.data.docId as string;
+  const emails = request.data.emails;
+  if (!docId || !Array.isArray(emails) || emails.length === 0) {
+    throw new HttpsError('invalid-argument', 'docId and a non-empty emails array are required.');
+  }
+  if (emails.length > 50) {
+    throw new HttpsError('invalid-argument', 'Too many recipients in a single notification.');
+  }
+  const doc = (await db.collection('documents').doc(docId).get()).data();
+  if (!doc) {
+    throw new HttpsError('not-found', 'Document not found.');
+  }
+
+  // Only someone who can manage this document's collaborators (author or manager) may send access
+  // notifications — mirrors the firestore.rules collaborator-list write gate.
+  const callerEmail = request.auth.token.email as string | undefined;
+  const callerRoles = (request.auth.token.roles as string[] | undefined) ?? [];
+  const inList = (arr: unknown) => Array.isArray(arr) && !!callerEmail && arr.includes(callerEmail);
+  const hasAnyRole = (arr: unknown) => Array.isArray(arr) && arr.some((r: string) => callerRoles.includes(r));
+  const canManage =
+    !doc.authorEmail ||
+    doc.authorEmail === 'legacy' ||
+    doc.authorEmail === callerEmail ||
+    inList(doc.managerEmails) ||
+    hasAnyRole(doc.managerRoles);
+  if (!canManage) {
+    throw new HttpsError('permission-denied', 'Not authorized to send access notifications for this document.');
+  }
+
+  // Restrict recipients to addresses actually granted access on the document, so a caller can't
+  // use this endpoint to email arbitrary addresses.
+  const granted = new Set<string>([
+    ...((doc.viewerEmails as string[] | undefined) ?? []),
+    ...((doc.editorEmails as string[] | undefined) ?? []),
+    ...((doc.managerEmails as string[] | undefined) ?? []),
+  ]);
+  const targets = Array.from(new Set(emails as string[])).filter((e) => typeof e === 'string' && granted.has(e));
+  if (targets.length === 0) {
+    return { success: false, error: 'No notifiable grantees.' };
+  }
+
+  await mailTransport.sendMail({
+    from: '建中班聯會法律與公文系統 <cksc77th@gmail.com>',
+    bcc: targets, // bcc so recipients don't see each other's addresses
+    subject: `[公文權限] 您已獲授「${doc.subject}」的存取權限`,
+    html: accessGrantedMail(docId, doc.subject),
+  } as MailOptions);
+  logger.info('Document access notification sent', {
+    actor: getActorInfo(request),
+    docId,
+    recipientCount: targets.length,
+  });
+  return { success: true, notified: targets.length };
 });
 
 export const buildIdCache = onCall(globalFunctionOptions, async (request) => {
