@@ -34,7 +34,7 @@
     "vue-draggable-plus": "^0.6.1",
     "vue-gtag": "~3.7.1",
     "vue-instantsearch": "^4.25.1",
-    "vue-router": "^5.0.6",
+    "vue-router": "^5.1.0",
     "vue-to-print": "^1.5.1",
     "vuefire": "^3.2.3"
   },
