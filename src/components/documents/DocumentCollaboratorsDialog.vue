@@ -188,10 +188,13 @@ function buildList(): Grantee[] {
   return out;
 }
 
+// Seed the editable list only on the closed→open transition. We deliberately do NOT depend on
+// props.doc here: vuefire reassigns docu.value to a fresh object on every snapshot, so watching it
+// would clobber the user's unsaved edits whenever any concurrent write touches this document.
 watch(
-  () => [props.modelValue, props.doc] as const,
-  ([open]) => {
-    if (!open) return;
+  () => props.modelValue,
+  (open, wasOpen) => {
+    if (!open || wasOpen) return;
     grantees.value = buildList();
     addKind.value = 'email';
     addRole.value = null;
@@ -239,18 +242,25 @@ function remove(i: number) {
   grantees.value.splice(i, 1);
 }
 
+// Project the unified grantee list back into the six persisted arrays, by tier and kind.
+const rolesForTier = (tier: Tier) => grantees.value.filter((g) => g.kind === 'role' && g.tier === tier).map((g) => g.value);
+const emailsForTier = (tier: Tier) => grantees.value.filter((g) => g.kind === 'email' && g.tier === tier).map((g) => g.value);
+function collaboratorArrays() {
+  return {
+    viewers: rolesForTier('viewer'),
+    viewerEmails: emailsForTier('viewer'),
+    editorRoles: rolesForTier('editor'),
+    editorEmails: emailsForTier('editor'),
+    managerRoles: rolesForTier('manager'),
+    managerEmails: emailsForTier('manager'),
+  };
+}
+
 async function save() {
-  const roles = (tier: Tier) => grantees.value.filter((g) => g.kind === 'role' && g.tier === tier).map((g) => g.value);
-  const emails = (tier: Tier) => grantees.value.filter((g) => g.kind === 'email' && g.tier === tier).map((g) => g.value);
   Loading.show();
   try {
     await updateDoc(firestoreDoc(documentsCollection(), props.docId), {
-      viewers: roles('viewer'),
-      viewerEmails: emails('viewer'),
-      editorRoles: roles('editor'),
-      editorEmails: emails('editor'),
-      managerRoles: roles('manager'),
-      managerEmails: emails('manager'),
+      ...collaboratorArrays(),
       ...stamp(),
     });
   } catch (e) {
@@ -284,13 +294,16 @@ async function transferOwnership() {
   const newOwner = transferEmail.value.trim().toLowerCase();
   if (!newOwner) return;
   const oldOwner = props.doc.authorEmail;
-  // Keep the previous owner as a manager so they don't lose access.
-  const managers = new Set(grantees.value.filter((g) => g.kind === 'email' && g.tier === 'manager').map((g) => g.value));
+  // Persist the full collaborator state (so in-session edits aren't dropped) alongside the
+  // ownership change. Keep the previous owner as a manager so they don't lose access, and drop the
+  // new owner from the manager list since they're now the author.
+  const managers = new Set(emailsForTier('manager'));
   if (oldOwner && oldOwner !== 'legacy') managers.add(oldOwner.toLowerCase());
   managers.delete(newOwner);
   Loading.show();
   try {
     await updateDoc(firestoreDoc(documentsCollection(), props.docId), {
+      ...collaboratorArrays(),
       authorEmail: newOwner,
       managerEmails: [...managers],
       ...stamp(),
