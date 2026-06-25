@@ -30,9 +30,16 @@ export interface Document {
   ccSpecific: DocumentSpecificIdentity[];
   ccOther: string[];
   confidentiality: DocumentConfidentiality;
-  viewers?: DocumentSpecificIdentity[];
+  viewers?: DocumentSpecificIdentity[]; // viewer tier by role (also gates confidential read)
+  viewerEmails?: string[]; // viewer tier by email
+  editorRoles?: string[]; // editor tier by role (DocumentSpecificIdentity.firebase strings)
+  editorEmails?: string[]; // editor tier by email
+  managerRoles?: string[]; // manager tier by role (DocumentSpecificIdentity.firebase strings)
+  managerEmails?: string[]; // manager tier by email
   declassifyAt?: Date | null;
   authorEmail?: string;
+  lastEditedBy?: DocumentEditor; // who last wrote this doc (validated by rules, trusted by history trigger)
+  lastEditedAt?: Date | null;
   read: string[];
   published: boolean;
   publishedAt?: Date | null;
@@ -45,6 +52,23 @@ export interface Document {
   AbsentMeeting3: string;
 
   getFullId(): string;
+}
+
+export interface DocumentEditor {
+  email: string | null;
+  uid: string | null;
+  name: string | null;
+}
+
+// One archived version of a document, stored at documents/{docId}/history/{versionId}.
+// Written only by the recordDocumentHistory Cloud Function trigger (Admin SDK).
+export interface DocumentHistoryEntry {
+  versionId: string;
+  snapshot: Record<string, unknown>; // full post-write Firestore doc data (firebase format)
+  editedAt: Date;
+  editedBy: DocumentEditor;
+  changeType: 'create' | 'update' | 'revert';
+  parentVersionId?: string;
 }
 
 export interface indictment {

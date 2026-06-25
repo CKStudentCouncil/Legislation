@@ -3,16 +3,18 @@
     <div v-if="!docu">載入中...(或查無此公文)</div>
     <div v-else style="max-width: min(1170px, 97vw)">
       <div class="q-gutter-md q-mb-md">
-        <q-btn color="positive" icon="edit" label="編輯資訊" @click="edit" />
-        <q-btn color="primary" icon="edit" label="編輯內文" @click="editContent" />
-        <q-btn color="accent" icon="attachment" label="上傳附件" @click="uploadAttachment()" />
-        <q-btn-dropdown color="warning" icon="settings" label="進階功能">
+        <q-btn v-if="canEdit" color="positive" icon="edit" label="編輯資訊" @click="edit" />
+        <q-btn v-if="canEdit" color="primary" icon="edit" label="編輯內文" @click="editContent" />
+        <q-btn v-if="canEdit" color="accent" icon="attachment" label="上傳附件" @click="uploadAttachment()" />
+        <q-btn-dropdown v-if="canEdit" color="warning" icon="settings" label="進階功能">
           <div class="q-gutter-sm col">
             <q-btn class="bg-amber-8 row" icon="schedule" label="發布時間" @click="editPublishedAt()" />
-            <q-btn class="bg-green-8 row" icon="123" label="公文字號" @click="editId()" />
+            <q-btn v-if="canOwnDoc" class="bg-green-8 row" icon="123" label="公文字號" @click="editId()" />
           </div>
         </q-btn-dropdown>
-        <q-btn v-if="!docu.published" color="secondary" icon="send" label="發布公文">
+        <q-btn v-if="canManageCollaborators" color="teal" icon="group" label="管理協作者" @click="managingCollaborators = true" />
+        <q-btn v-if="canEdit" color="brown" icon="history" label="歷史版本" @click="showHistory = true" />
+        <q-btn v-if="canEdit && !docu.published" color="secondary" icon="send" label="發布公文">
           <q-popup-proxy>
             <div class="q-ma-lg row">
               <div class="col-9">
@@ -26,7 +28,7 @@
             </div>
           </q-popup-proxy>
         </q-btn>
-        <q-btn v-if="docu.published" color="negative" icon="close" label="撤回公文">
+        <q-btn v-if="canEdit && docu.published" color="negative" icon="close" label="撤回公文">
           <q-popup-proxy>
             <div class="q-ma-lg">
               確認撤回公文？
@@ -34,7 +36,7 @@
             </div>
           </q-popup-proxy>
         </q-btn>
-        <q-btn color="negative" icon="delete" label="刪除公文">
+        <q-btn v-if="canDelete" color="negative" icon="delete" label="刪除公文">
           <q-popup-proxy>
             <div class="q-ma-lg">
               確認刪除公文？
@@ -131,6 +133,14 @@
     </q-card>
   </q-dialog>
   <DocumentDialog v-model="editing" :action="action" @canceled="action = null" @submit="update" />
+  <DocumentCollaboratorsDialog
+    v-if="docu"
+    v-model="managingCollaborators"
+    :doc="docu"
+    :docId="(docu as any).id"
+    :isOwner="canOwnDoc"
+  />
+  <DocumentHistoryDialog v-if="docu" v-model="showHistory" :docId="(docu as any).id" :currentDoc="docu" :canRevert="canEdit" />
 </template>
 
 <script lang="ts" setup>
@@ -154,12 +164,44 @@ import { getReign } from 'src/ts/shared-utils.ts';
 import { useDocument } from 'vuefire';
 import { useFunctionAsync } from 'boot/vuefire.ts';
 import DocumentSeparator from 'components/DocumentSeparator.vue';
+import DocumentCollaboratorsDialog from 'components/documents/DocumentCollaboratorsDialog.vue';
+import DocumentHistoryDialog from 'components/documents/DocumentHistoryDialog.vue';
+import { stamp } from './common.ts';
+import { loggedInUser, loggedInUserClaims } from 'src/ts/auth.ts';
 
 const route = useRoute();
 const router = useRouter();
 const jsConfetti = new JSConfetti();
 const docuId = computed(() => doc(documentsCollection(), route.params.id! as string)); // dynamic id so we can auto reload during an id change
 const docu = useDocument(docuId);
+
+// --- permission tiers (mirror firestore.rules) ---
+const hasNoAuthor = computed(() => {
+  const a = docu.value?.authorEmail;
+  return !!loggedInUser.value && (!a || a === 'legacy');
+});
+const isAuthor = computed(() => !!docu.value?.authorEmail && docu.value.authorEmail === loggedInUser.value?.email);
+const isManager = computed(() => {
+  const d = docu.value;
+  if (!d) return false;
+  const email = loggedInUser.value?.email;
+  const roles = loggedInUserClaims.roles ?? [];
+  return (!!email && (d.managerEmails ?? []).includes(email)) || (d.managerRoles ?? []).some((r) => roles.includes(r));
+});
+const isEditorTier = computed(() => {
+  const d = docu.value;
+  if (!d) return false;
+  const email = loggedInUser.value?.email;
+  const roles = loggedInUserClaims.roles ?? [];
+  return (!!email && (d.editorEmails ?? []).includes(email)) || (d.editorRoles ?? []).some((r) => roles.includes(r));
+});
+const canEdit = computed(() => isAuthor.value || hasNoAuthor.value || isManager.value || isEditorTier.value);
+const canManageCollaborators = computed(() => isAuthor.value || hasNoAuthor.value || isManager.value);
+const canDelete = computed(() => isAuthor.value || hasNoAuthor.value || isManager.value);
+const canOwnDoc = computed(() => isAuthor.value || hasNoAuthor.value); // owner-only actions (rename, transfer)
+const managingCollaborators = ref(false);
+const showHistory = ref(false);
+
 const content = ref('');
 const editingContent = ref(false);
 const editing = reactive({} as models.Document);
@@ -179,6 +221,7 @@ const editingIdNumber = ref('');
 async function update() {
   Loading.show();
   try {
+    Object.assign(editing, stamp());
     await setDoc(doc(documentsCollection(), (docu.value as any).id), editing);
   } catch (e) {
     notifyError('編輯失敗', e);
@@ -211,6 +254,7 @@ async function submitContent() {
   try {
     await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
       content: content.value,
+      ...stamp(),
     });
   } catch (e) {
     notifyError('編輯失敗', e);
@@ -228,6 +272,7 @@ async function publish() {
     await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
       published: true,
       publishedAt: new Date(),
+      ...stamp(),
     });
     Loading.show({ message: '寄發通知郵件' });
     const publishDocumentFn = await useFunctionAsync('publishDocument');
@@ -249,6 +294,7 @@ async function retract() {
     await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
       published: false,
       publishedAt: null,
+      ...stamp(),
     });
   } catch (e) {
     notifyError('撤回失敗', e);
@@ -295,11 +341,13 @@ async function submitAttachment() {
     if (attachmentAction.value === 'add') {
       await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
         attachments: arrayUnion(attachment),
+        ...stamp(),
       });
     } else if (attachmentAction.value === 'edit') {
       docu.value!.attachments[attachment.index] = attachment;
       await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
         attachments: docu.value!.attachments,
+        ...stamp(),
       });
     }
   } catch (e) {
@@ -317,6 +365,7 @@ async function removeAttachment(a: Attachment) {
   try {
     await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
       attachments: arrayRemove(a),
+      ...stamp(),
     });
   } catch (e) {
     notifyError('刪除附件失敗', e);
@@ -332,6 +381,7 @@ async function rearrangeAttachment() {
   try {
     await updateDoc(doc(documentsCollection(), route.params.id! as string), {
       attachments: docu.value!.attachments,
+      ...stamp(),
     });
   } catch (e) {
     notifyError('重新排序失敗', e);
@@ -349,6 +399,7 @@ async function submitPublishedAt() {
     await updateDoc(doc(documentsCollection(), (docu.value as any).id), {
       publishedAt: date,
       reign: getReign(date),
+      ...stamp(),
     });
   } catch (e) {
     notifyError('編輯失敗', e);
@@ -389,6 +440,12 @@ async function submitId() {
         throw e;
       }
     }
+    // The rename is a create of a new doc; the create rule requires authorEmail == caller.
+    // Normal owners already satisfy this; a legacy/unowned doc claims authorship on rename.
+    if (!docu.value!.authorEmail || docu.value!.authorEmail === 'legacy') {
+      docu.value!.authorEmail = loggedInUser.value?.email ?? undefined;
+    }
+    Object.assign(docu.value!, stamp());
     await setDoc(doc(documentsCollection(), newId), docu.value);
     await router.push(newId);
     await deleteDoc(doc(documentsCollection(), oldId));

@@ -5,14 +5,22 @@ service cloud.firestore {
     function isSignedIn() {
       return request.auth != null && request.auth.uid != null;
     }
+    function hasRole(role) {
+      return 'roles' in request.auth.token && role in request.auth.token.roles;
+    }
 
     match /legislation/{legislation=**} {
       allow read: if true;
-      allow write: if isSignedIn();
+      // Only council leadership may edit legislation directly. The amendment-approval flow
+      // writes legislation via the Admin SDK (which bypasses these rules), so it is unaffected.
+      allow write: if isSignedIn() && (
+        hasRole('Chairman') || hasRole('Speaker') || hasRole('DeputySpeaker') || hasRole('JudicialCommitteeChairman')
+      );
     }
-    match /documents/{document=**} {
+
+    match /documents/{docId} {
       function isPublished() {
-        return !('published' in resource.data) || resource.data.published != false;
+        return 'published' in resource.data && resource.data.published == true;
       }
       function isAuthor() {
         return 'authorEmail' in resource.data && 'email' in request.auth.token && resource.data.authorEmail == request.auth.token.email;
@@ -26,18 +34,95 @@ service cloud.firestore {
       function isDeclassified() {
         return 'declassifyAt' in resource.data && resource.data.declassifyAt != null && request.time >= resource.data.declassifyAt;
       }
+      // viewer tier by role (also gates confidential read)
       function isViewer() {
         return 'viewers' in resource.data && 'roles' in request.auth.token && resource.data.viewers.hasAny(request.auth.token.roles);
       }
+
+      // --- collaborator tiers (each grantable by role or email) ---
+      function isManagerByEmail() {
+        return 'email' in request.auth.token && 'managerEmails' in resource.data && resource.data.managerEmails.hasAny([request.auth.token.email]);
+      }
+      function isManagerByRole() {
+        return 'roles' in request.auth.token && 'managerRoles' in resource.data && resource.data.managerRoles.hasAny(request.auth.token.roles);
+      }
+      function isManager() {
+        return isManagerByEmail() || isManagerByRole();
+      }
+      function isEditorByEmail() {
+        return 'email' in request.auth.token && 'editorEmails' in resource.data && resource.data.editorEmails.hasAny([request.auth.token.email]);
+      }
+      function isEditorByRole() {
+        return 'roles' in request.auth.token && 'editorRoles' in resource.data && resource.data.editorRoles.hasAny(request.auth.token.roles);
+      }
+      function isEditor() {
+        return isManager() || isEditorByEmail() || isEditorByRole();
+      }
+      function isViewerByEmail() {
+        return 'email' in request.auth.token && 'viewerEmails' in resource.data && resource.data.viewerEmails.hasAny([request.auth.token.email]);
+      }
+      function isViewerGrant() {
+        return isEditor() || isViewerByEmail() || isViewer();
+      }
+
       function canReadDocument() {
-        return (isSignedIn() && (isAuthor() || hasNoAuthor())) ||
+        return (isSignedIn() && isAuthor()) ||
+               (hasNoAuthor() && isPublic()) ||
                (isPublished() && isPublic()) ||
                (isPublished() && (!isPublic()) && isSignedIn() && (isDeclassified() || isViewer()));
       }
 
-      allow read: if canReadDocument();
-      allow write: if isSignedIn();
+      // Only the owner may change authorEmail; only owner/managers may change the collaborator lists.
+      function ownerUnchanged() {
+        return request.resource.data.get('authorEmail', '') == resource.data.get('authorEmail', '');
+      }
+      function collaboratorListsUnchanged() {
+        return request.resource.data.get('viewers', []) == resource.data.get('viewers', [])
+          && request.resource.data.get('viewerEmails', []) == resource.data.get('viewerEmails', [])
+          && request.resource.data.get('editorRoles', []) == resource.data.get('editorRoles', [])
+          && request.resource.data.get('editorEmails', []) == resource.data.get('editorEmails', [])
+          && request.resource.data.get('managerRoles', []) == resource.data.get('managerRoles', [])
+          && request.resource.data.get('managerEmails', []) == resource.data.get('managerEmails', []);
+      }
+      // Editor identity cannot be forged (the history trigger trusts this field). Absence is tolerated.
+      function lastEditedByValid() {
+        return !('lastEditedBy' in request.resource.data)
+          || (request.resource.data.lastEditedBy.email == request.auth.token.email
+              && request.resource.data.lastEditedBy.uid == request.auth.uid);
+      }
+
+      allow read: if canReadDocument() || (isSignedIn() && isViewerGrant());
+      allow create: if isSignedIn()
+        && request.resource.data.authorEmail == request.auth.token.email
+        && lastEditedByValid();
+      allow update: if isSignedIn()
+        && (isAuthor() || hasNoAuthor() || isEditor())
+        && (isAuthor() || hasNoAuthor() || ownerUnchanged())
+        && (isAuthor() || hasNoAuthor() || isManager() || collaboratorListsUnchanged())
+        && lastEditedByValid();
+      allow delete: if isSignedIn() && (isAuthor() || hasNoAuthor() || isManager());
+
+      // Server-recorded edit history. Written ONLY by the recordDocumentHistory trigger
+      // (Admin SDK bypasses rules); clients can read it if they may edit the parent doc.
+      match /history/{versionId} {
+        function parent() {
+          return get(/databases/$(database)/documents/documents/$(docId)).data;
+        }
+        allow read: if isSignedIn() && (
+          ('email' in request.auth.token && (
+            parent().get('authorEmail', '') == request.auth.token.email
+            || parent().get('editorEmails', []).hasAny([request.auth.token.email])
+            || parent().get('managerEmails', []).hasAny([request.auth.token.email])
+          )) ||
+          ('roles' in request.auth.token && (
+            parent().get('editorRoles', []).hasAny(request.auth.token.roles)
+            || parent().get('managerRoles', []).hasAny(request.auth.token.roles)
+          ))
+        );
+        allow write: if false;
+      }
     }
+
     match /settings/{setting=**} {
       allow read: if true;
       allow write: if isSignedIn() && ('Chairman' in request.auth.token.roles || 'Speaker' in request.auth.token.roles || 'DeputySpeaker' in request.auth.token.roles);

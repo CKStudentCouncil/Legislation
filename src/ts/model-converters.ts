@@ -28,6 +28,14 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     if (!data.declassifyAt) delete data.declassifyAt;
     else data.declassifyAt = Timestamp.fromDate(data.declassifyAt) as any;
     if (!data.authorEmail) delete data.authorEmail;
+    if (!data.viewerEmails?.length) delete data.viewerEmails;
+    if (!data.editorRoles?.length) delete data.editorRoles;
+    if (!data.editorEmails?.length) delete data.editorEmails;
+    if (!data.managerRoles?.length) delete data.managerRoles;
+    if (!data.managerEmails?.length) delete data.managerEmails;
+    if (!data.lastEditedBy) delete data.lastEditedBy;
+    if (!data.lastEditedAt) delete data.lastEditedAt;
+    else data.lastEditedAt = Timestamp.fromDate(data.lastEditedAt) as any;
     return data;
   },
   fromFirestore(snapshot, options) {
@@ -43,6 +51,12 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     data.type = DocumentType.VALUES[data.type as keyof typeof DocumentType.VALUES];
     data.ccSpecific = data.ccSpecific.map((ccSpecific: any) => DocumentSpecificIdentity.VALUES[ccSpecific]);
     data.viewers = data.viewers ? data.viewers.map((viewer: any) => DocumentSpecificIdentity.VALUES[viewer]) : [];
+    data.viewerEmails = data.viewerEmails ?? [];
+    data.editorRoles = data.editorRoles ?? [];
+    data.editorEmails = data.editorEmails ?? [];
+    data.managerRoles = data.managerRoles ?? [];
+    data.managerEmails = data.managerEmails ?? [];
+    data.lastEditedAt = data.lastEditedAt ? new Date(data.lastEditedAt.toMillis()) : null;
     data.secretarySpecific = data.secretarySpecific ? DocumentSpecificIdentity.VALUES[data.secretarySpecific] : null;
     data.getFullId = function () {
       return `${this.idPrefix}第${this.idNumber}號`;

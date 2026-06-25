@@ -25,6 +25,7 @@ import { SitemapStream } from 'sitemap';
 import { createGzip } from 'zlib';
 import * as https from 'https';
 export { submitAmendmentRequest, resolveAmendmentRequest } from './amendments';
+export { recordDocumentHistory, revertDocument } from './history';
 import * as utf8 from 'utf8';
 import { DocumentSpecificIdentity, User } from '../../src/ts/models';
 import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils';
@@ -136,6 +137,12 @@ export const uploadAttachment = onCall(
     if (request.auth == null) {
       throw new HttpsError('unauthenticated', 'The function must be called while authenticated.');
     }
+    // Only provisioned council members (users with at least one role) may upload, to prevent
+    // abuse of the shared Drive as anonymous public file hosting.
+    const uploaderRoles = (request.auth.token.roles as string[] | undefined) ?? [];
+    if (uploaderRoles.length === 0) {
+      throw new HttpsError('permission-denied', 'You must have a council role to upload attachments.');
+    }
     const { name, content, mimeType } = request.data;
     const buf = Buffer.from(content, 'base64');
     const fileSize = buf.length;
@@ -199,6 +206,24 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
     throw new HttpsError('not-found', 'Document not found.');
   }
 
+  // Only someone who can edit the document may trigger its publication notifications, to prevent
+  // unauthenticated callers from spamming recipients with arbitrary documents' emails.
+  const callerEmail = request.auth.token.email as string | undefined;
+  const callerRoles = (request.auth.token.roles as string[] | undefined) ?? [];
+  const inList = (arr: unknown) => Array.isArray(arr) && !!callerEmail && arr.includes(callerEmail);
+  const hasAnyRole = (arr: unknown) => Array.isArray(arr) && arr.some((r: string) => callerRoles.includes(r));
+  const canPublish =
+    !doc.authorEmail ||
+    doc.authorEmail === 'legacy' ||
+    doc.authorEmail === callerEmail ||
+    inList(doc.editorEmails) ||
+    hasAnyRole(doc.editorRoles) ||
+    inList(doc.managerEmails) ||
+    hasAnyRole(doc.managerRoles);
+  if (!canPublish) {
+    throw new HttpsError('permission-denied', 'Not authorized to publish this document.');
+  }
+
   const names = [] as string[];
   const senderName = DocumentSpecificIdentity.VALUES[doc.fromSpecific].translation;
   let senderMail = undefined as string | undefined;
@@ -223,7 +248,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
   const users = await admin.auth().listUsers();
   for (const user of users.users) {
     if (user.email == null) continue;
-    const roles = user.customClaims?.roles;
+    const roles = (user.customClaims?.roles as string[] | undefined) ?? [];
     if (roles.includes(doc.fromSpecific)) senderMail = user.email;
     if (roles.some(toChecker)) recipientsEmail.push(user.email);
     if (roles.some(ccChecker)) ccEmail.push(user.email);

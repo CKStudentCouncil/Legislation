@@ -7,6 +7,19 @@ import { meetingNoticeTemplate, meetingRecordTemplate } from 'src/ts/template.ts
 import { doc, setDoc } from 'firebase/firestore';
 import { loggedInUser } from 'src/ts/auth.ts';
 
+// Editor-attribution stamp spread into every document write. firestore.rules enforces that
+// lastEditedBy matches the caller, so the server-side history trigger can trust it.
+export function stamp(): { lastEditedBy: models.DocumentEditor; lastEditedAt: Date } {
+  return {
+    lastEditedBy: {
+      email: loggedInUser.value?.email ?? null,
+      uid: loggedInUser.value?.uid ?? null,
+      name: loggedInUser.value?.displayName ?? null,
+    },
+    lastEditedAt: new Date(),
+  };
+}
+
 export function getEmptyDocument() {
   const adding = {} as models.Document;
   adding.type = models.DocumentType.Advisory;
@@ -22,6 +35,11 @@ export function getEmptyDocument() {
   adding.createdAt = new Date();
   adding.confidentiality = DocumentConfidentiality.Public;
   adding.viewers = [];
+  adding.viewerEmails = [];
+  adding.editorRoles = [];
+  adding.editorEmails = [];
+  adding.managerRoles = [];
+  adding.managerEmails = [];
   adding.declassifyAt = null;
   adding.authorEmail = loggedInUser.value?.email || undefined;
   adding.read = [];
@@ -67,6 +85,7 @@ export async function create(adding: models.Document, template = true) {
       break;
   }
   if (!adding.idNumber) adding.idNumber = await generateDocumentIdNumber(adding.fromSpecific, adding.type);
+  Object.assign(adding, stamp());
   const id = adding.idPrefix + '第' + adding.idNumber + '號';
   await setDoc(doc(documentsCollection(), id), adding);
   return id;

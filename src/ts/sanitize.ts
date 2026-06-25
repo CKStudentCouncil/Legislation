@@ -19,10 +19,13 @@ const sanitizeDefaults = (
 export function customSanitize(text: string): string {
   return sanitize(text, {
     allowedTags: sanitizeDefaults.allowedTags.concat(['font']),
-    allowedAttributes: Object.assign(sanitizeDefaults.allowedAttributes, {
+    // Build a fresh object — Object.assign onto sanitizeDefaults.allowedAttributes would
+    // permanently mutate sanitize-html's shared global defaults (a process-wide side effect).
+    allowedAttributes: {
+      ...sanitizeDefaults.allowedAttributes,
       font: ['color', 'size'],
       div: ['style'],
-    }),
+    },
     allowedStyles: {
       '*': {
         // Match HEX and RGB
