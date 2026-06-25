@@ -1,0 +1,63 @@
+name: Deploy Cloud Functions (manual)
+
+# Manual only — Functions are never deployed automatically. Trigger from the
+# Actions tab ("Run workflow"). Deploy auth uses the same service-account secret
+# as the hosting/Cloud Run deploy.
+on:
+  workflow_dispatch:
+
+# Don't let two manual function deploys race each other.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  PROJECT_ID: cksc-legislation
+  # Pinned to match the hosting workflow: 15.22.x regressed service-account auth
+  # (upstream firebase-tools #10692). 15.21.0 is the last known-good version.
+  FIREBASE_TOOLS_VERSION: '15.21.0'
+
+jobs:
+  deploy_functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24.x'
+          cache: 'npm'
+
+      - name: Cache packages
+        uses: actions/cache@v3
+        with:
+          key: ${{ runner.os }}-functions-yarn-${{ hashFiles('functions/yarn.lock') }}
+          path: functions/node_modules
+
+      - name: Install functions dependencies
+        run: |
+          cd functions
+          yarn install --frozen-lockfile
+
+      - name: Restore runtime service-account credential
+        # The google-drive-uploader key is read at runtime by functions/src/index.ts
+        # (keyFile: 'src/credential.json'). It is gitignored and never committed — it
+        # lives only as the FUNCTIONS_CREDENTIAL_JSON secret and is materialised here so
+        # it ships with the deployed source. Written via env (not inline) to keep the
+        # secret out of the command line and logs.
+        run: printf '%s' "$FUNCTIONS_CREDENTIAL_JSON" > functions/src/credential.json
+        env:
+          FUNCTIONS_CREDENTIAL_JSON: ${{ secrets.FUNCTIONS_CREDENTIAL_JSON }}
+
+      - name: Google Auth
+        # Exports GOOGLE_APPLICATION_CREDENTIALS so the Firebase CLI deploys via ADC.
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CKSC_LEGISLATION }}
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools@${{ env.FIREBASE_TOOLS_VERSION }}
+
+      - name: Deploy functions
+        # predeploy hooks (lint + tsc build) run automatically from firebase.json.
+        run: firebase deploy --only functions --project ${{ env.PROJECT_ID }} --non-interactive
