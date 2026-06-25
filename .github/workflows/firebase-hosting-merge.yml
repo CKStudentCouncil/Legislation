@@ -53,6 +53,12 @@ jobs:
           channelId: live
           projectId: ${{ env.PROJECT_ID }}
           target: ${{ env.HOSTING_SITE }}
+          # Pinned: firebase-tools 15.22.x regressed service-account auth with
+          # "Premature close" on the OAuth token exchange (upstream issue #10692),
+          # which the CLI mislabels "Failed to authenticate". 15.21.0 is the last
+          # known-good version (last green deploy 2026-06-17). Revert to `latest`
+          # once 15.22.x+ ships a fix.
+          firebaseToolsVersion: '15.21.0'
       - name: Google Auth
         id: auth
         uses: 'google-github-actions/auth@v2'
