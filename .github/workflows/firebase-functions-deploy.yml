@@ -55,6 +55,18 @@ jobs:
         env:
           FUNCTIONS_CREDENTIAL_JSON: ${{ secrets.FUNCTIONS_CREDENTIAL_JSON }}
 
+      - name: Restore functions runtime .env
+        # functions/.env holds GMAIL_EMAIL / GMAIL_PASSWORD, read at module load by
+        # functions/src/index.ts + amendments.ts and passed to nodemailer. It is gitignored
+        # and never committed, so a checkout-only runner deploys functions without them and
+        # every sendMail fails at runtime with "Missing credentials for PLAIN" (EAUTH).
+        # firebase deploy bundles functions/.env as the deployed runtime env, so we
+        # materialise it here from the FUNCTIONS_ENV secret (via env, not inline, to keep it
+        # out of the command line and logs), exactly like credential.json above.
+        run: printf '%s' "$FUNCTIONS_ENV" > functions/.env
+        env:
+          FUNCTIONS_ENV: ${{ secrets.FUNCTIONS_ENV }}
+
       - name: Write deploy service-account key
         # The Firebase CLI authenticates from a service-account key file pointed to by
         # GOOGLE_APPLICATION_CREDENTIALS — the same mechanism the hosting deploy's

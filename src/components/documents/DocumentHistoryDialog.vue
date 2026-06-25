@@ -1,21 +1,24 @@
 <template>
-  <q-dialog v-model="dialogModel">
-    <q-card class="history-dialog">
+  <q-dialog v-model="dialogModel" :maximized="maximized">
+    <q-card :class="{ 'history-dialog': !maximized }">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6 col">歷史版本</div>
+        <q-btn dense flat round :icon="maximized ? 'fullscreen_exit' : 'fullscreen'" @click="maximized = !maximized">
+          <q-tooltip>{{ maximized ? '退出全螢幕' : '全螢幕' }}</q-tooltip>
+        </q-btn>
         <q-btn v-close-popup dense flat icon="close" round />
       </q-card-section>
       <q-card-section class="row q-col-gutter-md">
         <div class="col-12 col-md-4">
           <div v-if="loading" class="flex flex-center q-pa-lg"><q-spinner color="primary" size="32px" /></div>
           <div v-else-if="versions.length === 0" class="text-grey-7 q-pa-md">尚無歷史紀錄。</div>
-          <q-list v-else bordered separator style="max-height: 65vh; overflow-y: auto">
+          <q-list v-else bordered separator :style="{ maxHeight: maximized ? '82vh' : '65vh', overflowY: 'auto' }">
             <q-item
               v-for="v in versions"
               :key="v.versionId"
               clickable
               :active="selected?.versionId === v.versionId"
-              active-class="bg-blue-1"
+              active-class="history-version--active"
               @click="selected = v"
             >
               <q-item-section>
@@ -52,7 +55,7 @@
             />
           </div>
           <div v-if="!selected" class="text-grey-7 q-pa-md">請選擇左側的版本。</div>
-          <div v-else-if="view === 'preview' && selectedDoc" style="max-height: 60vh; overflow-y: auto">
+          <div v-else-if="view === 'preview' && selectedDoc" :style="{ maxHeight: maximized ? '80vh' : '60vh', overflowY: 'auto' }">
             <DocumentRenderer :doc="selectedDoc" />
           </div>
           <q-no-ssr v-else-if="view === 'diff'">
@@ -61,7 +64,7 @@
               diff-style="word"
               filename="此版本"
               language="plaintext"
-              max-height="60vh"
+              :max-height="maximized ? '80vh' : '60vh'"
               new-filename="目前版本"
               :new-string="currentText"
               :old-string="selectedText"
@@ -125,6 +128,7 @@ const selected = ref<HistoryVersion | null>(null);
 const loading = ref(false);
 const view = ref<'preview' | 'diff'>('preview');
 const confirmRevert = ref(false);
+const maximized = ref(false);
 
 async function load() {
   loading.value = true;
@@ -234,5 +238,14 @@ async function revert() {
 .history-dialog {
   width: min(1300px, 98vw);
   max-width: 1300px;
+}
+
+/* Selected-version highlight. Theme-aware: a light tint in light mode, a darker tint in dark mode,
+   so the default item text (dark in light mode, light in dark mode) stays readable on both. */
+.history-version--active {
+  background: #e3f2fd;
+}
+.body--dark .history-version--active {
+  background: rgba(59, 130, 246, 0.28);
 }
 </style>
