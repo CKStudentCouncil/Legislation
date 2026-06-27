@@ -45,7 +45,8 @@
               icon="add"
               label="新增"
               no-caps
-              :disable="addKind === 'email' ? !addEmail.trim() : !addRole"
+              :disable="checking || (addKind === 'email' ? !addEmail.trim() : !addRole)"
+              :loading="checking"
               @click="addGrantee"
             />
           </div>
@@ -66,12 +67,15 @@
         <q-list v-else bordered class="rounded-borders" separator>
           <q-item v-for="(g, i) in grantees" :key="g.kind + ':' + g.value">
             <q-item-section avatar>
-              <q-icon :name="g.kind === 'role' ? 'badge' : 'mail'" />
+              <q-avatar v-if="g.kind === 'email' && userInfo[g.value]?.photoURL" size="36px">
+                <img :src="userInfo[g.value]?.photoURL || undefined" alt="" referrerpolicy="no-referrer" />
+              </q-avatar>
+              <q-icon v-else :name="granteeIcon(g)" size="28px" />
             </q-item-section>
             <q-item-section>
               <q-item-label>{{ granteeLabel(g) }}</q-item-label>
               <q-item-label caption>
-                {{ g.kind === 'role' ? '角色' : '電子郵件'
+                {{ granteeCaption(g)
                 }}<span v-if="g.isNew && g.kind === 'email' && g.notify"> · 儲存後將寄送通知</span>
               </q-item-label>
             </q-item-section>
@@ -157,6 +161,12 @@ interface Grantee {
   notify: boolean;
 }
 
+interface UserInfo {
+  exists: boolean;
+  displayName: string | null;
+  photoURL: string | null;
+}
+
 const grantees = ref<Grantee[]>([]);
 const addKind = ref<'role' | 'email'>('email');
 const addRole = ref<Identity | null>(null);
@@ -165,6 +175,10 @@ const addTier = ref<Tier>('viewer');
 const addNotify = ref(true);
 const transferEmail = ref('');
 const confirmTransfer = ref(false);
+// email → Firebase Auth account info (existence + avatar), fetched via the lookupUsersByEmail
+// Cloud Function. `checking` gates the add button while a lookup is in flight.
+const userInfo = ref<Record<string, UserInfo>>({});
+const checking = ref(false);
 
 // `viewers` is persisted as Identity instances on the model; the editor/manager role arrays are raw
 // firebase strings. Normalize all role lists to firebase strings.
@@ -196,12 +210,16 @@ watch(
   (open, wasOpen) => {
     if (!open || wasOpen) return;
     grantees.value = buildList();
+    userInfo.value = {};
+    // Populate avatars for existing email grantees. Best-effort: a lookup failure must not break the dialog.
+    void fetchUsers(grantees.value.filter((g) => g.kind === 'email').map((g) => g.value)).catch(() => {});
     addKind.value = 'email';
     addRole.value = null;
     addEmail.value = '';
     addTier.value = 'viewer';
     addNotify.value = true;
     transferEmail.value = '';
+    checking.value = false;
   },
   { immediate: true },
 );
@@ -212,8 +230,33 @@ function roleLabel(fb: string): string {
 function granteeLabel(g: Grantee): string {
   return g.kind === 'role' ? roleLabel(g.value) : g.value;
 }
+// A role is shown with its department's (category's) icon; an email without a resolved avatar falls
+// back to a generic person icon.
+function granteeIcon(g: Grantee): string {
+  if (g.kind === 'role') return DocumentSpecificIdentity.VALUES[g.value]?.generic.icon ?? 'badge';
+  return 'account_circle';
+}
+function granteeCaption(g: Grantee): string {
+  if (g.kind === 'role') return '角色';
+  return userInfo.value[g.value]?.displayName || '電子郵件';
+}
 
-function addGrantee() {
+// Resolve account info for emails not already cached. Callers that need a definitive existence
+// answer (add / transfer) await this and handle a throw; the on-open avatar population ignores failures.
+async function fetchUsers(emails: string[]): Promise<void> {
+  const wanted = [...new Set(emails.map((e) => e.trim().toLowerCase()).filter(Boolean))].filter((e) => !(e in userInfo.value));
+  if (wanted.length === 0) return;
+  const fn = await useFunctionAsync('lookupUsersByEmail');
+  const res = await fn({ emails: wanted });
+  userInfo.value = { ...userInfo.value, ...(res.data as { users: Record<string, UserInfo> }).users };
+}
+
+async function emailHasAccount(email: string): Promise<boolean> {
+  await fetchUsers([email]);
+  return userInfo.value[email]?.exists ?? false;
+}
+
+async function addGrantee() {
   if (addKind.value === 'role') {
     if (!addRole.value) return;
     const fb = addRole.value.firebase;
@@ -225,6 +268,21 @@ function addGrantee() {
     const email = addEmail.value.trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       notifyError('請輸入有效的電子郵件');
+      return;
+    }
+    // Block granting access to an address with no account — it could never sign in to use the grant.
+    checking.value = true;
+    let exists: boolean;
+    try {
+      exists = await emailHasAccount(email);
+    } catch (e) {
+      notifyError('無法驗證此電子郵件帳號，請稍後再試', e);
+      return;
+    } finally {
+      checking.value = false;
+    }
+    if (!exists) {
+      notifyError('此電子郵件尚未註冊帳號，無法新增為協作者');
       return;
     }
     const existing = grantees.value.find((g) => g.kind === 'email' && g.value === email);
@@ -293,6 +351,19 @@ async function save() {
 async function transferOwnership() {
   const newOwner = transferEmail.value.trim().toLowerCase();
   if (!newOwner) return;
+  // The new owner must have an account, otherwise they could never sign in to manage the document.
+  let exists: boolean;
+  try {
+    exists = await emailHasAccount(newOwner);
+  } catch (e) {
+    notifyError('無法驗證新擁有者帳號，請稍後再試', e);
+    return;
+  }
+  if (!exists) {
+    notifyError('此電子郵件尚未註冊帳號，無法轉移所有權');
+    confirmTransfer.value = false;
+    return;
+  }
   const oldOwner = props.doc.authorEmail;
   // Persist the full collaborator state (so in-session edits aren't dropped) alongside the
   // ownership change. Keep the previous owner as a manager so they don't lose access, and drop the

@@ -100,12 +100,14 @@ export class DocumentConfidentiality {
 }
 
 export class DocumentGeneralIdentity {
-  static Chairman = new DocumentGeneralIdentity('Chairman', '主席', '建班主', '0');
-  static ViceChairman = new DocumentGeneralIdentity('ViceChairman', '副主席', '建班副主', '4');
-  static ExecutiveDepartment = new DocumentGeneralIdentity('ExecutiveDepartment', '行政部門', '建班政', '1');
-  static StudentCouncil = new DocumentGeneralIdentity('StudentCouncil', '班代大會', '建班立', '2');
-  static JudicialCommittee = new DocumentGeneralIdentity('JudicialCommittee', '評議委員會', '建班評', '3');
-  static SpecialCommittee = new DocumentGeneralIdentity('SpecialCommittee', '特殊時期會務委員會', '建班特委', '4');
+  // `icon` mirrors the matching LegislationCategory's icon so a role can be shown with its
+  // department's (category's) icon wherever roles are listed.
+  static Chairman = new DocumentGeneralIdentity('Chairman', '主席', '建班主', '0', 'settings_accessibility');
+  static ViceChairman = new DocumentGeneralIdentity('ViceChairman', '副主席', '建班副主', '4', 'settings_accessibility');
+  static ExecutiveDepartment = new DocumentGeneralIdentity('ExecutiveDepartment', '行政部門', '建班政', '1', 'construction');
+  static StudentCouncil = new DocumentGeneralIdentity('StudentCouncil', '班代大會', '建班立', '2', 'groups');
+  static JudicialCommittee = new DocumentGeneralIdentity('JudicialCommittee', '評議委員會', '建班評', '3', 'gavel');
+  static SpecialCommittee = new DocumentGeneralIdentity('SpecialCommittee', '特殊時期會務委員會', '建班特委', '4', 'emergency');
   static VALUES = {
     Chairman: DocumentGeneralIdentity.Chairman,
     ViceChairman: DocumentGeneralIdentity.ViceChairman,
@@ -120,6 +122,7 @@ export class DocumentGeneralIdentity {
     public translation: string,
     public prefix: string,
     public code: string,
+    public icon: string = 'badge',
   ) {}
 }
 

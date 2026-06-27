@@ -372,6 +372,43 @@ export const notifyDocumentAccess = onCall(globalFunctionOptions, async (request
   return { success: true, notified: targets.length };
 });
 
+// Look up Firebase Auth accounts by email for the collaborator picker. Returns ONLY whether each
+// address has an account plus its display name and avatar URL — never uid, roles, or any other PII —
+// so the collaborators dialog can (a) block granting access to an address with no account and
+// (b) show each grantee's avatar. Auth is required; account existence is unavoidably disclosed since
+// that is the feature's whole purpose, but nothing else is.
+export const lookupUsersByEmail = onCall(globalFunctionOptions, async (request) => {
+  if (request.auth == null) {
+    throw new HttpsError('unauthenticated', 'Must be authenticated.');
+  }
+  const raw = request.data?.emails;
+  if (!Array.isArray(raw) || raw.length === 0) {
+    throw new HttpsError('invalid-argument', 'A non-empty emails array is required.');
+  }
+  if (raw.length > 100) {
+    throw new HttpsError('invalid-argument', 'Too many emails in a single lookup.');
+  }
+  const emails = Array.from(
+    new Set(
+      raw
+        .filter((e): e is string => typeof e === 'string')
+        .map((e) => e.trim().toLowerCase())
+        .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)),
+    ),
+  );
+  const users: Record<string, { exists: boolean; displayName: string | null; photoURL: string | null }> = {};
+  for (const e of emails) users[e] = { exists: false, displayName: null, photoURL: null };
+  if (emails.length === 0) return { users };
+  const found = await admin.auth().getUsers(emails.map((email) => ({ email })));
+  for (const user of found.users) {
+    const key = user.email?.toLowerCase();
+    if (key && key in users) {
+      users[key] = { exists: true, displayName: user.displayName ?? null, photoURL: user.photoURL ?? null };
+    }
+  }
+  return { users };
+});
+
 // Server-side document ID (字號) allocation. The document confidentiality rules (correctly) forbid
 // a client from listing the documents collection — an unconstrained list query would expose
 // confidential, unpublished documents — so the next serial number is computed here with the Admin
