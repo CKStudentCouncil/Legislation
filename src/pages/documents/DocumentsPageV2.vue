@@ -302,6 +302,27 @@ function applyQueryToFilters(query: LocationQuery) {
 
 applyQueryToFilters(route.query);
 const q = computed(() => {
+  // "所有我能檢視的公文" — each OR disjunct must be provably readable under firestore.rules' list-query
+  // static analysis, or Firestore rejects the whole query (permission-denied / 403). authorEmail=='legacy'
+  // was REMOVED: closing the confidential-legacy read leak (hasNoAuthor now also requires isPublic) made a
+  // bare legacy branch able to match an unreadable confidential legacy doc. Legacy public docs still show
+  // via the public-published branch. Built up-front so we never hand a single-element list to or() (needs ≥2).
+  const viewableBranches =
+    props.manage && manageScope.value === '所有我能檢視的公文'
+      ? [
+          ...(loggedInUser.value?.email ? [where('authorEmail', '==', loggedInUser.value.email)] : []),
+          and(where('published', '==', true), where('confidentiality', '==', DocumentConfidentiality.Public.firebase)),
+          ...(loggedInUserClaims?.roles?.length > 0
+            ? [
+                and(
+                  where('published', '==', true),
+                  where('confidentiality', '==', DocumentConfidentiality.Confidential.firebase),
+                  where('viewers', 'array-contains-any', loggedInUserClaims.roles),
+                ),
+              ]
+            : []),
+        ]
+      : [];
   const filters = [
     props.filterReign || reign.value ? where('reign', '==', props.filterReign ?? reign.value) : null,
     fromGeneric.value && fromSpecific.value.length === 0
@@ -369,25 +390,7 @@ const q = computed(() => {
           ]
       : []),
 
-    ...(props.manage && manageScope.value === '所有我能檢視的公文'
-      ? [
-          or(
-            ...(loggedInUser.value?.email
-              ? [where('authorEmail', 'in', [loggedInUser.value.email, 'legacy'])]
-              : [where('authorEmail', '==', 'legacy')]),
-            and(where('published', '==', true), where('confidentiality', '==', DocumentConfidentiality.Public.firebase)),
-            ...(loggedInUserClaims?.roles?.length > 0
-              ? [
-                  and(
-                    where('published', '==', true),
-                    where('confidentiality', '==', DocumentConfidentiality.Confidential.firebase),
-                    where('viewers', 'array-contains-any', loggedInUserClaims.roles),
-                  ),
-                ]
-              : []),
-          ),
-        ]
-      : []),
+    ...(viewableBranches.length > 0 ? [viewableBranches.length > 1 ? or(...viewableBranches) : viewableBranches[0]] : []),
 
     !props.manage ? where('published', '==', true) : null,
     !props.manage ? where('confidentiality', '==', DocumentConfidentiality.Public.firebase) : null,
