@@ -1,10 +1,8 @@
 import { Notify } from 'quasar';
 import type { DocumentType } from './models';
 import { DocumentSpecificIdentity } from './models';
-import { documentsCollection } from './model-converters';
-import { getDocsFromServer, limit, orderBy, query, where } from 'firebase/firestore';
+import { useFunctionAsync } from 'boot/vuefire.ts';
 import { exception } from 'vue-gtag';
-import { getCurrentReign } from './shared-utils';
 
 export function generateHistoryContentId(refDate: Date, existingIds: string[]): string {
   const utc8 = new Date(refDate.getTime() + 8 * 60 * 60 * 1000);
@@ -111,31 +109,13 @@ export function getReadableRecipient(specific: DocumentSpecificIdentity[], other
 }
 
 export async function generateDocumentIdNumber(specific: DocumentSpecificIdentity, type: DocumentType) {
-  //e.g. 07620000001，1.公文之文號,由十二碼組成,前三碼為屆次,第四碼為期間次,第五碼為部門碼,第六、七碼為機關碼,第八碼為該公文類型,後四碼為流水號。
-  let r = getCurrentReign().replace('-', '');
-  if (r.length === 3) {
-    r = '0' + r;
-  }
-  const target = specific.shareIdWith ?? specific;
-  let s = r + target.generic.code + target.code;
-  const sharedFrom = [target.firebase];
-
-  for (const i of Object.values(DocumentSpecificIdentity.VALUES)) {
-    if (i.shareIdWith?.firebase === target.firebase) {
-      sharedFrom.push(i.firebase);
-    }
-  }
-  const lastDoc = await getDocsFromServer(
-    query(documentsCollection(), orderBy('createdAt', 'desc'), where('fromSpecific', 'in', sharedFrom), where('type', '==', type.firebase), limit(1)),
-  );
-  if (lastDoc.docs[0] && lastDoc.docs[0].exists() && lastDoc.docs[0].data()?.idNumber.startsWith(r)) {
-    const lastDocId = lastDoc.docs[0].id;
-    const lastDocIdNumber = parseInt(lastDocId.slice(-4));
-    s += (lastDocIdNumber + 1).toString().padStart(4, '0');
-  } else {
-    s += '0001';
-  }
-  return s;
+  // e.g. 07620000001，1.公文之文號,由十二碼組成,前三碼為屆次,第四碼為期間次,第五碼為部門碼,第六、七碼為機關碼,第八碼為該公文類型,後四碼為流水號。
+  // Computing the next serial requires scanning every document of this type — including confidential
+  // ones the caller cannot read — so a client list query is (rightly) blocked by firestore.rules.
+  // The generateDocumentId Cloud Function does it with the Admin SDK and returns only the number.
+  const generateDocumentId = await useFunctionAsync('generateDocumentId');
+  const result = await generateDocumentId({ fromSpecific: specific.firebase, type: type.firebase });
+  return (result.data as { idNumber: string }).idNumber;
 }
 
 export async function htmlToText(html: string, wordwrap: number = 130) {

@@ -28,7 +28,7 @@ import * as https from 'https';
 export { submitAmendmentRequest, resolveAmendmentRequest } from './amendments';
 export { recordDocumentHistory, revertDocument } from './history';
 import * as utf8 from 'utf8';
-import { DocumentSpecificIdentity, User } from '../../src/ts/models';
+import { DocumentSpecificIdentity, DocumentType, User } from '../../src/ts/models';
 import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils';
 
 const globalFunctionOptions = { region: 'asia-east1' };
@@ -370,6 +370,51 @@ export const notifyDocumentAccess = onCall(globalFunctionOptions, async (request
     recipientCount: targets.length,
   });
   return { success: true, notified: targets.length };
+});
+
+// Server-side document ID (字號) allocation. The document confidentiality rules (correctly) forbid
+// a client from listing the documents collection — an unconstrained list query would expose
+// confidential, unpublished documents — so the next serial number is computed here with the Admin
+// SDK (which bypasses rules) and ONLY the generated number string is returned, never any document
+// data. Mirrors the previous client-side src/ts/utils.ts generateDocumentIdNumber logic.
+export const generateDocumentId = onCall(globalFunctionOptions, async (request) => {
+  if (request.auth == null) {
+    throw new HttpsError('unauthenticated', 'Must be authenticated.');
+  }
+  const { fromSpecific, type } = (request.data ?? {}) as { fromSpecific?: string; type?: string };
+  const specific = fromSpecific ? DocumentSpecificIdentity.VALUES[fromSpecific] : undefined;
+  const docType = type ? DocumentType.VALUES[type] : undefined;
+  if (!specific || !docType) {
+    throw new HttpsError('invalid-argument', 'Unknown or missing fromSpecific/type.');
+  }
+
+  let r = getCurrentReign().replace('-', '');
+  if (r.length === 3) {
+    r = '0' + r;
+  }
+  const target = specific.shareIdWith ?? specific;
+  let s = r + target.generic.code + target.code;
+  const sharedFrom = [target.firebase];
+  for (const i of Object.values(DocumentSpecificIdentity.VALUES)) {
+    if (i.shareIdWith?.firebase === target.firebase) {
+      sharedFrom.push(i.firebase);
+    }
+  }
+  const lastDoc = await db
+    .collection('documents')
+    .where('fromSpecific', 'in', sharedFrom)
+    .where('type', '==', docType.firebase)
+    .orderBy('createdAt', 'desc')
+    .limit(1)
+    .get();
+  const top = lastDoc.docs[0];
+  if (top && (top.data().idNumber as string | undefined)?.startsWith(r)) {
+    const lastDocIdNumber = parseInt(top.id.slice(-4));
+    s += (lastDocIdNumber + 1).toString().padStart(4, '0');
+  } else {
+    s += '0001';
+  }
+  return { idNumber: s };
 });
 
 export const buildIdCache = onCall(globalFunctionOptions, async (request) => {
