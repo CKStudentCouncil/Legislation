@@ -2498,15 +2498,15 @@
     typescript-eslint "^8.56.0"
     vue-eslint-parser "^10.4.0"
 
-"@vue/language-core@3.2.7":
-  version "3.2.7"
-  resolved "https://registry.yarnpkg.com/@vue/language-core/-/language-core-3.2.7.tgz#06507ace715e0c22cf686ca2231f2a40f51befe2"
-  integrity sha512-Gn4q/tRxbpVGLEuARQ43p3YELlNAFgRUVCgW9U5Cr+5q4vfD2bWDWpl3ABbJMXUt5xlE1dF8dkigg2aUq7JYYw==
+"@vue/language-core@3.3.5":
+  version "3.3.5"
+  resolved "https://registry.yarnpkg.com/@vue/language-core/-/language-core-3.3.5.tgz#7f03e2c2eb48652e925ec811b048b7a17c23cc60"
+  integrity sha512-UkKu5nhX89fg4VhlG/FOeI10G3cj/7radKT/cy9BT4Q9qJmJlSTAc/dP63Xqs29aypN4f39xUV6PsLNk/dcD6g==
   dependencies:
     "@volar/language-core" "2.4.28"
     "@vue/compiler-dom" "^3.5.0"
     "@vue/shared" "^3.5.0"
-    alien-signals "^3.1.2"
+    alien-signals "^3.2.0"
     muggle-string "^0.4.1"
     path-browserify "^1.0.1"
     picomatch "^4.0.4"
@@ -2690,10 +2690,10 @@ algoliasearch@^5.51.0:
     "@algolia/requester-fetch" "5.51.0"
     "@algolia/requester-node-http" "5.51.0"
 
-alien-signals@^3.1.2:
-  version "3.1.2"
-  resolved "https://registry.yarnpkg.com/alien-signals/-/alien-signals-3.1.2.tgz#26e623e3ed81e401df1a7c503f726e2288a4fa02"
-  integrity sha512-d9dYqZTS90WLiU0I5c6DHj/HcKkF8ZyGN3G5x8wSbslulz70KOxaqCT0hQCo9KOyhVqzqGojvNdJXoTumZOtcw==
+alien-signals@^3.2.0:
+  version "3.2.1"
+  resolved "https://registry.yarnpkg.com/alien-signals/-/alien-signals-3.2.1.tgz#eb66256949bce90b7d30d055e2752e62d6930c7c"
+  integrity sha512-I8FjmltrfnDFoZedi5CG8DghVYNhzb/Ijluz7tCSJH0xpd0484Kowhbb1XDYOxfJpU1p5wnM2X54dA+IfGyD1g==
 
 ansi-align@^3.0.0:
   version "3.0.1"
@@ -8632,13 +8632,13 @@ vue-to-print@^1.5.1:
   resolved "https://registry.yarnpkg.com/vue-to-print/-/vue-to-print-1.5.1.tgz#eb500f4e17d8bda9bdb36d2359e9833908c15a18"
   integrity sha512-Z8LeXBmw9J5zQrtcqNQeoFNprgs6ituih682SAOv06ExZljvIjt2CEAW7N1XAjLpgzx9LKMrl500G2ZeGugLUg==
 
-vue-tsc@^3.2.7:
-  version "3.2.7"
-  resolved "https://registry.yarnpkg.com/vue-tsc/-/vue-tsc-3.2.7.tgz#3e9a3a759f3e8fe4681ae628c3746aee00a5d1ff"
-  integrity sha512-zc1tL3HoQni1zGTGrwBVRQb7rGP5SWdu/m4rGB6JcnAC5MT5LFZIxF7Y+EJEnt4hGF23d60rXH7gRjHGb5KQQQ==
+vue-tsc@^3.3.5:
+  version "3.3.5"
+  resolved "https://registry.yarnpkg.com/vue-tsc/-/vue-tsc-3.3.5.tgz#080783e24add23cf860647e905a7f0506c70c21e"
+  integrity sha512-Rzh/G2MmNlMSAMTiQEjDrsb4dgB/jbtEM47rVN2NtidF1dfb/q4w4QvpQBtW5+y3y5H27Hjh7deVwk+YB02fNg==
   dependencies:
     "@volar/typescript" "2.4.28"
-    "@vue/language-core" "3.2.7"
+    "@vue/language-core" "3.3.5"
 
 vue@^3.5.38:
   version "3.5.38"
