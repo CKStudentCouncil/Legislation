@@ -58,7 +58,7 @@
     "typescript": "~5.9.3",
     "vite-plugin-checker": "^0.13.0",
     "vite-plugin-eslint2": "^5.3.0",
-    "vue-tsc": "^3.2.7"
+    "vue-tsc": "^3.3.5"
   },
   "engines": {
     "node": "^24 || ^22 || ^20 || ^18",
