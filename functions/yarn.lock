@@ -501,7 +501,7 @@
     natural-compare "^1.4.0"
     ts-api-utils "^2.5.0"
 
-"@typescript-eslint/parser@8.64.0", "@typescript-eslint/parser@^8.62.0":
+"@typescript-eslint/parser@8.64.0", "@typescript-eslint/parser@^8.64.0":
   version "8.64.0"
   resolved "https://registry.yarnpkg.com/@typescript-eslint/parser/-/parser-8.64.0.tgz#c9864a1cc28a13ff29a7314fbdef0528bb122f72"
   integrity sha512-KA0OshtlcCCXmbfqyZkM5pV3/WNraJf7DkJRLpyrmwPtud57H5BDX7C3k0LPSPxpprfRL+cJDGabF10mvNCoCw==
