@@ -19,7 +19,7 @@
   "dependencies": {
     "@quasar/extras": "^2.0.1",
     "@types/sanitize-html": "^2.16.1",
-    "algoliasearch": "^5.51.0",
+    "algoliasearch": "^5.55.1",
     "diff": "^9.0.0",
     "firebase": "^12.15.0",
     "html-to-text": "^10.0.0",
