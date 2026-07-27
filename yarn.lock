@@ -1830,10 +1830,10 @@
     vite "^8.0.1"
     webpack-merge "^6.0.1"
 
-"@quasar/extras@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@quasar/extras/-/extras-2.0.1.tgz#593c1e919cf91bd1161c4e937faaaccae597c27d"
-  integrity sha512-gieBBROuXkVhvqXtbcVg4pHR5FDcaK+F9PaY2K2t8+EuK8OB/0aJq306DeF5+/Bqv8ixIXT9KhpRZj0HotaOew==
+"@quasar/extras@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@quasar/extras/-/extras-2.0.2.tgz#0e01a55bfd79b4daf4c945a1c0cd6032546523b6"
+  integrity sha512-BkH/iBISDbLNl5qAdsVNpa/0hxHbd1VwfML4dRwTUb8oGeLqlr00yjYM648KGYB1C8plwhU7LyGziE1JpSa6ZA==
 
 "@quasar/render-ssr-error@1.0.4":
   version "1.0.4"
