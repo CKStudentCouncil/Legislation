@@ -70,7 +70,9 @@ import { useCollection } from 'vuefire';
 import orderBy from 'lodash/orderBy';
 import { useRouter } from 'vue-router';
 import { useMeta } from 'quasar';
+import { useDocumentStore } from 'stores/document.ts';
 
+const store = useDocumentStore();
 const step = ref(0);
 const stepper = ref();
 const findBy = ref<null | 'select' | 'id'>(null);
@@ -128,15 +130,24 @@ function chooseFindBy(type: 'select' | 'id') {
   step.value = type === 'select' ? 1 : 3;
 }
 
-function next() {
+async function next() {
   switch (step.value) {
     case 1:
       reignInput.value.validate();
       if (reignInput.value.hasError) return;
       loadOptions();
       break;
-    case 3:
-      void router.push(`/document/judicial/lawsuit/${idPrefix.value}第${idNumber.value}號`); //TODO check if doc exists before redirecting
+    case 3: {
+      const primaryId = `${idPrefix.value}第${idNumber.value}號`;
+      const docs = await store.loadLawsuit(primaryId);
+      if (docs && docs.length > 0) {
+        void router.push(`/document/judicial/lawsuit/${primaryId}`);
+      } else {
+        const prefix = courtType.value === '一般法庭' ? '政' : '憲';
+        void router.push(`/document/judicial/lawsuit/${prefix}啟字第${idNumber.value}號`);
+      }
+      break;
+    }
   }
   stepper.value.next();
 }
