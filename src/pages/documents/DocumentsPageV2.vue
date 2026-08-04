@@ -432,7 +432,7 @@ const updateTotal = async () => {
     lastVisibleDoc.value = undefined;
     Object.keys(allDocs).forEach((k) => delete allDocs[k]);
     totalDocs.value = (await getCountFromServer(q.value)).data().count;
-    if (!process.env.SERVER) {
+    if (!import.meta.env.QUASAR_SERVER) {
       scroll.value.updateScrollTarget();
       scroll.value.resume();
     }
@@ -512,7 +512,7 @@ const seededFromSSR = showCrawlIndex && !hasActiveFilters && documentStore.getPu
 if (seededFromSSR) {
   documentStore.getPublicList.forEach((d) => (allDocs[d.getFullId()] = d));
   totalDocs.value = documentStore.publicListTotal;
-} else if (!process.env.SERVER) {
+} else if (!import.meta.env.QUASAR_SERVER) {
   void updateTotal();
 }
 

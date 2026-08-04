@@ -148,7 +148,7 @@ const historyDiffDialog = ref(false);
 const selectedHistory = ref<LegislationHistory | null>(null);
 const diffCompareTarget = ref<'previous' | 'current'>('previous');
 const route = useRoute();
-const ssrContext = process.env.SERVER ? useSSRContext() : null;
+const ssrContext = import.meta.env.QUASAR_SERVER ? useSSRContext() : null;
 const hash = ref(route.hash?.substring(1));
 
 if (!hash.value || hash.value.length === 0) {

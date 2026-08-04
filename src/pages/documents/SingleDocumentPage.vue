@@ -49,7 +49,7 @@ import { documentJsonLd, ldJsonScript } from 'src/ts/structured-data.ts';
 import { convertToChineseDay } from 'src/ts/shared-utils.ts';
 
 const route = useRoute();
-const ssrContext = process.env.SERVER ? useSSRContext() : null;
+const ssrContext = import.meta.env.QUASAR_SERVER ? useSSRContext() : null;
 const doc = ref();
 const content = ref();
 const size = ref(100); // %

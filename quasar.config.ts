@@ -1,7 +1,7 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
-import { defineConfig } from '#q-app/wrappers';
+import { defineConfig } from '#q-app';
 
 export default defineConfig((ctx) => {
   return {
@@ -33,6 +33,22 @@ export default defineConfig((ctx) => {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
+      // @quasar/app-vite v3 ships only '@' -> /src and '#q-app'; it dropped the
+      // v2 folder aliases the codebase imports through ('src/…', 'components/…',
+      // 'boot/…', 'stores/…', 'pages/…', 'layouts/…'). Re-declare them here —
+      // build.alias feeds both Vite resolution and the generated .quasar/tsconfig
+      // paths, so restoring them keeps every existing import working.
+      alias: {
+        src: ctx.appPaths.srcDir,
+        app: ctx.appPaths.appDir,
+        assets: ctx.appPaths.resolve.src('assets'),
+        boot: ctx.appPaths.resolve.src('boot'),
+        components: ctx.appPaths.resolve.src('components'),
+        layouts: ctx.appPaths.resolve.src('layouts'),
+        pages: ctx.appPaths.resolve.src('pages'),
+        stores: ctx.appPaths.resolve.src('stores'),
+      },
+
       target: {
         browser: ['es2022', 'firefox115', 'chrome115', 'safari14'],
         node: 'node22',
@@ -60,7 +76,11 @@ export default defineConfig((ctx) => {
       // env: {},
       // rawDefine: {}
       // ignorePublicFolder: true,
-      minify: 'terser',
+      // Must stay a boolean: @quasar/app-vite v3 forwards this value verbatim into
+      // the Rolldown config for the SSR webserver bundle, which only accepts
+      // boolean | 'dce-only' | object — 'terser'/'oxc' make that build throw.
+      // `true` uses Vite 8's oxc minifier, which drops comments by default.
+      minify: true,
       // polyfillModulePreload: true,
       // distDir
 
@@ -69,11 +89,6 @@ export default defineConfig((ctx) => {
         if ((ctx.mode as any).ssr) {
           viteConf.build!.assetsDir = 'ssr-assets';
         }
-        viteConf.build!.terserOptions = {
-          format: {
-            comments: false,
-          },
-        };
         viteConf.build!.rollupOptions = {
           ...viteConf.build!.rollupOptions,
           output: {

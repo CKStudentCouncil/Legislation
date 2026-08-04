@@ -65,7 +65,8 @@ Gen-2 Functions (Node 24, **CommonJS**, own ESLint/tsconfig/`yarn install` — e
 - `src/ts/shared-utils.ts` — **SSR-safe and Function-shared**: pure functions only (`getReign`, `getCurrentReign`, `randomChars`, …), no browser/Quasar/Firebase imports.
 - `src/ts/utils.ts` — **client-only**: touches `window`/`navigator.clipboard`/Quasar `Notify`/`vue-gtag`; lazy-`import()`s `sanitize-html`/`html-to-text` to keep them out of the SSR bundle.
 - `src/ts/auth.ts` — client-only; Firebase Auth is never available during SSR prefetch.
-- Guard browser globals with `if (!process.env.SERVER)`, `<q-no-ssr>`, or `onMounted`.
+- Guard browser globals with `if (!import.meta.env.QUASAR_SERVER)`, `<q-no-ssr>`, or `onMounted`. (`@quasar/app-vite` v3 replaced the v2 `process.env.SERVER`/`CLIENT`/`DEV`/`PROD`/`DEBUGGING` flags with `import.meta.env.QUASAR_*` — the old names are no longer substituted at build time and silently evaluate to `undefined`.)
+- `/src-ssr` is **its own package** since app-vite v3: anything `src-ssr/**` imports (express, compression) belongs in `src-ssr/package.json`, not the root one. Quasar runs a nested install there during `quasar build`, and merges those deps into the generated `dist/ssr/package.json`.
 
 ### Auth & roles
 
@@ -90,7 +91,9 @@ Roles are `DocumentSpecificIdentity.firebase` strings stored in the Firebase Aut
 ## Gotchas
 
 - **No router auth guard exists** (`src/router/index.ts` is the stock factory). `src/pages/legislation/AGENTS.md` claims `/manage/*` is protected by a guard — that is stale/aspirational. Typing a `/manage/...` URL is not blocked at the route level; rely on Firestore rules and UI gating for the real authorization model.
-- TS: `allowImportingTsExtensions` is on (imports may carry `.ts` — don't "fix" them) and `exactOptionalPropertyTypes` is intentionally `false`. The real tsconfig is generated into `.quasar/`; use the generated path aliases (`stores/…`, `pages/…`, `components/…`, `boot/…`, `layouts/…`).
+- TS: `allowImportingTsExtensions` is on (imports may carry `.ts` — don't "fix" them) and `exactOptionalPropertyTypes` is intentionally `false`. The real tsconfig is generated into `.quasar/`; use the path aliases (`stores/…`, `pages/…`, `components/…`, `boot/…`, `layouts/…`).
+- Those folder aliases are **no longer framework defaults** — app-vite v3 ships only `@` → `/src` and `#q-app`. They are re-declared in `quasar.config.ts` → `build.alias`, which feeds both Vite resolution and the generated `.quasar/tsconfig.json` `paths`. Delete an entry there and every import using it breaks at typecheck *and* build.
+- `build.minify` must stay a **boolean**. v3 forwards it verbatim into the Rolldown config for the SSR webserver bundle, which only accepts `boolean | 'dce-only' | object`, so the otherwise-documented `'terser'`/`'oxc'` values make `quasar build -m ssr` throw.
 - ESLint (flat config, type-aware): enforces single quotes and `consistent-type-imports` (use `import type`); deliberately lax on `no-explicit-any`/`no-unused-vars`/`no-misused-promises`.
 - `functions/src/credential.json` is a committed Google service-account key; Gmail creds come from `GMAIL_*` env. Firebase web config is hardcoded inline in `src/boot/vuefire.ts`.
 - Both deploy artifacts (`dist/spa` to Hosting, `dist/ssr` Docker image to Cloud Run) must succeed for a coherent release; the merge workflow's asset shuffle + `index.html`→`main.html` rename is load-bearing.
