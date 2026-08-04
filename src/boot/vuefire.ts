@@ -1,4 +1,4 @@
-import { boot } from 'quasar/wrappers';
+import { defineBoot } from '#q-app';
 import { initializeApp } from 'firebase/app';
 import { VueFire } from 'vuefire';
 import { createGtag } from 'vue-gtag';
@@ -14,13 +14,13 @@ export const firebaseApp = initializeApp({
   measurementId: 'G-0ZLXJZG30T',
 });
 
-export default boot(({ app }) => {
+export default defineBoot(({ app }) => {
   app.use(VueFire, {
     firebaseApp,
     modules: [],
   });
 
-  if (!process.env.SERVER) {
+  if (!import.meta.env.QUASAR_SERVER) {
     // defer gtag to reduce TBT and initial load size
     setTimeout(() => {
       app.use(

@@ -6,12 +6,31 @@
  */
 
 /**
- * Make sure to yarn add / npm install (in your project root)
- * anything you import here (except for express and compression).
+ * Since @quasar/app-vite v3, /src-ssr is its own package: anything imported
+ * here must be declared in /src-ssr/package.json (not the root one).
  */
 import express from 'express';
-import compression from 'compression';
-import { defineSsrCreate, defineSsrListen, defineSsrClose, defineSsrServeStaticContent, defineSsrRenderPreloadTag } from '#q-app/wrappers';
+import type { Application, Request, Response } from 'express';
+import type { Server } from 'node:http';
+import {
+  defineSsrCreate,
+  defineSsrInjectDevMiddleware,
+  defineSsrListen,
+  defineSsrClose,
+  defineSsrServeStaticContent,
+  defineSsrRenderPreloadTag,
+} from '#q-app';
+
+// Tells Quasar which server driver we use, so `app`/`req`/`res` are typed
+// as Express types in server.ts and in every /src-ssr/middlewares file.
+declare module '#q-app' {
+  interface SsrDriver {
+    app: Application;
+    listenResult: Server;
+    request: Request;
+    response: Response;
+  }
+}
 
 /**
  * Create your webserver and return its instance.
@@ -20,7 +39,7 @@ import { defineSsrCreate, defineSsrListen, defineSsrClose, defineSsrServeStaticC
  *
  * Can be async: defineSsrCreate(async ({ ... }) => { ... })
  */
-export const create = defineSsrCreate((/* { ... } */) => {
+export const create = defineSsrCreate(async (/* { ... } */) => {
   const app = express();
 
   // attackers can use this header to detect apps running Express
@@ -29,12 +48,24 @@ export const create = defineSsrCreate((/* { ... } */) => {
 
   // place here any middlewares that
   // absolutely need to run before anything else
-  if (process.env.PROD) {
+  if (import.meta.env.QUASAR_PROD) {
+    const { default: compression } = await import('compression');
     app.use(compression());
   }
 
   return app;
 });
+
+/**
+ * Used by the Quasar SSR dev server to inject its own middleware
+ * (Vite dev server, public path handling, etc) into our webserver.
+ */
+export const injectDevMiddleware = defineSsrInjectDevMiddleware(
+  ({ app }) =>
+    (middleware) => {
+      app.use(middleware);
+    },
+);
 
 /**
  * You need to make the server listen to the indicated port
@@ -47,12 +78,26 @@ export const create = defineSsrCreate((/* { ... } */) => {
  * For production, you can instead export your
  * handler for serverless use or whatever else fits your needs.
  *
- * Can be async: defineSsrListen(async ({ app, devHttpsApp, port }) => { ... })
+ * Can be async: defineSsrListen(async ({ app, devHttpsOptions, port }) => { ... })
  */
-export const listen = defineSsrListen(({ app, devHttpsApp, port }) => {
-  const server = devHttpsApp || app;
-  return server.listen(port, process.env.PROD ? '0.0.0.0' : 'localhost', () => {
-    if (process.env.PROD) {
+export const listen = defineSsrListen(async ({ app, devHttpsOptions, port }) => {
+  if (import.meta.env.QUASAR_DEV && devHttpsOptions) {
+    const https = await import('node:https');
+    const server = https.createServer(devHttpsOptions, (req, res) => {
+      app(req, res);
+    });
+    return server.listen(port);
+  }
+
+  const http = await import('node:http');
+  const server = http.createServer((req, res) => {
+    app(req, res);
+  });
+
+  // Cloud Run routes traffic to the container's external interface, so bind
+  // 0.0.0.0 in production; localhost keeps the dev server off the LAN.
+  return server.listen(port, import.meta.env.QUASAR_PROD ? '0.0.0.0' : 'localhost', () => {
+    if (import.meta.env.QUASAR_PROD) {
       console.log('Server listening at port ' + port);
     }
   });
@@ -72,7 +117,7 @@ export const close = defineSsrClose(({ listenResult }) => {
   return listenResult.close();
 });
 
-const maxAge = process.env.DEV ? 0 : 1000 * 60 * 60 * 24 * 30;
+const maxAge = import.meta.env.QUASAR_DEV ? 0 : 1000 * 60 * 60 * 24 * 30;
 
 /**
  * Should return a function that will be used to configure the webserver

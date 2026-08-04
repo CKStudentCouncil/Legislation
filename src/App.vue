@@ -14,7 +14,7 @@ import { SITE } from 'src/ts/structured-data.ts';
 defineOptions({
   name: 'App',
 });
-if (process.env.SERVER) {
+if (import.meta.env.QUASAR_SERVER) {
   const ssrContext = useSSRContext();
   const $q = useQuasar();
   if (ssrContext?.req.headers['sec-ch-prefers-color-scheme'] === 'dark') {
