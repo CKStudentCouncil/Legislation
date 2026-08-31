@@ -4567,10 +4567,10 @@ instantsearch-ui-components@0.36.0:
     "@swc/helpers" "0.5.18"
     markdown-to-jsx "^7.7.15"
 
-instantsearch.css@^8.19.1:
-  version "8.19.1"
-  resolved "https://registry.yarnpkg.com/instantsearch.css/-/instantsearch.css-8.19.1.tgz#a2f1921f034523a5c50805521f57cdcf34cbbdc0"
-  integrity sha512-DpQVguJRD1dDNufu9XeicJFkG1R32ndQLnXajyysWoAA2AMGs7y1TgvV2HNu338tp3eYYV830CqbQv1MaNa1Gw==
+instantsearch.css@^8.20.0:
+  version "8.20.0"
+  resolved "https://registry.yarnpkg.com/instantsearch.css/-/instantsearch.css-8.20.0.tgz#ff3ec3905c6db6e3d5d7547eb57cb1a6c94adc54"
+  integrity sha512-mgCfUlJ4rNqsOu0ro4vNS3eKhqA2N8BN/zcavfiB5sGHV9+E5n9Oj95xTkXwi5QGCYB/0lCweauDtbbtlVewhg==
   dependencies:
     tweakpane "4.0.5"
 
