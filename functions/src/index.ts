@@ -151,11 +151,13 @@ export const uploadAttachment = onCall(
       throw new HttpsError('invalid-argument', 'File size exceeds 25MiB limit.');
     }
     const folderQuery = await driveAPI.files.list({
-      q: `mimeType='application/vnd.google-apps.folder' and name='${getCurrentReign()}'`,
+      q: `mimeType='application/vnd.google-apps.folder' and name='${getCurrentReign()}' and trashed=false`,
       fields: 'files(id)',
     });
+    // `files` is an empty array (not undefined) when nothing matches, so the element itself must
+    // be optional-chained too - otherwise the first upload of a new reign throws.
     const folder =
-      folderQuery.data.files?.[0].id ??
+      folderQuery.data.files?.[0]?.id ??
       (
         await driveAPI.files.create({
           requestBody: {
