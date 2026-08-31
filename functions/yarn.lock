@@ -1932,10 +1932,10 @@ https-proxy-agent@^7.0.1:
     agent-base "^7.0.2"
     debug "4"
 
-ical-generator@^11.1.0:
-  version "11.1.0"
-  resolved "https://registry.yarnpkg.com/ical-generator/-/ical-generator-11.1.0.tgz#6b7669e42e1a656beb91cebcb06bb1856d339e5e"
-  integrity sha512-/CSyXcelySK5qYAUxXnwzhAi1UPVnapnVMXqkRQ+L0RXHCFtzqLm92o5PD0ZRhaWBCtkS0hP8YIxMrSRZ+8Zug==
+ical-generator@^11.1.1:
+  version "11.1.1"
+  resolved "https://registry.yarnpkg.com/ical-generator/-/ical-generator-11.1.1.tgz#199b8a73199e6e8939df7a3eeb43b12481277bda"
+  integrity sha512-1m50e+BOMzxtE3lFXlFiOKvze4Mmiiq2+QoEMw7w7EDtWSq8OxWrdN6mmQdaymBVjmkP1pg0BAPUesBL1ZHQMQ==
 
 iconv-lite@^0.7.2, iconv-lite@~0.7.0:
   version "0.7.3"
