@@ -2026,15 +2026,15 @@
     typescript-eslint "^8.60.0"
     vue-eslint-parser "^10.4.0"
 
-"@vue/language-core@3.3.5":
-  version "3.3.5"
-  resolved "https://registry.yarnpkg.com/@vue/language-core/-/language-core-3.3.5.tgz#7f03e2c2eb48652e925ec811b048b7a17c23cc60"
-  integrity sha512-UkKu5nhX89fg4VhlG/FOeI10G3cj/7radKT/cy9BT4Q9qJmJlSTAc/dP63Xqs29aypN4f39xUV6PsLNk/dcD6g==
+"@vue/language-core@3.3.11":
+  version "3.3.11"
+  resolved "https://registry.yarnpkg.com/@vue/language-core/-/language-core-3.3.11.tgz#e5b6b5ad1fa1a37e032cf7668458cda7a5566b37"
+  integrity sha512-QJmpliwAVpC/OxubIByPAhNzsQPRc8/gxlN2qnVzVfIMjMDz/9RnXRFoetjz5yEgXVXyp4LqhXq3V53PjmNzFw==
   dependencies:
     "@volar/language-core" "2.4.28"
     "@vue/compiler-dom" "^3.5.0"
     "@vue/shared" "^3.5.0"
-    alien-signals "^3.2.0"
+    alien-signals "^3.2.1"
     muggle-string "^0.4.1"
     path-browserify "^1.0.1"
     picomatch "^4.0.4"
@@ -2198,7 +2198,7 @@ algoliasearch@^5.56.0:
     "@algolia/requester-fetch" "5.56.0"
     "@algolia/requester-node-http" "5.56.0"
 
-alien-signals@^3.2.0:
+alien-signals@^3.2.1:
   version "3.2.1"
   resolved "https://registry.yarnpkg.com/alien-signals/-/alien-signals-3.2.1.tgz#eb66256949bce90b7d30d055e2752e62d6930c7c"
   integrity sha512-I8FjmltrfnDFoZedi5CG8DghVYNhzb/Ijluz7tCSJH0xpd0484Kowhbb1XDYOxfJpU1p5wnM2X54dA+IfGyD1g==
@@ -7687,13 +7687,13 @@ vue-to-print@^1.5.1:
   resolved "https://registry.yarnpkg.com/vue-to-print/-/vue-to-print-1.5.1.tgz#eb500f4e17d8bda9bdb36d2359e9833908c15a18"
   integrity sha512-Z8LeXBmw9J5zQrtcqNQeoFNprgs6ituih682SAOv06ExZljvIjt2CEAW7N1XAjLpgzx9LKMrl500G2ZeGugLUg==
 
-vue-tsc@^3.3.5:
-  version "3.3.5"
-  resolved "https://registry.yarnpkg.com/vue-tsc/-/vue-tsc-3.3.5.tgz#080783e24add23cf860647e905a7f0506c70c21e"
-  integrity sha512-Rzh/G2MmNlMSAMTiQEjDrsb4dgB/jbtEM47rVN2NtidF1dfb/q4w4QvpQBtW5+y3y5H27Hjh7deVwk+YB02fNg==
+vue-tsc@^3.3.11:
+  version "3.3.11"
+  resolved "https://registry.yarnpkg.com/vue-tsc/-/vue-tsc-3.3.11.tgz#26e7df7b6c1d66793d68caaa4ab96caa28002d9c"
+  integrity sha512-gOb0B9rtU2+f1dszwPqSH5kAieIF9ReeLhD3kSRNHv5WZZUQz/JdVXW0RTdqhNTMlQkqKzrTTviqKr/4FYZraQ==
   dependencies:
     "@volar/typescript" "2.4.28"
-    "@vue/language-core" "3.3.5"
+    "@vue/language-core" "3.3.11"
 
 vue@^3.5.38:
   version "3.5.38"
