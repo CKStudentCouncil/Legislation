@@ -27,7 +27,7 @@
     "@eslint/js": "^10.0.1",
     "@types/nodemailer": "^8.0.1",
     "@types/utf8": "^3.0.3",
-    "@typescript-eslint/parser": "^8.67.0",
+    "@typescript-eslint/parser": "^8.68.0",
     "eslint": "^10.8.1",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-import": "^2.32.0",
