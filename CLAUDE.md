@@ -28,6 +28,7 @@ A single Firebase Hosting site (`cksc-law`, domain `law.cksc.tw`) fronts **both*
 
 - **SEO/public read routes** (`/`, `/legislation/**`, `/document/**`, `/sitemap.xml`) → Cloud Run services (`cksc-legislation` / `sitemap`, region `asia-east1`), server-rendered.
 - **Everything else** → SPA fallback `dist/spa/main.html`. The merge workflow **renames `index.html` → `main.html`** specifically so the root is never served as a non-SSR page.
+- `firebase.json` `headers` match the **request** path, not the rewrite destination (they are applied before rewrites). Content-hashed `/assets/**` + `/ssr-assets/**` are `immutable`; the SPA-fallback `no-cache` rule must therefore name the client-only route prefixes explicitly (`/manage`, `/manage/**`, `/main.html`) — a new non-SSR top-level route needs an entry there, or its `main.html` stays browser-cached for an hour after the next deploy and points at hashed assets that no longer exist. Do not reach for a `**` rule: it would also clobber the `s-maxage` Cloud Run sends on SSR pages.
 - The second hosting site, `cksc-legislation`, only 301-redirects to `law.cksc.tw` (legacy domain). `.firebaserc` default project is `cksc-legislation`.
 
 CI (`.github/workflows/`):

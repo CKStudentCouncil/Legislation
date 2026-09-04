@@ -1,34 +1,40 @@
 import { Loading } from 'quasar';
-import type { Auth, User } from 'firebase/auth';
+import type { User } from 'firebase/auth';
 import type * as models from 'src/ts/models.ts';
 import type { Ref } from 'vue';
 import { reactive, ref } from 'vue';
 import { useAuth, useFunctionAsync } from 'boot/vuefire.ts';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
-let authStore: Auth | null = null;
 export const loggedInUser = ref(null) as Ref<User | null>;
-export const loggedInUserClaims = reactive({} as { roles: string[] });
+export const loggedInUserClaims = reactive({ roles: [] as string[] });
 
-async function getAuthInstance() {
-  if (!authStore) {
-    authStore = await useAuth();
-  }
-  return authStore;
+// useAuth() memoises the Auth instance itself, so there is nothing to cache here.
+function getAuthInstance() {
+  return useAuth();
 }
 
-export async function init() {
-  const auth = await getAuthInstance();
-  void updateCustomClaims();
-  auth.onAuthStateChanged((user) => {
-    loggedInUser.value = user;
-    void updateCustomClaims();
-    if (user) {
-      console.log('Logged In.');
-    } else {
-      console.log('Logged Out.');
-    }
+let initPromise: Promise<void> | null = null;
+
+// HeaderSidebar calls this from onMounted, and it is remounted every time the route
+// switches between SSRLayout and MainLayout — so this has to be idempotent, otherwise
+// every mount stacks another onAuthStateChanged listener and updateCustomClaims()
+// (a getIdTokenResult() round-trip) runs once per copy on every auth change.
+export function init(): Promise<void> {
+  initPromise ??= getAuthInstance().then((auth) => {
+    // onAuthStateChanged fires with the current state as soon as it is registered, so
+    // that first callback is what populates loggedInUserClaims — no eager call needed.
+    auth.onAuthStateChanged((user) => {
+      loggedInUser.value = user;
+      void updateCustomClaims();
+      if (user) {
+        console.log('Logged In.');
+      } else {
+        console.log('Logged Out.');
+      }
+    });
   });
+  return initPromise;
 }
 
 export async function login() {
