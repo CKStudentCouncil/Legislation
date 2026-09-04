@@ -3,6 +3,7 @@ import { initializeApp } from 'firebase/app';
 import { VueFire } from 'vuefire';
 import { createGtag } from 'vue-gtag';
 import type { HttpsCallable } from '@firebase/functions';
+import type { Auth } from 'firebase/auth';
 
 export const firebaseApp = initializeApp({
   apiKey: 'AIzaSyAI6eGOld2TX1NkPUjvp-nqJNmzfE-Ti7U',
@@ -38,7 +39,24 @@ export async function useFunctionAsync(name: string): Promise<HttpsCallable> {
   return httpsCallable(getFunctions(firebaseApp, 'asia-east1'), name);
 }
 
-export async function useAuth() {
-  const { getAuth } = await import('firebase/auth');
-  return getAuth(firebaseApp);
+let authPromise: Promise<Auth> | null = null;
+
+export function useAuth(): Promise<Auth> {
+  // Deliberately NOT getAuth(). getAuth() wires in browserPopupRedirectResolver, whose
+  // `_shouldInitProactively` is true on every mobile browser, Safari and iOS — so merely
+  // creating the Auth instance eagerly opens the gapi auth iframe and pulls
+  // https://cksc-legislation.firebaseapp.com/__/auth/iframe(.js) (~95 KB gzipped,
+  // Cache-Control: max-age=1800) on *every* page load for *every* visitor, logged in or
+  // not. That resolver is only actually needed while a sign-in popup is open, so
+  // `login()` passes browserPopupRedirectResolver explicitly instead. The persistence
+  // hierarchy below mirrors getAuth()'s default, so existing sessions keep working.
+  //
+  // The promise is cached because initializeAuth() throws `auth/already-initialized` if
+  // it is called twice with options (getAuth() was idempotent; this is not).
+  authPromise ??= import('firebase/auth').then(({ initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence }) =>
+    initializeAuth(firebaseApp, {
+      persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence],
+    }),
+  );
+  return authPromise;
 }

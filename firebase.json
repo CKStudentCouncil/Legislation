@@ -61,6 +61,16 @@
           "destination": "/main.html"
         }
       ],
+      "headers": [
+        {
+          "source": "/assets/**",
+          "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+        },
+        {
+          "source": "/ssr-assets/**",
+          "headers": [{ "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }]
+        }
+      ],
       "public": "dist/spa",
       "ignore": ["firebase.json", "**/.*", "**/node_modules/**"]
     },

@@ -35,10 +35,12 @@ export async function login() {
   console.log('Opening login page.');
   Loading.show();
   try {
-    const { GoogleAuthProvider, signInWithPopup } = await import('firebase/auth');
+    const { GoogleAuthProvider, signInWithPopup, browserPopupRedirectResolver } = await import('firebase/auth');
     const auth = await getAuthInstance();
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
+    // The resolver is passed here rather than baked into the Auth instance (see useAuth):
+    // it is what loads the …/__/auth/iframe helper, and only sign-in actually needs it.
+    await signInWithPopup(auth, provider, browserPopupRedirectResolver);
     console.log('Logged in successfully.');
     Loading.hide();
     notifySuccess('登入成功');
