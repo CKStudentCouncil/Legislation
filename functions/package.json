@@ -19,7 +19,7 @@
     "firebase-functions": "^7.3.2",
     "googleapis": "^176.0.0",
     "ical-generator": "^11.1.0",
-    "nodemailer": "^9.0.5",
+    "nodemailer": "^9.1.0",
     "sitemap": "^9.0.1",
     "utf8": "^3.0.0"
   },
