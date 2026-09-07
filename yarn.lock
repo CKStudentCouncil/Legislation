@@ -3877,10 +3877,10 @@ find-up@^5.0.0:
     locate-path "^6.0.0"
     path-exists "^4.0.0"
 
-firebase-tools@^15.28.1:
-  version "15.28.1"
-  resolved "https://registry.yarnpkg.com/firebase-tools/-/firebase-tools-15.28.1.tgz#a21b3e9936cf56832d55efaf02a3e0bde08491b7"
-  integrity sha512-5qbKmO0Am0++a335zzUe9/TFdM/dn6jGNKVp2JUcHwDrOK+5wU0LT/fGX+8rjQM8AwfzPp+eMowWX1uDGI+aQg==
+firebase-tools@^15.29.0:
+  version "15.29.0"
+  resolved "https://registry.yarnpkg.com/firebase-tools/-/firebase-tools-15.29.0.tgz#807bb216c991c21c980aa73a2e7c4744f916dcab"
+  integrity sha512-9v59oeU7seYNjMUykhQqodXl2J08QVVxVsxgJ0SycnX41xSA7nM4BboAdAK85z0tLSm6PsHjoNqop3cKAe4uaA==
   dependencies:
     "@apphosting/common" "^0.0.8"
     "@electric-sql/pglite" "^0.3.3"
