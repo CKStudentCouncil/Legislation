@@ -1540,10 +1540,10 @@
   resolved "https://registry.yarnpkg.com/@quasar/art/-/art-1.0.0.tgz#29c23715d730b55a40d42e69672129634862e603"
   integrity sha512-IAV8Qg2QM3U2alywUcCELyOlHCUNbJYmiVDRTLgcgmyBlQwo3Wk33eHAyT9cpnV5CqlmuYXe6UZt0Ybi1m0lMA==
 
-"@quasar/extras@^2.0.2":
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/@quasar/extras/-/extras-2.0.2.tgz#0e01a55bfd79b4daf4c945a1c0cd6032546523b6"
-  integrity sha512-BkH/iBISDbLNl5qAdsVNpa/0hxHbd1VwfML4dRwTUb8oGeLqlr00yjYM648KGYB1C8plwhU7LyGziE1JpSa6ZA==
+"@quasar/extras@^2.0.4":
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/@quasar/extras/-/extras-2.0.4.tgz#d5dfe52f404b2343241231c22a730e877c931bf9"
+  integrity sha512-JWls5J+xkgEn6u86NSBLRUXf92RSTlImmYNcF77JtbOwuZgQfQTg7RpLskqRTmzpU3Kkpd3TLDcVT0xwWwiphA==
 
 "@quasar/render-ssr-error@^2.2.6":
   version "2.2.6"
