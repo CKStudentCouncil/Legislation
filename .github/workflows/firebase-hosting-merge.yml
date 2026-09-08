@@ -41,6 +41,12 @@ jobs:
           node-version: '22.22.x'
           cache: 'npm'
       - run: yarn install --frozen-lockfile
+      # /src-ssr is its own package since @quasar/app-vite v3, and Quasar only runs
+      # its nested install during an SSR build. The SPA build's vue-tsc pass still
+      # typechecks src-ssr/** (the generated tsconfig includes the whole repo), so
+      # express/compression types must already be on disk or `yarn spa-build` fails
+      # with TS7016 before `yarn gcp-build` ever gets a chance to install them.
+      - run: yarn --cwd src-ssr install --frozen-lockfile
       - run: yarn spa-build
       - run: yarn gcp-build
       - run: mkdir dist/spa/ssr-assets

@@ -18,7 +18,7 @@ import * as Stream from 'stream';
 import { addUserWithRole, checkRole, editUserClaims } from './auth';
 import { createTransport } from 'nodemailer';
 import { newDocMail } from './mail/new-doc';
-import { MailOptions } from 'nodemailer/lib/smtp-pool';
+import type { SendMailOptions } from 'nodemailer';
 import ical, { ICalCalendarMethod } from 'ical-generator';
 import { newMeetingNotice } from './mail/new-meeting-notice';
 import { accessGrantedMail } from './mail/access-granted';
@@ -269,7 +269,7 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
     to: recipientsEmail,
     subject: `[公文] ${doc.subject}`,
     html: newDocMail(docId, doc.subject, Array.from(new Set(names)).join('、'), senderName),
-  } as MailOptions;
+  } as SendMailOptions;
   if (recipientsEmail.length == 0) {
     if (ccEmail.length != 0) {
       mailOptions.to = ccEmail;
@@ -365,7 +365,7 @@ export const notifyDocumentAccess = onCall(globalFunctionOptions, async (request
     bcc: targets, // bcc so recipients don't see each other's addresses
     subject: `[公文權限] 您已獲授「${doc.subject}」的存取權限`,
     html: accessGrantedMail(docId, doc.subject),
-  } as MailOptions);
+  } as SendMailOptions);
   logger.info('Document access notification sent', {
     actor: getActorInfo(request),
     docId,

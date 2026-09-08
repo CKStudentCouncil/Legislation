@@ -3,7 +3,7 @@ import * as admin from 'firebase-admin';
 import { HttpsError, onCall } from 'firebase-functions/https';
 import * as logger from 'firebase-functions/logger';
 import { createTransport } from 'nodemailer';
-import { MailOptions } from 'nodemailer/lib/smtp-pool';
+import type { SendMailOptions } from 'nodemailer';
 import { DocumentSpecificIdentity, LegislationContent } from '../../src/ts/models';
 import { amendmentNotificationMail } from './mail/amendment-notification';
 import { amendmentResolvedMail } from './mail/amendment-resolved';
@@ -120,7 +120,7 @@ export const submitAmendmentRequest = onCall(globalFunctionOptions, async (reque
 
     const reviewerTitle = DocumentSpecificIdentity.VALUES[requiredRole].translation;
 
-    const mailOptions: MailOptions = {
+    const mailOptions: SendMailOptions = {
       from: '建中班聯會法律與公文系統 <cksc77th@gmail.com>',
       to: approverEmails,
       subject: `[草案審查請求] ${legislation.name}`,
@@ -283,7 +283,7 @@ export const resolveAmendmentRequest = onCall(globalFunctionOptions, async (requ
   if (reqData.petitionerEmail) {
     const docUrl = result.documentId ? `https://law.cksc.tw/document/${result.documentId}` : undefined;
     const legUrl = `https://law.cksc.tw/legislation/${reqData.legislationId}`;
-    const mailOptions: MailOptions = {
+    const mailOptions: SendMailOptions = {
       from: '建中班聯會法律與公文系統 <cksc77th@gmail.com>',
       to: reqData.petitionerEmail,
       subject: `[草案審查結果] ${reqData.legislationName}`,
