@@ -108,7 +108,7 @@ const endpoints: Endpoint[] = [
     requireAuth: true,
     requireRole: [DocumentSpecificIdentity.Chairman, DocumentSpecificIdentity.Speaker, DocumentSpecificIdentity.JudicialCommitteeChairman],
   },
-  { name: '聲請平台', url: 'https://cksc-jc.notion.site/38a4465929c78260b6d681378aba8efc', icon: 'gavel', external: true, requireAuth: false },
+  { name: '聲請平台', url: 'https://script.google.com/macros/s/AKfycbx_cfNnV_ZzRh9hBFnX_2XBlILjnVsIO7dUomrCAF1-fHuCHTq2njYi-b-pQT2yC5G2/exec', icon: 'gavel', external: true, requireAuth: false },
   { name: '關於與使用條款', url: '/about', icon: 'info', requireAuth: false },
 ];
 const selected = ref('Account Information');
