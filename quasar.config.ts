@@ -67,7 +67,17 @@ export default defineConfig((ctx) => {
       vueRouterMode: 'history', // available values: 'hash', 'history'
       // vueRouterBase,
       // vueDevtools,
-      // vueOptionsAPI: false,
+
+      // Must stay `true`. @quasar/app-vite v3 defaults this to `false`, which sets
+      // __VUE_OPTIONS_API__=false and strips Options API support (mixins / `inject:` /
+      // `methods:`) from the build. Every `ais-*` component in vue-instantsearch is Options
+      // API, and the flag only takes effect on the client — the server keeps rendering them
+      // fine — so with this off `LegislationPage.vue` server-renders correctly and then
+      // throws "this.suit is not a function" during hydration, wiping the SSR markup and
+      // leaving a blank page. That blanks both /legislation and /manage/legislation, since
+      // ManageLegislationPage is `<LegislationPage manage />`.
+      // Our own components are all `<script setup>`; this is purely for vue-instantsearch.
+      vueOptionsAPI: true,
 
       // rebuildCache: true, // rebuilds Vite/linter/etc cache on startup
 
