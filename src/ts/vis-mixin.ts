@@ -10,7 +10,6 @@ function defaultCloneComponent(componentInstance: any, { mixins = [] } = {}) {
     fetch: undefined,
     _base: undefined,
     name: 'ais-ssr-root-component',
-    template: '<div></div>',
   } as any;
 
   let app;
@@ -19,14 +18,42 @@ function defaultCloneComponent(componentInstance: any, { mixins = [] } = {}) {
     const appOptions = Object.assign({}, componentInstance.$options, options);
     appOptions.mixins = [...mixins, ...(appOptions.mixins || [])];
     app = createSSRApp(appOptions);
-    if (componentInstance.$router) {
-      app.use(componentInstance.$router);
-    }
-    if (componentInstance.$store) {
-      app.use(componentInstance.$store);
-    }
-    if (componentInstance.$i18n) {
-      app.use(componentInstance.$i18n);
+
+    // The clone is its own Vue app, so it starts with an empty component registry and no
+    // plugins. Without this, every globally registered component fails to resolve — for us
+    // that is all of Quasar, and since <ais-instant-search-ssr> sits inside <q-page>, an
+    // unresolved q-page renders no children, the ais-* widgets never register, and
+    // findResultsState() resolves with {} (no results to render or serialize).
+    // Inheriting the real app's context makes the clone render the same tree.
+    const parentInstance = componentInstance.$ ?? componentInstance._;
+    const parentContext = parentInstance?.appContext;
+    if (parentContext) {
+      const cloneContext = app._context;
+      Object.assign(cloneContext.components, parentContext.components);
+      Object.assign(cloneContext.directives, parentContext.directives);
+      Object.assign(cloneContext.config.globalProperties, parentContext.config.globalProperties);
+      // Inherit the *component instance's* provides, not just the app's: the clone renders
+      // this page as a root, without its layout ancestors, so it still needs the keys
+      // QLayout/QPageContainer provide or <q-page> renders nothing and takes the ais-*
+      // widgets down with it. Prototype chain rather than a copy, so the clone cannot
+      // write back into the real app's provides.
+      // Expect one dev-only "App already provides property with key Symbol(v-scx)" warning
+      // per render: renderToString() gives the clone its own SSR context, deliberately
+      // shadowing the inherited one. It is dev-stripped in production.
+      cloneContext.provides = Object.create(parentInstance.provides ?? parentContext.provides);
+    } else {
+      // Fallback to upstream's behaviour when there is no context to inherit from.
+      // Re-installing these on top of an inherited context would only re-register
+      // RouterLink/RouterView and re-provide keys the clone already has.
+      if (componentInstance.$router) {
+        app.use(componentInstance.$router);
+      }
+      if (componentInstance.$store) {
+        app.use(componentInstance.$store);
+      }
+      if (componentInstance.$i18n) {
+        app.use(componentInstance.$i18n);
+      }
     }
   } else {
     // copy over global Vue APIs

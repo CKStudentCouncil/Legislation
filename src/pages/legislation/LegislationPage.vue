@@ -112,9 +112,9 @@
 
 <script lang="ts" setup>
 import { LegislationCategory } from 'src/ts/models.ts';
-import { aisMixin, searchClient } from 'boot/algolia.ts';
+import { AIS_SSR_INSTANCE_KEY, createAisRootMixin, searchClient } from 'boot/algolia.ts';
 import { AisHighlight, AisHits, AisInstantSearchSsr, AisMenu, AisPanel, AisSearchBox } from 'vue-instantsearch/vue3/es';
-import { getCurrentInstance, onBeforeMount, onServerPrefetch, provide, ref, useSSRContext } from 'vue';
+import { getCurrentInstance, inject, onBeforeMount, onServerPrefetch, provide, ref, useSSRContext } from 'vue';
 import { copyLawLink, getMeta } from 'src/ts/utils.ts';
 import { renderToString } from 'vue/server-renderer';
 import { useMeta } from 'quasar';
@@ -129,8 +129,15 @@ defineProps({
   },
 });
 
-const instantsearch = (aisMixin as any).data().instantsearch;
-provide('$_ais_ssrInstantSearchInstance', instantsearch);
+// findResultsState() collects the Algolia results by rendering a *clone* of this page, and
+// that clone runs this same setup(). It must search on the very instance we then read the
+// results off, so reuse the one the original provided rather than building a second one.
+// Outside the clone nothing provides this key, so each real page instance — i.e. each SSR
+// request — gets its own instance. See createAisRootMixin() for why that matters.
+const inheritedInstantSearch = inject<any>(AIS_SSR_INSTANCE_KEY, null);
+const isAisResultsClone = inheritedInstantSearch !== null;
+const instantsearch = inheritedInstantSearch ?? (createAisRootMixin() as any).data().instantsearch;
+provide(AIS_SSR_INSTANCE_KEY, instantsearch);
 
 const components = {
   AisInstantSearchSsr,
@@ -143,31 +150,33 @@ const components = {
 
 onBeforeMount(() => {
   if (Object.values(useAlgoliaStore().getState()).length > 0) {
-    aisMixin.data().instantsearch.hydrate(useAlgoliaStore().getState());
+    instantsearch.hydrate(useAlgoliaStore().getState());
     useAlgoliaStore().clearState();
   }
 });
 
-onServerPrefetch(async function () {
-  try {
-    const ctx = useSSRContext();
-    let state: any;
-    if (!useAlgoliaStore().hasState()) {
-      state = instantsearch.findResultsState({
-        component: getCurrentInstance(),
+// Skipped in the clone: it renders this same setup(), so registering the hook there would
+// call findResultsState() again, and again, forever.
+if (!isAisResultsClone) {
+  onServerPrefetch(async function () {
+    try {
+      const ctx = useSSRContext();
+      // `.proxy`, not the internal instance: findResultsState() clones the component from
+      // `component.$options`, which only exists on the public proxy. Passing the internal
+      // instance made it clone an empty component that rendered nothing, registered no
+      // widgets and always resolved with {}.
+      // Awaited so the results are hydrated onto `instantsearch` before this page renders,
+      // and so the real state (not a pending Promise) is what gets serialized for the client.
+      const state = await instantsearch.findResultsState({
+        component: getCurrentInstance()!.proxy,
         renderToString: (app: any) => renderToString(app, ctx),
       });
-    } else {
-      state = await instantsearch.findResultsState({
-        component: getCurrentInstance(),
-        renderToString: (app: any) => renderToString(app, ctx),
-      });
+      useAlgoliaStore().setState(state);
+    } catch (error) {
+      console.error('Error during server-side rendering:', error);
     }
-    useAlgoliaStore().setState(state);
-  } catch (error) {
-    console.error('Error during server-side rendering:', error);
-  }
-});
+  });
+}
 
 if (useRoute().path !== '/') {
   useMeta({ title: '檢視法令', meta: getMeta('檢視法令') });
