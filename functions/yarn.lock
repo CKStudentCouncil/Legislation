@@ -2577,10 +2577,10 @@ node-fetch@^3.3.2:
     fetch-blob "^3.1.4"
     formdata-polyfill "^4.0.10"
 
-nodemailer@^9.1.0:
-  version "9.1.0"
-  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-9.1.0.tgz#a83be0fcbe356c359f7a15f4fdebea72b0edc7a5"
-  integrity sha512-xj1Ri5Sau3qpPffHJwi2bY0oWVVWYq62Ph17l+2v1xXpxjqTls3YPc3L8dub9mcJpxj+1ucNnuYVqLlgh4pmDA==
+nodemailer@^10.0.1:
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-10.0.1.tgz#72b3c1f58c6833f99a5a182fab41cb092a2f4a25"
+  integrity sha512-c+gU9cL9HLDax3vjxL88kW+6NOgdtEUWaZ+AUtxdJR6LLhf0kGdCLExof7yiKW7zdO9EfXCSIgmhGyFmUM0mYQ==
 
 object-assign@^4:
   version "4.1.1"
