@@ -11,6 +11,20 @@ spec:
       containerConcurrency: 80
       containers:
         - image: ${IMAGE}
+          # Filled in by envsubst from the deploy workflow's environment. Unset variables
+          # become empty strings, and /src-ssr/sentry.ts reads an empty SENTRY_DSN as
+          # "reporting off" — so a repo with no Sentry configured deploys as it always did.
+          # The DSN lives here rather than in the image so the service can be re-pointed
+          # (or muted) by a deploy instead of a rebuild.
+          env:
+            - name: SENTRY_DSN
+              value: '${SENTRY_DSN}'
+            - name: SENTRY_ENVIRONMENT
+              value: '${SENTRY_ENVIRONMENT}'
+            - name: SENTRY_RELEASE
+              value: '${SENTRY_RELEASE}'
+            - name: SENTRY_TRACES_SAMPLE_RATE
+              value: '${SENTRY_TRACES_SAMPLE_RATE}'
   traffic:
     - percent: 100
       latestRevision: true

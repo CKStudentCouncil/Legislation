@@ -5,6 +5,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@sentry/node": "^10.74.0",
     "compression": "^1.8.1",
     "express": "^5.1.0"
   },

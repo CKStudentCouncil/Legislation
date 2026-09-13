@@ -2,6 +2,7 @@ import { Notify } from 'quasar';
 import type { DocumentType } from './models';
 import { DocumentSpecificIdentity } from './models';
 import { useFunctionAsync } from 'boot/vuefire.ts';
+import { captureError } from 'boot/sentry.ts';
 import { exception } from 'vue-gtag';
 
 export function generateHistoryContentId(refDate: Date, existingIds: string[]): string {
@@ -181,5 +182,7 @@ export function notifyError(message: string, e?: any): void {
       fatal: false,
       stack: e?.stack,
     });
+    // GA4 exceptions are a counter; Sentry keeps the stack, the user and the release.
+    captureError(e, message);
   }
 }

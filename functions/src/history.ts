@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as admin from 'firebase-admin';
 import { FieldValue } from 'firebase-admin/firestore';
-import { HttpsError, onCall } from 'firebase-functions/https';
-import { onDocumentWritten } from 'firebase-functions/firestore';
+import { HttpsError } from 'firebase-functions/https';
+import { onCall, onDocumentWritten } from './sentry';
 import * as logger from 'firebase-functions/logger';
 
 const globalFunctionOptions = { region: 'asia-east1' };

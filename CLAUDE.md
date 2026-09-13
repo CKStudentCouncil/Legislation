@@ -89,6 +89,28 @@ Roles are `DocumentSpecificIdentity.firebase` strings stored in the Firebase Aut
 - `DocumentsPage.vue` is **dead code** — routes use `DocumentsPageV2.vue` everywhere.
 - Judicial pages (`/document/judicial/*`) are a view layer over the same `documents` collection; `prosecutionId` is a **soft foreign key** threading a case's documents together. Editing a document's ID is a copy-to-new-doc-then-delete-old operation because the ID is the Firestore key.
 
+## Error reporting (Sentry)
+
+Three runtimes, three SDKs, one switch each — and every one of them is a no-op when its DSN is absent, so a checkout with nothing configured builds and deploys exactly as it did before.
+
+| Runtime | SDK | Entry point | Where its DSN comes from |
+| --- | --- | --- | --- |
+| Browser | `@sentry/vue` (root `dependencies`) | `src/boot/sentry.ts` — listed **first** in `quasar.config.ts` > `boot` | **Build time**: `SENTRY_DSN` in the build environment, inlined by `build.defineEnv` |
+| SSR webserver (Cloud Run) | `@sentry/node` (**`src-ssr/package.json`**) | `src-ssr/sentry.ts`, `initSentry()` first thing in `create()` | **Runtime**: env var on the Cloud Run service, from `.apphosting/service.template.yaml` |
+| Cloud Functions | `@sentry/node` (`functions/package.json`) | `functions/src/sentry.ts` | **Runtime**: `functions/.env`, to which the deploy workflow appends `SENTRY_DSN` |
+
+The three read their DSN independently, so they can point at different Sentry projects — the variable is only spelled the same.
+
+- **The client config is build-time, and that is load-bearing.** `SENTRY_*` reach app code through `build.defineEnv` rather than the `QCLI_` client prefix, so the keys exist as typed literals in `import.meta.env` even on a machine that has none of them set. That is what lets `src/boot/sentry.ts` fold `if (!DSN) return` to a constant and lets Rolldown drop `@sentry/vue` out of the client chunks entirely — with no DSN the built boot file is literally `({ app, router }) => {}`. Reading these off `process.env` in app code, or moving them behind `QCLI_`, breaks both the typecheck and the tree-shake.
+- **Tracing and Session Replay are off, and at a sample rate of 0 they are not even bundled** — the integrations sit behind the same constant-folded guards. Turning them on (`SENTRY_TRACES_SAMPLE_RATE`, `SENTRY_REPLAY_SESSION_SAMPLE_RATE`, `SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE`) costs roughly 15 KB gz and 50 KB gz respectively on a site whose point is fast public pages.
+- **Source maps are uploaded only when `SENTRY_AUTH_TOKEN` + `SENTRY_ORG` + `SENTRY_PROJECT` are all set.** Then `build.sourcemap` flips to `'hidden'` and `@sentry/vite-plugin` uploads the maps and deletes them from `dist/` before deploy. It is injected through `extendViteConf`, *not* `build.vitePlugins`, because `sentryVitePlugin()` returns an **array** of plugins and Quasar's plugin parser would deep-merge that array into an object. Without those three, production stack traces stay minified.
+- **The SSR capture is explicit**, in `src-ssr/middlewares/render.ts`. That middleware catches everything itself and never calls `next(err)`, so an Express error handler would never see a failed render. The redirect and route-not-found rejections are normal control flow and are filtered out before the capture.
+- **Functions are instrumented by import, not by editing 16 handlers.** `functions/src/sentry.ts` re-exports `onCall` / `onRequest` / `onDocumentWritten` with the firebase-functions signatures plus a try/catch, so `index.ts`, `amendments.ts` and `history.ts` only change where they import their trigger from. `HttpsError`s carrying caller-fault codes (`permission-denied`, `invalid-argument`, `not-found`, …) are deliberately **not** reported — `checkRole()` throws those at people who simply are not allowed to do the thing, and the function worked as designed.
+- `notifyError()` (`src/ts/utils.ts`) reports to Sentry next to the existing GA4 `exception` event, and `updateCustomClaims()` (`src/ts/auth.ts`) mirrors the Firebase user **and their roles** onto the Sentry scope — roles being what decides what a user could see when it broke.
+- **A root `.env` will not configure any of this.** Quasar parses dotenv files for app code but deliberately never pushes them into `process.env`, and `quasar.config.ts` runs in plain Node. Locally, pass real env vars: `SENTRY_DSN=… yarn dev`.
+
+CI supplies all of it: `firebase-hosting-merge.yml` sets a job-level `env:` block (with `SENTRY_RELEASE` = the commit SHA, shared by the browser bundle, the Cloud Run service and the uploaded maps), and `firebase-functions-deploy.yml` appends the `SENTRY_*` lines to `functions/.env` after writing the `FUNCTIONS_ENV` blob. They are appended rather than stored inside that blob deliberately: one `SENTRY_DSN` secret then configures all three runtimes, and nobody has to hand-edit an opaque secret to rotate it. `SENTRY_DSN` and `SENTRY_AUTH_TOKEN` are repo **secrets**; `SENTRY_ORG`, `SENTRY_PROJECT` and the sample rates are repo **variables**.
+
 ## Gotchas
 
 - **No router auth guard exists** (`src/router/index.ts` is the stock factory). `src/pages/legislation/AGENTS.md` claims `/manage/*` is protected by a guard — that is stale/aspirational. Typing a `/manage/...` URL is not blocked at the route level; rely on Firestore rules and UI gating for the real authorization model.

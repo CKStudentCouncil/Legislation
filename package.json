@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@quasar/extras": "^2.0.2",
+    "@sentry/vue": "^10.74.0",
     "@types/sanitize-html": "^2.16.1",
     "algoliasearch": "^5.56.0",
     "diff": "^9.0.0",
@@ -41,6 +42,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@quasar/app-vite": "^3.8.1",
+    "@sentry/vite-plugin": "^5.4.0",
     "@types/diff": "^8.0.0",
     "@types/html-to-text": "^9.0.4",
     "@types/lodash": "^4.17.25",

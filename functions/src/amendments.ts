@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as admin from 'firebase-admin';
-import { HttpsError, onCall } from 'firebase-functions/https';
+import { HttpsError } from 'firebase-functions/https';
+import { onCall } from './sentry';
 import * as logger from 'firebase-functions/logger';
 import { createTransport } from 'nodemailer';
 import type { SendMailOptions } from 'nodemailer';
