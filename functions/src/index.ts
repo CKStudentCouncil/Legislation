@@ -482,6 +482,12 @@ export const buildIdCache = onCall(globalFunctionOptions, async (request) => {
 export const sitemap = onRequest(globalFunctionOptions, async (request, response) => {
   response.header('Content-Type', 'application/xml');
   response.header('Content-Encoding', 'gzip');
+  // Without an explicit Cache-Control, Firebase Hosting stamps `private` on a Cloud
+  // Function response and its CDN never stores it — so every crawler fetch of a 1300-URL
+  // sitemap was a cold invocation plus a `settings/cache` read. The document this is built
+  // from only changes when updateIdCache fires on a publish, so an hour at the edge (with a
+  // day of stale-while-revalidate behind it) costs nothing in freshness.
+  response.header('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400');
 
   try {
     const smStream = new SitemapStream({ hostname: 'https://law.cksc.tw/' });

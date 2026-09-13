@@ -12,6 +12,21 @@ function isRouteNotFoundError(err: unknown): err is SsrRenderRouteNotFoundError 
   return typeof err === 'object' && err !== null && 'routeNotFound' in err;
 }
 
+/**
+ * SSR paths that render byte-identical output no matter what query string they are handed.
+ * `/` and `/legislation` are both LegislationPage, which reads nothing from route.query —
+ * its search box is client-only and InstantSearch has no `routing` here. (`/document` is
+ * deliberately absent: its filter UI genuinely syncs into the query string.)
+ *
+ * Firebase Hosting keys its CDN on the full URL, query string included, so every distinct
+ * `?…` a crawler invents or a referrer appends is a guaranteed cache miss on the two most
+ * requested URLs of the site — a fresh Cloud Run render, and a full page down the wire, for
+ * a response we already had cached. Collapsing them to the canonical path (which is what
+ * the page's own <link rel="canonical"> already claims) turns an unbounded family of cache
+ * entries back into one.
+ */
+const CANONICAL_QUERYLESS_PATHS = new Set(['/', '/legislation', '/legislation/']);
+
 // This middleware should execute as last one
 // since it captures everything and tries to
 // render the page with Vue
@@ -21,6 +36,15 @@ export default defineSsrMiddleware(({ app, resolve, render, serve }) => {
   // over to Vue and Vue Router to render our page
   // ('{*path}' is the Express 5 spelling of the old '*' catch-all)
   app.get(resolve.urlPath('{*path}'), async (req, res) => {
+    // Before anything expensive: send junk query strings back to the canonical path. The
+    // redirect is itself cached at the edge, so a crawler grinding through a parameter
+    // space stops reaching Cloud Run at all after the first hit of each URL.
+    if (CANONICAL_QUERYLESS_PATHS.has(req.path) && req.originalUrl.includes('?')) {
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=86400');
+      res.redirect(301, req.path === '/legislation/' ? '/legislation' : req.path);
+      return;
+    }
+
     res.setHeader('Content-Type', 'text/html');
     res.setHeader('Accept-CH', 'Sec-CH-Prefers-Color-Scheme');
     res.setHeader('Vary', 'Sec-CH-Prefers-Color-Scheme');

@@ -1,15 +1,30 @@
 <template>
   <q-page padding>
     <ais-instant-search-ssr :insights="true" :search-client="searchClient" index-name="legislation">
+      <ais-configure v-bind="searchParameters" />
       <q-no-ssr>
         <ais-search-box>
           <template v-slot="{ currentRefinement, isSearchStalled, refine }">
-            <q-input :model-value="currentRefinement" placeholder="以關鍵字搜尋法律" type="search" @update:model-value="refine($event)">
+            <q-input
+              :model-value="currentRefinement"
+              placeholder="以關鍵字搜尋法律"
+              type="search"
+              @update:model-value="
+                query = String($event ?? '');
+                refine($event);
+              "
+            >
               <template v-slot:prepend>
-                <q-icon name="search" />
+                <q-icon :name="matSearch" />
               </template>
               <template v-slot:append>
-                <q-icon name="close" @click="refine('')" />
+                <q-icon
+                  :name="matClose"
+                  @click="
+                    query = '';
+                    refine('');
+                  "
+                />
               </template>
             </q-input>
             <span :hidden="!isSearchStalled">請稍後...</span>
@@ -34,7 +49,7 @@
                     "
                   >
                     <q-item-section avatar>
-                      <q-icon :name="category.icon" />
+                      <q-icon :name="icon(category.icon)" />
                     </q-item-section>
                     <q-item-section>
                       <q-item-label>
@@ -60,21 +75,21 @@
                 </q-card-section>
                 <q-separator />
                 <q-card-section class="row">
-                  <div v-for="i in Object.keys(item.content)" :key="i">
+                  <div v-for="i in Object.keys(item.content ?? {})" :key="i">
                     <!-- prettier-ignore -->
-                    <div v-if="(item._highlightResult.content[i].content && item._highlightResult.content[i].content.matchedWords.length > 0) ||
-                        (item._highlightResult.content[i].subtitle && item._highlightResult.content[i].subtitle.matchedWords.length > 0)">
-                      <span>{{ `${item.content[i].title}` }}<span v-if="item._highlightResult.content[i].subtitle.value.length>0">
+                    <div v-if="(item._highlightResult?.content?.[i]?.content?.matchedWords?.length ?? 0) > 0 ||
+                        (item._highlightResult?.content?.[i]?.subtitle?.matchedWords?.length ?? 0) > 0">
+                      <span>{{ `${item.content[i].title}` }}<span v-if="(item._highlightResult.content[i].subtitle?.value?.length ?? 0) > 0">
                         【<ais-highlight :attribute="`content.${i}.subtitle`" :hit="item" highlightedTagName="mark" />】</span>：</span>
                       <ais-highlight :attribute="`content.${i}.content`" :hit="item" highlightedTagName="mark" />
                     </div>
                   </div>
-                  <q-btn v-if="$props.manage" :to="`/manage/legislation/${item.objectID}`" color="secondary" flat label="編輯" icon="edit" />
+                  <q-btn v-if="$props.manage" :to="`/manage/legislation/${item.objectID}`" color="secondary" flat label="編輯" :icon="matEdit" />
                   <q-btn
                     :to="`/legislation/${item.objectID}`"
                     color="primary"
                     flat
-                    icon="visibility"
+                    :icon="matVisibility"
                     label="檢視全文"
                     role="link"
                     :title="item.name"
@@ -84,7 +99,7 @@
                     <q-btn
                       color="primary"
                       flat
-                      icon="link"
+                      :icon="matLink"
                       label="複製連結"
                       @click="
                         sendEvent('click', item, 'Legislation link copied');
@@ -94,7 +109,7 @@
                     <q-btn
                       color="primary"
                       flat
-                      icon="draw"
+                      :icon="matDraw"
                       label="起草修正"
                       :to="`/legislation/${item.objectID}/amendment`"
                       @click="sendEvent('click', item, 'Legislation amendment clicked')"
@@ -111,10 +126,12 @@
 </template>
 
 <script lang="ts" setup>
+import { matClose, matDraw, matEdit, matLink, matSearch, matVisibility } from '@quasar/extras/material-icons';
+import { icon } from 'src/ts/icons.ts';
 import { LegislationCategory } from 'src/ts/models.ts';
 import { AIS_SSR_INSTANCE_KEY, createAisRootMixin, searchClient } from 'boot/algolia.ts';
-import { AisHighlight, AisHits, AisInstantSearchSsr, AisMenu, AisPanel, AisSearchBox } from 'vue-instantsearch/vue3/es';
-import { getCurrentInstance, inject, onBeforeMount, onServerPrefetch, provide, ref, useSSRContext } from 'vue';
+import { AisConfigure, AisHighlight, AisHits, AisInstantSearchSsr, AisMenu, AisPanel, AisSearchBox } from 'vue-instantsearch/vue3/es';
+import { computed, getCurrentInstance, inject, onBeforeMount, onServerPrefetch, provide, ref, useSSRContext } from 'vue';
 import { copyLawLink, getMeta } from 'src/ts/utils.ts';
 import { renderToString } from 'vue/server-renderer';
 import { useMeta } from 'quasar';
@@ -122,6 +139,31 @@ import { useRoute } from 'vue-router';
 import { useAlgoliaStore } from 'stores/algolia.ts';
 
 const selected = ref('');
+
+// The current search box text. Always '' during SSR — the search box lives inside
+// <q-no-ssr>, and this page reads nothing from the URL query — so the server render always
+// takes the narrow branch of searchParameters below.
+const query = ref('');
+
+/**
+ * What Algolia is allowed to put in each hit. Without this the index defaults apply, and
+ * the empty-query render — which is every SSR render of `/` and `/legislation` — shipped
+ * ~250 KB of JSON per response to display 15 law names:
+ *
+ *   _highlightResult 119 KB · content[] 87 KB · _snippetResult 36 KB · actually rendered 10 KB
+ *
+ * All of it rode into the browser inside window.__INITIAL_STATE__, on the site's two most
+ * crawled URLs. The per-clause block in the template is gated on matchedWords, which is
+ * empty for every clause when there is no query, so none of those three attributes can
+ * render anything until the visitor actually types something. So don't fetch them until
+ * they do — and never fetch _snippetResult, which nothing in this app has ever read.
+ */
+const searchParameters = computed(() =>
+  query.value === ''
+    ? { attributesToRetrieve: ['name', 'category'], attributesToHighlight: ['name'], attributesToSnippet: [] }
+    : { attributesToSnippet: [] },
+);
+
 defineProps({
   manage: {
     type: Boolean,
@@ -141,6 +183,7 @@ provide(AIS_SSR_INSTANCE_KEY, instantsearch);
 
 const components = {
   AisInstantSearchSsr,
+  AisConfigure,
   AisSearchBox,
   AisMenu,
   AisHits,
