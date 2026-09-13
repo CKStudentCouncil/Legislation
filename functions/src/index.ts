@@ -10,8 +10,10 @@
 import * as admin from 'firebase-admin';
 admin.initializeApp(); // This must run before everything else
 import { FieldPath, FieldValue } from 'firebase-admin/firestore';
-import { CallableRequest, HttpsError, onCall, onRequest } from 'firebase-functions/https';
-import { onDocumentWritten } from 'firebase-functions/firestore';
+import { CallableRequest, HttpsError } from 'firebase-functions/https';
+// Trigger wrappers, not the raw firebase-functions ones: same signatures, plus Sentry
+// reporting of anything a handler throws. See ./sentry.
+import { onCall, onDocumentWritten, onRequest } from './sentry';
 import * as logger from 'firebase-functions/logger';
 import { drive_v3, google } from 'googleapis';
 import * as Stream from 'stream';

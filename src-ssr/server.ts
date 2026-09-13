@@ -9,6 +9,7 @@
  * Since @quasar/app-vite v3, /src-ssr is its own package: anything imported
  * here must be declared in /src-ssr/package.json (not the root one).
  */
+import { initSentry } from './sentry.ts';
 import express from 'express';
 import type { Application, Request, Response } from 'express';
 import type { Server } from 'node:http';
@@ -40,6 +41,10 @@ declare module '#q-app' {
  * Can be async: defineSsrCreate(async ({ ... }) => { ... })
  */
 export const create = defineSsrCreate(async (/* { ... } */) => {
+  // Before anything else, so the default onUncaughtException / onUnhandledRejection
+  // handlers cover the whole life of the process. No-op unless SENTRY_DSN is set.
+  initSentry();
+
   const app = express();
 
   // attackers can use this header to detect apps running Express

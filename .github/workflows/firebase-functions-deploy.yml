@@ -63,9 +63,25 @@ jobs:
         # firebase deploy bundles functions/.env as the deployed runtime env, so we
         # materialise it here from the FUNCTIONS_ENV secret (via env, not inline, to keep it
         # out of the command line and logs), exactly like credential.json above.
-        run: printf '%s' "$FUNCTIONS_ENV" > functions/.env
+        #
+        # The Sentry lines are appended rather than kept inside FUNCTIONS_ENV so that the
+        # single repo secret SENTRY_DSN configures all three runtimes, and so
+        # SENTRY_RELEASE always names the commit actually being deployed rather than
+        # whatever was current when the blob was last edited. With SENTRY_DSN unset these
+        # are all empty and functions/src/sentry.ts stays a transparent pass-through.
+        run: |
+          printf '%s' "$FUNCTIONS_ENV" > functions/.env
+          {
+            echo ""
+            echo "SENTRY_DSN=$SENTRY_DSN"
+            echo "SENTRY_ENVIRONMENT=production"
+            echo "SENTRY_RELEASE=$GITHUB_SHA"
+            echo "SENTRY_TRACES_SAMPLE_RATE=$SENTRY_TRACES_SAMPLE_RATE"
+          } >> functions/.env
         env:
           FUNCTIONS_ENV: ${{ secrets.FUNCTIONS_ENV }}
+          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+          SENTRY_TRACES_SAMPLE_RATE: ${{ vars.SENTRY_TRACES_SAMPLE_RATE }}
 
       - name: Write deploy service-account key
         # The Firebase CLI authenticates from a service-account key file pointed to by

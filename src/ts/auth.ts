@@ -4,6 +4,7 @@ import type * as models from 'src/ts/models.ts';
 import type { Ref } from 'vue';
 import { reactive, ref } from 'vue';
 import { useAuth, useFunctionAsync } from 'boot/vuefire.ts';
+import { setSentryUser } from 'boot/sentry.ts';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
 export const loggedInUser = ref(null) as Ref<User | null>;
@@ -62,9 +63,14 @@ export async function updateCustomClaims() {
   const claims = await auth?.currentUser?.getIdTokenResult();
   if (!claims) {
     loggedInUserClaims.roles = [];
+    // Also covers logout: onAuthStateChanged calls this with no current user.
+    setSentryUser(null);
     return;
   }
   loggedInUserClaims.roles = (claims.claims.roles as string[]) || [];
+  // Roles decide what a user could see, so they are the single most useful thing to have
+  // attached to an issue in a system where the same page renders differently per role.
+  setSentryUser(auth.currentUser, loggedInUserClaims.roles);
 }
 
 export function useCurrentClaims() {

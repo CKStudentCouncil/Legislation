@@ -2,8 +2,33 @@
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
 import { defineConfig } from '#q-app';
+import { sentryVitePlugin } from '@sentry/vite-plugin';
 
 export default defineConfig((ctx) => {
+  /**
+   * Sentry. Every piece below is inert when its environment variable is missing, so a
+   * checkout with no Sentry env in scope builds exactly what it built before. See
+   * CLAUDE.md > Error reporting for which variable is read by which runtime.
+   *
+   * These go through `defineEnv` rather than the QCLI_ client prefix on purpose: defineEnv
+   * guarantees the keys exist as typed literals in `import.meta.env` even on a machine
+   * that has none of them set. That is what lets src/boot/sentry.ts fold its guards to
+   * constants (so Rolldown drops the whole SDK) instead of failing the vue-tsc pass with
+   * "property does not exist on type ImportMetaEnv".
+   */
+  const clamp01 = (value: string | undefined) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.min(Math.max(parsed, 0), 1) : 0;
+  };
+  const sentryAuthToken = process.env.SENTRY_AUTH_TOKEN ?? '';
+  const sentryOrg = process.env.SENTRY_ORG ?? '';
+  const sentryProject = process.env.SENTRY_PROJECT ?? '';
+  const sentryRelease = process.env.SENTRY_RELEASE ?? '';
+  // A minified stack trace is worthless, so source maps are generated only when there is
+  // somewhere to upload them to. The plugin deletes them again once the upload succeeds,
+  // so they never reach dist/spa and never get served to visitors.
+  const uploadSourcemaps = ctx.prod && sentryAuthToken !== '' && sentryOrg !== '' && sentryProject !== '';
+
   return {
     // https://v2.quasar.dev/quasar-cli-vite/prefetch-feature
     preFetch: true,
@@ -11,7 +36,9 @@ export default defineConfig((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ['vuefire'],
+    // 'sentry' first: it installs the Vue error handler, so anything the later boot files
+    // throw is already being reported by the time they run.
+    boot: ['sentry', 'vuefire'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],
@@ -54,6 +81,17 @@ export default defineConfig((ctx) => {
         node: 'node22',
       },
 
+      defineEnv: {
+        SENTRY_DSN: process.env.SENTRY_DSN ?? '',
+        SENTRY_ENVIRONMENT: process.env.SENTRY_ENVIRONMENT || (ctx.dev ? 'development' : 'production'),
+        SENTRY_RELEASE: sentryRelease,
+        // Both default to 0, which is not just "don't sample" but "don't ship": the
+        // integrations they gate are dead code at 0 and never enter the bundle.
+        SENTRY_TRACES_SAMPLE_RATE: clamp01(process.env.SENTRY_TRACES_SAMPLE_RATE),
+        SENTRY_REPLAY_SESSION_SAMPLE_RATE: clamp01(process.env.SENTRY_REPLAY_SESSION_SAMPLE_RATE),
+        SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE: clamp01(process.env.SENTRY_REPLAY_ON_ERROR_SAMPLE_RATE),
+      },
+
       typescript: {
         strict: true,
         vueShim: true,
@@ -91,6 +129,11 @@ export default defineConfig((ctx) => {
       // boolean | 'dce-only' | object — 'terser'/'oxc' make that build throw.
       // `true` uses Vite 8's oxc minifier, which drops comments by default.
       minify: true,
+      // Only ever 'hidden' (maps emitted, no sourceMappingURL comment) and only while
+      // uploading: @sentry/vite-plugin stamps debug IDs into the bundles, ships the maps
+      // to Sentry and then deletes them from dist/, so traces de-minify in Sentry without
+      // the maps being reachable from the browser.
+      sourcemap: uploadSourcemaps ? ('hidden' as const) : false,
       // polyfillModulePreload: true,
       // distDir
 
@@ -98,6 +141,33 @@ export default defineConfig((ctx) => {
         // SSR
         if ((ctx.mode as any).ssr) {
           viteConf.build!.assetsDir = 'ssr-assets';
+        }
+
+        // Injected here rather than through build.vitePlugins because sentryVitePlugin()
+        // returns an *array* of plugins, which Quasar's vitePlugins parser has no form for
+        // (it would deep-merge the array into an object). Running for every Vite build in
+        // the mode means the SPA chunks, the SSR client chunks and the server render
+        // bundle all get their maps uploaded under the same release.
+        if (uploadSourcemaps) {
+          viteConf.plugins = [
+            ...(viteConf.plugins ?? []),
+            ...sentryVitePlugin({
+              org: sentryOrg,
+              project: sentryProject,
+              authToken: sentryAuthToken,
+              ...(sentryRelease ? { release: { name: sentryRelease } } : {}),
+              sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.js.map'] },
+              telemetry: false,
+              // The plugin throws by default, which would abort the build — so a Sentry
+              // outage, an expired token or a rate limit would take down the deploy of a
+              // release that is otherwise perfectly fine. The site shipping matters more
+              // than its stack traces being readable, so warn and carry on. Verified: the
+              // maps are still deleted on a failed upload, so this cannot leak them.
+              errorHandler: (err: Error) => {
+                console.warn('[sentry] source map upload failed, continuing build:', err.message);
+              },
+            }),
+          ];
         }
         viteConf.build!.rollupOptions = {
           ...viteConf.build!.rollupOptions,

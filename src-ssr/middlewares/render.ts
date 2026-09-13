@@ -1,4 +1,5 @@
 import { defineSsrMiddleware } from '#q-app';
+import { captureRenderError } from '../sentry.ts';
 import type { SsrRenderRedirectError, SsrRenderRouteNotFoundError } from '#q-app';
 
 // Since @quasar/app-vite v3, render() rejects with plain shapes rather than a
@@ -55,6 +56,11 @@ export default defineSsrMiddleware(({ app, resolve, render, serve }) => {
         res.status(404).send('404 | Page Not Found');
         return;
       }
+
+      // Everything still here is a genuine render failure — the two rejections handled
+      // above are normal control flow. This has to be an explicit capture: the catch
+      // never calls next(err), so an Express error handler would never see it.
+      captureRenderError(err, req);
 
       // well, we treat any other code as error;
       // if we're in dev mode, then we can use Quasar CLI
