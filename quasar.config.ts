@@ -44,19 +44,23 @@ export default defineConfig((ctx) => {
     css: ['app.scss'],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
-    extras: [
-      // 'ionicons-v4',
-      // 'mdi-v7',
-      // 'fontawesome-v6',
-      // 'eva-icons',
-      // 'themify',
-      // 'line-awesome',
-      // 'roboto-font-latin-ext', // this or either 'roboto-font', NEVER both!
-
-      // 'roboto-font' dropped: UI is Traditional Chinese (system CJK fonts); the Latin
-      // webfont was render-blocking weight for little benefit. Re-add if Latin UI regresses.
-      'material-icons', // optional, you are not bound to it
-    ],
+    // No webfonts at all.
+    //
+    // 'roboto-font' was dropped earlier: the UI is Traditional Chinese (system CJK fonts), so
+    // the Latin webfont was render-blocking weight for little benefit.
+    //
+    // 'material-icons' is gone for the same reason, and it was the larger of the two: the
+    // ligature webfont is a flat 129 KB woff2 on every cold page load, carrying ~2000 glyphs
+    // to draw the 60 this app actually uses. Icons are now SVG path data — each `mat*` import
+    // is a string constant that Rolldown tree-shakes, and `iconSet` below switches Quasar's
+    // own internal icons (dropdown arrows, checkboxes, dialog chrome) to SVG as well, since
+    // those would otherwise still be emitted as ligature names with no font to resolve them.
+    //
+    // The consequence: an icon name written as a bare string no longer renders. Import the
+    // constant instead (`import { matEdit } from '@quasar/extras/material-icons'` then
+    // `:icon="matEdit"`), and for the ligature names that live in models.ts, go through
+    // `icon()` in src/ts/icons.ts.
+    extras: [],
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#build
     build: {
@@ -169,52 +173,27 @@ export default defineConfig((ctx) => {
             }),
           ];
         }
-        viteConf.build!.rollupOptions = {
-          ...viteConf.build!.rollupOptions,
-          output: {
-            ...viteConf.build!.rollupOptions?.output,
-            manualChunks(id) {
-              // Only apply manualChunks for client build
-              if (viteConf.build!.ssr) {
-                return;
-              }
-
-              // Firebase SDK
-              if (id.includes('node_modules/firebase/')) {
-                return 'vendor-firebase';
-              }
-              if (id.includes('node_modules/@firebase/')) {
-                return 'vendor-firebase-internal';
-              }
-              // Quasar framework internals
-              if (id.includes('node_modules/quasar/') || id.includes('node_modules/@quasar/')) {
-                return 'vendor-quasar';
-              }
-              // Diff / text-comparison libraries (used in legislation diff view)
-              if (id.includes('node_modules/diff-match-patch/') || id.includes('node_modules/diff/') || id.includes('node_modules/fast-diff/')) {
-                return 'vendor-diff';
-              }
-              // Drag-and-drop
-              if (id.includes('node_modules/vue-draggable-plus/') || id.includes('node_modules/sortablejs/')) {
-                return 'vendor-draggable';
-              }
-              // Algolia search
-              if (id.includes('node_modules/algoliasearch/') || id.includes('node_modules/@algolia/')) {
-                return 'vendor-algolia';
-              }
-              // Vue ecosystem (vue, vue-router, pinia, vuefire)
-              if (
-                id.includes('node_modules/vue/') ||
-                id.includes('node_modules/vue-router/') ||
-                id.includes('node_modules/pinia/') ||
-                id.includes('node_modules/vuefire/') ||
-                id.includes('node_modules/@vueuse/')
-              ) {
-                return 'vendor-vue';
-              }
-            },
-          },
-        };
+        /**
+         * No manualChunks here, deliberately.
+         *
+         * There used to be one grouping node_modules into vendor-firebase / vendor-quasar /
+         * vendor-vue / vendor-diff / vendor-draggable / vendor-algolia. Grouping by package
+         * name cuts across the real module graph, and once two groups each hold something the
+         * other needs the chunks become mutually dependent: the built output had vendor-quasar
+         * AND vendor-vue both statically importing vendor-draggable, and vendor-firebase
+         * statically importing vendor-algolia. Static imports are not deferrable, so the whole
+         * tangle landed in the entry's static closure — every visitor to every page downloaded
+         * 111 KB of drag-and-drop (vue-draggable-plus + sortablejs, used only by the /manage
+         * editors and the amendment drafter) and 19 KB of Algolia (used only by the legislation
+         * index), on a site whose public pages are server-rendered documents.
+         *
+         * Letting Rolldown split on its own drops the entry's static closure from 1194 KB to
+         * 921 KB uncompressed and puts vue-draggable-plus back where it belongs, in a lazy
+         * 40 KB chunk pulled only by the routes that import it. If you reintroduce manualChunks,
+         * re-check the static closure afterwards — `dist/ssr/client/ssr-assets`, follow the
+         * `import` statements out of index-*.js — because the regression is invisible in the
+         * build's chunk listing and only shows up as bytes on every page.
+         */
       },
       // viteVuePluginOptions: {},
 
@@ -248,7 +227,10 @@ export default defineConfig((ctx) => {
     framework: {
       config: {},
 
-      // iconSet: 'material-icons', // Quasar icon set
+      // Quasar's own internal icons as SVG, to match the app's. Without this, components
+      // like QSelect/QCheckbox/QDialog emit material-icons ligature names and, with the
+      // webfont gone, would render them as literal text ("arrow_drop_down").
+      iconSet: 'svg-material-icons',
       lang: 'zh-TW', // Quasar language pack
 
       // For special cases outside of where the auto-import strategy can have an impact

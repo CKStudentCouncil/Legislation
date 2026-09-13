@@ -142,7 +142,6 @@ export const serveStaticContent = defineSsrServeStaticContent(({ app, resolve })
 
 const jsRE = /\.js$/;
 const cssRE = /\.css$/;
-const woffRE = /\.woff$/;
 const woff2RE = /\.woff2$/;
 const gifRE = /\.gif$/;
 const jpgRE = /\.jpe?g$/;
@@ -161,10 +160,12 @@ export const renderPreloadTag = defineSsrRenderPreloadTag((file /* , { ssrContex
     return `<link rel="stylesheet" href="${file}" crossorigin>`;
   }
 
-  if (woffRE.test(file) === true) {
-    return `<link rel="preload" href="${file}" as="font" type="font/woff" crossorigin>`;
-  }
-
+  // Deliberately no .woff branch. Quasar's material-icons @font-face lists woff2 first and
+  // falls back to woff, and every browser in build.target (es2022 / firefox115 / chrome115 /
+  // safari14) supports woff2 — so the woff is dead weight the browser would never request on
+  // its own. Preloading it does not give the browser a choice: `as="font"` fetches it
+  // unconditionally, so the tag was the only reason a second 165 KB copy of the same icon
+  // font ever came down the wire. Returning '' leaves the CSS to pick woff2 as it already did.
   if (woff2RE.test(file) === true) {
     return `<link rel="preload" href="${file}" as="font" type="font/woff2" crossorigin>`;
   }

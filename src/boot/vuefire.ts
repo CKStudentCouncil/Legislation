@@ -1,6 +1,5 @@
 import { defineBoot } from '#q-app';
 import { initializeApp } from 'firebase/app';
-import { VueFire } from 'vuefire';
 import { createGtag } from 'vue-gtag';
 import type { HttpsCallable } from '@firebase/functions';
 import type { Auth } from 'firebase/auth';
@@ -16,10 +15,28 @@ export const firebaseApp = initializeApp({
 });
 
 export default defineBoot(({ app }) => {
-  app.use(VueFire, {
-    firebaseApp,
-    modules: [],
-  });
+  /**
+   * Deliberately NOT `app.use(VueFire, { firebaseApp, modules: [] })`.
+   *
+   * That plugin's entire body is `app.provide(_FirebaseAppInjectionKey, firebaseApp)` plus a
+   * loop over `modules`, and `modules` is empty here — while vuefire's `useFirebaseApp()`
+   * already falls back to `getApp()` when the injection is missing (it passes `null` as the
+   * inject default specifically to avoid warning about it). So installing it bought nothing
+   * that `initializeApp()` above does not already provide.
+   *
+   * What it cost was the whole app. Boot files are eager, so `import { VueFire } from
+   * 'vuefire'` put vuefire — and through it the Firestore SDK — in the entry chunk's static
+   * import closure: ~175 KB brotli on every page, including the server-rendered public
+   * document and legislation pages, whose content is already in the HTML and whose store is
+   * hydrated from the serialized SSR state (`loadDocument` returns early and never opens a
+   * Firestore connection). Every other vuefire/Firestore importer — model-converters.ts, the
+   * /manage pages, the judicial pages, DocumentsPageV2 — is behind a lazy route chunk, so
+   * dropping this line is what actually lets Rolldown keep Firestore out of the entry.
+   *
+   * `firebaseApp` is still initialized eagerly at module scope above, which is what
+   * `getApp()` resolves to, so `useFirestore()` / `useDocument()` / `useCollection()` keep
+   * working unchanged wherever they are used.
+   */
 
   if (!import.meta.env.QUASAR_SERVER) {
     // defer gtag to reduce TBT and initial load size
