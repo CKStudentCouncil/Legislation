@@ -29,13 +29,13 @@
               <q-item-section>{{ r.title }}</q-item-section>
               <q-item-section side>
                 <div>
-                  <q-btn flat dense icon="edit" size="10px" @click="editResolution(i)" />
-                  <q-btn flat dense icon="delete" size="10px" color="negative" @click="removeResolution(i)" />
+                  <q-btn flat dense :icon="matEdit" size="10px" @click="editResolution(i)" />
+                  <q-btn flat dense :icon="matDelete" size="10px" color="negative" @click="removeResolution(i)" />
                 </div>
               </q-item-section>
             </q-item>
           </q-list>
-          <q-btn flat dense icon="add" label="新增決議文" color="positive" @click="addResolution" />
+          <q-btn flat dense :icon="matAdd" label="新增決議文" color="positive" @click="addResolution" />
         </div>
       </q-card-section>
       <q-card-actions align="right">
@@ -47,6 +47,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matAdd, matDelete, matEdit } from '@quasar/extras/material-icons';
 import type { ResolutionUrl } from 'src/ts/models.ts';
 import { LegislationCategory } from 'src/ts/models.ts';
 import { computed, ref } from 'vue';

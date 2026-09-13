@@ -7,16 +7,16 @@
 
   <q-page padding>
     <q-stepper ref="stepper" v-model="step" animated header-nav>
-      <q-step :done="!!findBy" :name="0" class="justify-center row" icon="list" title="選擇檢索模式">
-        <q-btn class="row text-h6 q-mb-md" icon="menu" label="依屆次列出所有啟字公文選擇" @click="chooseFindBy('select')" />
-        <q-btn class="row text-h6" icon="search" label="依訴訟案件號查詢" @click="chooseFindBy('id')" />
+      <q-step :done="!!findBy" :name="0" class="justify-center row" :icon="matList" title="選擇檢索模式">
+        <q-btn class="row text-h6 q-mb-md" :icon="matMenu" label="依屆次列出所有啟字公文選擇" @click="chooseFindBy('select')" />
+        <q-btn class="row text-h6" :icon="matSearch" label="依訴訟案件號查詢" @click="chooseFindBy('id')" />
       </q-step>
 
-      <q-step v-if="findBy === 'select'" :done="step === 2" :error="!reignValid" :name="1" icon="menu" title="輸入屆次">
+      <q-step v-if="findBy === 'select'" :done="step === 2" :error="!reignValid" :name="1" :icon="matMenu" title="輸入屆次">
         <q-input ref="reignInput" v-model="reign" :label="`屆次 (例：${getCurrentReign()})`" :rules="[isReign]" autofocus @keyup.enter="next" />
       </q-step>
 
-      <q-step v-if="findBy === 'select'" :header-nav="false" :name="2" class="text-center" icon="checklist" title="選擇啟字公文">
+      <q-step v-if="findBy === 'select'" :header-nav="false" :name="2" class="text-center" :icon="matChecklist" title="選擇啟字公文">
         <q-spinner v-if="!q" color="primary" size="40px" />
         <q-list v-else bordered separator>
           <q-item v-for="doc of sortedOptions" :key="doc.idNumber" v-ripple :to="`/document/judicial/lawsuit/${doc.getFullId()}`" clickable>
@@ -32,7 +32,7 @@
         </q-list>
       </q-step>
 
-      <q-step v-if="findBy === 'id'" :name="3" icon="search" title="輸入案件號">
+      <q-step v-if="findBy === 'id'" :name="3" :icon="matSearch" title="輸入案件號">
         <q-select v-model="courtType" :options="courtTypeOptions" label="法庭類型" />
 
         <q-select v-if="courtType === '憲章法庭'" v-model="idPrefix" :options="constitutionalPrefixOptions" label="案件號字首" class="q-mt-md" />
@@ -58,6 +58,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matChecklist, matList, matMenu, matSearch } from '@quasar/extras/material-icons';
 import { computed, ref, watch } from 'vue';
 import { getMeta, stripHtml } from 'src/ts/utils.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';

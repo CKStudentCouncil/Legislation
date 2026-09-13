@@ -5,16 +5,16 @@
       <h1 class="sr-only">{{ doc.subject }}</h1>
       <div>
         <q-no-ssr>
-          <q-btn class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
+          <q-btn class="no-print" dense flat :icon="matPrint" size="20px" @click="handlePrint">
             <q-tooltip>列印</q-tooltip>
           </q-btn>
-          <q-btn class="no-print" dense flat icon="share" size="20px" @click="share">
+          <q-btn class="no-print" dense flat :icon="matShare" size="20px" @click="share">
             <q-tooltip>分享</q-tooltip>
           </q-btn>
-          <q-btn class="no-print" dense flat icon="zoom_in" size="20px" @click="size += 10">
+          <q-btn class="no-print" dense flat :icon="matZoomIn" size="20px" @click="size += 10">
             <q-tooltip>放大</q-tooltip>
           </q-btn>
-          <q-btn class="no-print" dense flat icon="zoom_out" size="20px" @click="size -= 10">
+          <q-btn class="no-print" dense flat :icon="matZoomOut" size="20px" @click="size -= 10">
             <q-tooltip>縮小</q-tooltip>
           </q-btn>
         </q-no-ssr>
@@ -34,6 +34,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matPrint, matShare, matZoomIn, matZoomOut } from '@quasar/extras/material-icons';
 import { useRoute } from 'vue-router';
 import { useVueToPrint } from 'vue-to-print';
 import { onMounted, onServerPrefetch, ref, useSSRContext } from 'vue';

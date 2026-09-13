@@ -1,10 +1,11 @@
 <template>
-  <q-btn class="q-ma-md" color="positive" icon="add" label="新增法令" @click="add" />
+  <q-btn class="q-ma-md" color="positive" :icon="matAdd" label="新增法令" @click="add" />
   <LegislationPage manage />
   <LegislationDialog v-model="target" :action="action" @canceled="action = null" @submit="submit" />
 </template>
 
 <script lang="ts" setup>
+import { matAdd } from '@quasar/extras/material-icons';
 import LegislationPage from 'pages/legislation/LegislationPage.vue';
 import { reactive, ref } from 'vue';
 import type { Addendum, LegislationHistory, Legislation, LegislationContent } from 'src/ts/models.ts';

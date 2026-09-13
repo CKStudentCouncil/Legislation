@@ -27,8 +27,8 @@
     </div>
 
     <div class="q-mb-lg">
-      <q-btn color="primary" icon="search" label="搜尋" @click="applyFilters" />
-      <q-btn class="q-ml-sm" flat color="primary" icon="clear" label="清除條件" @click="resetFilters" />
+      <q-btn color="primary" :icon="matSearch" label="搜尋" @click="applyFilters" />
+      <q-btn class="q-ml-sm" flat color="primary" :icon="matClear" label="清除條件" @click="resetFilters" />
     </div>
 
     <div class="text-subtitle2 q-mb-md">共 {{ filteredDocs.length }} 筆決議文</div>
@@ -56,7 +56,7 @@
           </div>
         </q-card-section>
 
-        <q-expansion-item icon="preview" label="預覽內容" expand-separator>
+        <q-expansion-item :icon="matPreview" label="預覽內容" expand-separator>
           <q-card flat>
             <q-card-section>
               <DocumentRenderer :doc="doc" />
@@ -67,11 +67,11 @@
         <q-separator />
 
         <q-card-actions align="right">
-          <q-btn flat color="primary" icon="link" label="複製連結" @click="copyDocLink(doc)" />
+          <q-btn flat color="primary" :icon="matLink" label="複製連結" @click="copyDocLink(doc)" />
           <q-btn
             flat
             color="primary"
-            icon="open_in_new"
+            :icon="matOpenInNew"
             label="檢視原文"
             :to="`/document/${doc.getFullId()}`"
             rel="link"
@@ -84,6 +84,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matClear, matLink, matOpenInNew, matPreview, matSearch } from '@quasar/extras/material-icons';
 import { computed, ref } from 'vue';
 import { query, where } from 'firebase/firestore';
 import { useCollection } from 'vuefire';

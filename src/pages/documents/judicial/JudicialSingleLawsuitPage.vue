@@ -11,7 +11,7 @@
         v-for="(doc, index) in sortedDocs"
         :key="doc.createdAt.valueOf()"
         :caption="doc.subject"
-        :icon="doc.type.icon"
+        :icon="icon(doc.type.icon)"
         :name="index"
         :title="doc.getFullId()"
       >
@@ -19,12 +19,12 @@
         <q-stepper-navigation align="right">
           <q-btn v-if="step !== sortedDocs.length - 1" color="primary" label="下一頁" @click="next" />
           <q-btn v-if="step !== 0" color="primary" flat label="上一頁" @click="previous" />
-          <q-btn color="primary" flat icon="link" label="複製連結" @click="copyLink(step)" />
+          <q-btn color="primary" flat :icon="matLink" label="複製連結" @click="copyLink(step)" />
           <q-btn
             :to="`/document/${doc.getFullId()}`"
             color="primary"
             flat
-            icon="open_in_new"
+            :icon="matOpenInNew"
             label="檢視原文"
             rel="link"
             :alt="`${doc.getFullId()}：${doc.subject}`"
@@ -36,6 +36,8 @@
 </template>
 
 <script lang="ts" setup>
+import { matLink, matOpenInNew } from '@quasar/extras/material-icons';
+import { icon } from 'src/ts/icons.ts';
 import { useRoute, useRouter } from 'vue-router';
 import { onMounted, onServerPrefetch, ref, watch } from 'vue';
 import type { Document } from 'src/ts/models.ts';

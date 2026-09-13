@@ -3,18 +3,18 @@
     <div v-if="!docu">載入中...(或查無此公文)</div>
     <div v-else style="max-width: min(1170px, 97vw)">
       <div class="q-gutter-md q-mb-md">
-        <q-btn v-if="canEdit" color="positive" icon="edit" label="編輯資訊" @click="edit" />
-        <q-btn v-if="canEdit" color="primary" icon="edit" label="編輯內文" @click="editContent" />
-        <q-btn v-if="canEdit" color="accent" icon="attachment" label="上傳附件" @click="uploadAttachment()" />
-        <q-btn-dropdown v-if="canEdit" color="warning" icon="settings" label="進階功能">
+        <q-btn v-if="canEdit" color="positive" :icon="matEdit" label="編輯資訊" @click="edit" />
+        <q-btn v-if="canEdit" color="primary" :icon="matEdit" label="編輯內文" @click="editContent" />
+        <q-btn v-if="canEdit" color="accent" :icon="matAttachment" label="上傳附件" @click="uploadAttachment()" />
+        <q-btn-dropdown v-if="canEdit" color="warning" :icon="matSettings" label="進階功能">
           <div class="q-gutter-sm col">
-            <q-btn class="bg-amber-8 row" icon="schedule" label="發布時間" @click="editPublishedAt()" />
-            <q-btn v-if="canOwnDoc" class="bg-green-8 row" icon="123" label="公文字號" @click="editId()" />
+            <q-btn class="bg-amber-8 row" :icon="matSchedule" label="發布時間" @click="editPublishedAt()" />
+            <q-btn v-if="canOwnDoc" class="bg-green-8 row" :icon="mat123" label="公文字號" @click="editId()" />
           </div>
         </q-btn-dropdown>
-        <q-btn v-if="canManageCollaborators" color="teal" icon="group" label="管理協作者" @click="managingCollaborators = true" />
-        <q-btn v-if="canEdit" color="brown" icon="history" label="歷史版本" @click="showHistory = true" />
-        <q-btn v-if="canEdit && !docu.published" color="secondary" icon="send" label="發布公文">
+        <q-btn v-if="canManageCollaborators" color="teal" :icon="matGroup" label="管理協作者" @click="managingCollaborators = true" />
+        <q-btn v-if="canEdit" color="brown" :icon="matHistory" label="歷史版本" @click="showHistory = true" />
+        <q-btn v-if="canEdit && !docu.published" color="secondary" :icon="matSend" label="發布公文">
           <q-popup-proxy>
             <div class="q-ma-lg row">
               <div class="col-9">
@@ -28,7 +28,7 @@
             </div>
           </q-popup-proxy>
         </q-btn>
-        <q-btn v-if="canEdit && docu.published" color="negative" icon="close" label="撤回公文">
+        <q-btn v-if="canEdit && docu.published" color="negative" :icon="matClose" label="撤回公文">
           <q-popup-proxy>
             <div class="q-ma-lg">
               確認撤回公文？
@@ -36,7 +36,7 @@
             </div>
           </q-popup-proxy>
         </q-btn>
-        <q-btn v-if="canDelete" color="negative" icon="delete" label="刪除公文">
+        <q-btn v-if="canDelete" color="negative" :icon="matDelete" label="刪除公文">
           <q-popup-proxy>
             <div class="q-ma-lg">
               確認刪除公文？
@@ -59,12 +59,12 @@
           @update="rearrangeAttachment"
         >
           <div v-for="(attachment, index) of docu.attachments" :key="attachment.description + attachment.urls.toString()" class="row">
-            <q-icon v-if="attachmentDraggable" class="col self-center q-mr-sm" name="drag_indicator" style="max-width: 10px">
+            <q-icon v-if="attachmentDraggable" class="col self-center q-mr-sm" :name="matDragIndicator" style="max-width: 10px">
               <q-tooltip>拖曳以重新排序</q-tooltip>
             </q-icon>
             <AttachmentDisplay :attachment="attachment" :order="index + 1" style="width: calc(100% - 110px)" />
-            <q-btn flat icon="edit" size="10px" @click="uploadAttachment(attachment)" />
-            <q-btn color="negative" flat icon="delete" size="10px" @click="removeAttachment(attachment)" />
+            <q-btn flat :icon="matEdit" size="10px" @click="uploadAttachment(attachment)" />
+            <q-btn color="negative" flat :icon="matDelete" size="10px" @click="removeAttachment(attachment)" />
           </div>
         </VueDraggable>
       </div>
@@ -144,6 +144,7 @@
 </template>
 
 <script lang="ts" setup>
+import { mat123, matAttachment, matClose, matDelete, matDragIndicator, matEdit, matGroup, matHistory, matSchedule, matSend, matSettings } from '@quasar/extras/material-icons';
 import { useRoute, useRouter } from 'vue-router';
 import type { Attachment } from 'src/ts/models.ts';
 import { documentsCollection } from 'src/ts/model-converters.ts';

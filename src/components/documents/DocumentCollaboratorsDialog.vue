@@ -42,7 +42,7 @@
             <q-btn
               color="primary"
               dense
-              icon="add"
+              :icon="matAdd"
               label="新增"
               no-caps
               :disable="checking || (addKind === 'email' ? !addEmail.trim() : !addRole)"
@@ -83,7 +83,7 @@
               <q-select v-model="g.tier" borderless dense emit-value map-options :options="tierOptions" options-dense />
             </q-item-section>
             <q-item-section side>
-              <q-btn color="negative" dense flat icon="delete" round @click="remove(i)" />
+              <q-btn color="negative" dense flat :icon="matDelete" round @click="remove(i)" />
             </q-item-section>
           </q-item>
         </q-list>
@@ -118,6 +118,8 @@
 </template>
 
 <script lang="ts" setup>
+import { icon } from 'src/ts/icons.ts';
+import { matAccountCircle, matAdd, matBadge, matDelete } from '@quasar/extras/material-icons';
 import { computed, ref, watch } from 'vue';
 import { doc as firestoreDoc, updateDoc } from 'firebase/firestore';
 import { documentsCollection } from 'src/ts/model-converters.ts';
@@ -233,8 +235,10 @@ function granteeLabel(g: Grantee): string {
 // A role is shown with its department's (category's) icon; an email without a resolved avatar falls
 // back to a generic person icon.
 function granteeIcon(g: Grantee): string {
-  if (g.kind === 'role') return DocumentSpecificIdentity.VALUES[g.value]?.generic.icon ?? 'badge';
-  return 'account_circle';
+  // `generic.icon` is a models.ts ligature name, so it has to go through the SVG bridge;
+  // the two fallbacks are already SVG path data.
+  if (g.kind === 'role') return icon(DocumentSpecificIdentity.VALUES[g.value]?.generic.icon) ?? matBadge;
+  return matAccountCircle;
 }
 function granteeCaption(g: Grantee): string {
   if (g.kind === 'role') return '角色';

@@ -2,12 +2,13 @@
   <component :is="headingTag">
     {{ $props.content.title }} {{ $props.content.subtitle }}
     <q-no-ssr>
-      <q-btn aria-label="複製連結" class="no-print" dense flat icon="link" size="12px" @click="copyLink($props.content.index)" />
+      <q-btn aria-label="複製連結" class="no-print" dense flat :icon="matLink" size="12px" @click="copyLink($props.content.index)" />
     </q-no-ssr>
   </component>
 </template>
 
 <script lang="ts" setup>
+import { matLink } from '@quasar/extras/material-icons';
 import { copyLink } from 'src/ts/utils.ts';
 import type { PropType } from 'vue';
 import type { LegislationContent } from 'src/ts/models.ts';

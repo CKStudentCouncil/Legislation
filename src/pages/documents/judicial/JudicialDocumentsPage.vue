@@ -17,7 +17,7 @@
             @click="selected = selected == category.firebase ? '' : category.firebase"
           >
             <q-item-section avatar>
-              <q-icon :name="category.icon" />
+              <q-icon :name="icon(category.icon)" />
             </q-item-section>
             <q-item-section>
               <q-item-label>
@@ -33,6 +33,7 @@
 </template>
 
 <script lang="ts" setup>
+import { icon } from 'src/ts/icons.ts';
 import { DocumentType } from 'src/ts/models.ts';
 import { ref } from 'vue';
 import DocumentsPageV2 from 'pages/documents/DocumentsPageV2.vue';

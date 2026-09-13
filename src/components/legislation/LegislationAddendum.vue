@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+import { matDelete, matEdit } from '@quasar/extras/material-icons';
 import { translateNumberToChinese } from 'src/ts/utils.ts';
 
 defineProps({
@@ -29,8 +30,8 @@ defineEmits({
       </p>
     </div>
     <div v-if="editable" class="self-center">
-      <q-btn flat icon="edit" size="10px" @click="$emit('edit', addendum)" />
-      <q-btn color="negative" flat icon="delete" size="10px" @click="$emit('remove', addendum)" />
+      <q-btn flat :icon="matEdit" size="10px" @click="$emit('edit', addendum)" />
+      <q-btn color="negative" flat :icon="matDelete" size="10px" @click="$emit('remove', addendum)" />
     </div>
   </div>
 </template>

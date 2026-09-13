@@ -7,8 +7,8 @@
           {{ item }}
         </q-item-section>
         <q-item-section side>
-          <q-btn color="primary" icon="edit" dense @click="editItem(index as number)" />
-          <q-btn color="negative" icon="delete" dense @click="removeItem(index as number)" />
+          <q-btn color="primary" :icon="matEdit" dense @click="editItem(index as number)" />
+          <q-btn color="negative" :icon="matDelete" dense @click="removeItem(index as number)" />
         </q-item-section>
       </q-item>
     </VueDraggable>
@@ -16,6 +16,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matDelete, matEdit } from '@quasar/extras/material-icons';
 import { Dialog, QBtn, QItem, QItemSection, QList } from 'quasar';
 import { VueDraggable } from 'vue-draggable-plus';
 import { computed } from 'vue';

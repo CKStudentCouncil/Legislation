@@ -17,12 +17,12 @@
     >
       <template v-slot:top-right>
         <div class="row justify-end q-gutter-sm">
-          <q-btn icon="add_to_photos" @click="bulkAdd">批次新增郵寄標的</q-btn>
-          <q-btn icon="playlist_remove" @click="bulkRemoveUser">批次刪除郵寄標的</q-btn>
-          <q-btn icon="add" @click="add">新增郵寄標的</q-btn>
+          <q-btn :icon="matAddToPhotos" @click="bulkAdd">批次新增郵寄標的</q-btn>
+          <q-btn :icon="matPlaylistRemove" @click="bulkRemoveUser">批次刪除郵寄標的</q-btn>
+          <q-btn :icon="matAdd" @click="add">新增郵寄標的</q-btn>
           <q-input v-model="filter" debounce="300" dense label="搜尋">
             <template v-slot:append>
-              <q-icon name="search" />
+              <q-icon :name="matSearch" />
             </template>
           </q-input>
         </div>
@@ -36,10 +36,10 @@
             </div>
           </q-td>
           <q-td key="actions" style="text-align: right">
-            <q-btn class="text-yellow-9 q-ml-sm q-mr-sm" icon="edit" round @click="edit(props.row)">
+            <q-btn class="text-yellow-9 q-ml-sm q-mr-sm" :icon="matEdit" round @click="edit(props.row)">
               <q-tooltip>編輯</q-tooltip>
             </q-btn>
-            <q-btn class="text-red q-ml-sm q-mr-sm" icon="delete" round @click="del(props.row)">
+            <q-btn class="text-red q-ml-sm q-mr-sm" :icon="matDelete" round @click="del(props.row)">
               <q-tooltip>刪除</q-tooltip>
             </q-btn>
           </q-td>
@@ -80,6 +80,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matAdd, matAddToPhotos, matDelete, matEdit, matPlaylistRemove, matSearch } from '@quasar/extras/material-icons';
 import type { DocumentSpecificIdentity } from 'src/ts/models.ts';
 import { convertMailingListEntryToFirebase } from 'src/ts/models.ts';
 import { mailingListDoc, useMailingList } from 'src/ts/model-converters.ts';

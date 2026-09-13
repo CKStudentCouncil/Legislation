@@ -8,7 +8,7 @@
     </div>
 
     <div v-else-if="requestData === null" class="text-center q-pa-xl">
-      <q-icon name="error" color="negative" size="4em" />
+      <q-icon :name="matError" color="negative" size="4em" />
       <div class="text-h6 q-mt-md">找不到該修正草案請求</div>
     </div>
 
@@ -26,7 +26,7 @@
 
         <q-stepper v-model="step" vertical color="primary" animated flat>
           <!-- Step 1: Preview -->
-          <q-step :name="1" title="預覽變更內容" icon="preview" :done="step > 1">
+          <q-step :name="1" title="預覽變更內容" :icon="matPreview" :done="step > 1">
             <q-card flat bordered>
               <DraftAmendmentDiffPrint
                 v-if="legislationData"
@@ -42,7 +42,7 @@
           </q-step>
 
           <!-- Step 2: Decision -->
-          <q-step :name="2" title="審核決定" icon="gavel" :done="step > 2">
+          <q-step :name="2" title="審核決定" :icon="matGavel" :done="step > 2">
             <div class="q-gutter-sm">
               <q-radio v-model="decision" val="approve" label="同意核可並發布" color="positive" size="lg" />
               <q-radio v-model="decision" val="reject" label="退回草案" color="negative" size="lg" />
@@ -65,7 +65,7 @@
           </q-step>
 
           <!-- Step 3: Draft Document -->
-          <q-step :name="3" title="發布公文草稿" icon="description" :done="step > 3">
+          <q-step :name="3" title="發布公文草稿" :icon="matDescription" :done="step > 3">
             <p>系統已自動產生本次修法的公布令公文稿。您可以直接修改文字，或將草稿儲存至公文系統使用進階編輯器（例如新增附件）後再回來繼續發布。</p>
             <q-input v-model="draftDocumentFromName" label="發文者姓名" outlined class="q-mb-md" />
             <q-input v-model="draftDocumentContent" type="textarea" label="公文內文" outlined rows="6" />
@@ -75,7 +75,7 @@
                 v-if="!draftDocumentId"
                 outline
                 color="secondary"
-                icon="open_in_new"
+                :icon="matOpenInNew"
                 label="儲存草稿並使用進階編輯器"
                 @click="saveAdvancedDraft"
                 :loading="processing"
@@ -84,7 +84,7 @@
                 v-else
                 outline
                 color="positive"
-                icon="open_in_new"
+                :icon="matOpenInNew"
                 :label="`已起草，點此編輯 (編號: ${draftDocumentId})`"
                 :href="'/manage/document/' + draftDocumentId"
                 target="_blank"
@@ -98,12 +98,12 @@
           </q-step>
 
           <!-- Step 4: History Summary -->
-          <q-step :name="4" title="立法沿革與發布" icon="history" :done="step > 4">
+          <q-step :name="4" title="立法沿革與發布" :icon="matHistory" :done="step > 4">
             <p>將自動建立一筆立法沿革摘要，系統已依變更條文自動生成，請確認或修改：</p>
             <q-input v-model="historySummary" label="立法沿革摘要" outlined />
 
             <q-stepper-navigation class="q-mt-lg">
-              <q-btn color="positive" label="確定核准並發布" @click="submitResolution('approve')" :loading="processing" icon="celebration" />
+              <q-btn color="positive" label="確定核准並發布" @click="submitResolution('approve')" :loading="processing" :icon="matCelebration" />
               <q-btn flat @click="step = 3" color="primary" label="上一步" class="q-ml-sm" />
             </q-stepper-navigation>
           </q-step>
@@ -114,6 +114,7 @@
 </template>
 
 <script setup lang="ts">
+import { matCelebration, matCheck, matDescription, matError, matGavel, matHistory, matOpenInNew, matPreview } from '@quasar/extras/material-icons';
 import { computed, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useDocument, useFirestore } from 'vuefire';
@@ -311,18 +312,18 @@ async function submitResolution(action: 'approve' | 'reject') {
 
     if (action === 'approve') {
       void jsConfetti.addConfetti();
-      $q.notify({ color: 'positive', icon: 'check', message: '草案已成功核可並發布' });
+      $q.notify({ color: 'positive', icon: matCheck, message: '草案已成功核可並發布' });
       const docId = (result.data as any)?.result?.documentId;
       if (docId) void router.push('/manage/document/' + docId);
     } else {
-      $q.notify({ color: 'positive', icon: 'check', message: '草案已退回' });
+      $q.notify({ color: 'positive', icon: matCheck, message: '草案已退回' });
       void router.push('/');
     }
   } catch (err: any) {
     if (err.code === 'functions/permission-denied') {
-      $q.notify({ color: 'negative', icon: 'error', message: '權限不足：您並非此法規類別對應的首長或權責人員。' });
+      $q.notify({ color: 'negative', icon: matError, message: '權限不足：您並非此法規類別對應的首長或權責人員。' });
     } else {
-      $q.notify({ color: 'negative', icon: 'error', message: '操作失敗：' + err.message });
+      $q.notify({ color: 'negative', icon: matError, message: '操作失敗：' + err.message });
     }
   } finally {
     processing.value = false;

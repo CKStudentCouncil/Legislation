@@ -1,3 +1,4 @@
+import { matCheckCircle, matReportProblem } from '@quasar/extras/material-icons';
 import { Notify } from 'quasar';
 import type { DocumentType } from './models';
 import { DocumentSpecificIdentity } from './models';
@@ -163,7 +164,7 @@ export function notifySuccess(message: string): void {
   Notify.create({
     message,
     color: 'positive',
-    icon: 'check_circle',
+    icon: matCheckCircle,
     position: 'top',
   });
 }
@@ -172,7 +173,7 @@ export function notifyError(message: string, e?: any): void {
   Notify.create({
     message,
     color: 'negative',
-    icon: 'report_problem',
+    icon: matReportProblem,
     position: 'top',
   });
   if (e) {

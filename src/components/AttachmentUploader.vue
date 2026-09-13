@@ -13,12 +13,12 @@
       @input="check"
     >
       <template v-slot:prepend>
-        <q-icon name="attach_file" />
+        <q-icon :name="matAttachFile" />
       </template>
     </q-file>
     <q-btn class="row" color="primary" dense no-caps @click="upload">
       <div>
-        <q-icon name="cloud_upload" />
+        <q-icon :name="matCloudUpload" />
         <br />上傳並加入附件
       </div>
     </q-btn>
@@ -26,6 +26,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matAttachFile, matCloudUpload } from '@quasar/extras/material-icons';
 import { ref } from 'vue';
 import { useFunctionAsync } from 'boot/vuefire.ts';
 import { Loading } from 'quasar';

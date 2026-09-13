@@ -13,7 +13,7 @@
         shadow-text="可按右旁按鈕選擇"
       >
         <template v-slot:append>
-          <q-icon class="cursor-pointer" name="event">
+          <q-icon class="cursor-pointer" :name="matEvent">
             <q-popup-proxy cover transition-hide="scale" transition-show="scale">
               <q-date v-model="after">
                 <div class="row items-center justify-end">
@@ -34,7 +34,7 @@
         shadow-text="可按右旁按鈕選擇"
       >
         <template v-slot:append>
-          <q-icon class="cursor-pointer" name="event">
+          <q-icon class="cursor-pointer" :name="matEvent">
             <q-popup-proxy cover transition-hide="scale" transition-show="scale">
               <q-date v-model="before">
                 <div class="row items-center justify-end">
@@ -98,7 +98,7 @@
             <q-card-section>
               <div>{{ doc.getFullId() }}</div>
               <div v-if="!doc.published" class="text-amber-9">
-                <q-icon class="q-pr-sm" name="warning" />
+                <q-icon class="q-pr-sm" :name="matWarning" />
                 未發布
               </div>
               <div>{{ doc.publishedAt?.toLocaleDateString() }}</div>
@@ -107,8 +107,8 @@
             <q-separator />
             <q-card-actions>
               <q-btn v-if="manage" :to="`/manage/document/${doc.getFullId()}`" color="secondary" flat label="編輯" />
-              <q-btn :title="doc.subject" :to="`/document/${doc.getFullId()}`" color="primary" flat icon="visibility" label="檢視" role="link" />
-              <q-btn color="primary" flat icon="link" label="複製連結" @click="copyDocLink(doc.getFullId())" />
+              <q-btn :title="doc.subject" :to="`/document/${doc.getFullId()}`" color="primary" flat :icon="matVisibility" label="檢視" role="link" />
+              <q-btn color="primary" flat :icon="matLink" label="複製連結" @click="copyDocLink(doc.getFullId())" />
             </q-card-actions>
           </div>
         </q-card>
@@ -123,6 +123,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matEvent, matLink, matVisibility, matWarning } from '@quasar/extras/material-icons';
 import { copyDocLink, getMeta, notifyError } from 'src/ts/utils.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import type { Ref } from 'vue';

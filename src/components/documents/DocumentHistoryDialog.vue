@@ -3,10 +3,10 @@
     <q-card :class="{ 'history-dialog': !maximized }">
       <q-card-section class="row items-center q-pb-none">
         <div class="text-h6 col">歷史版本</div>
-        <q-btn dense flat round :icon="maximized ? 'fullscreen_exit' : 'fullscreen'" @click="maximized = !maximized">
+        <q-btn dense flat round :icon="maximized ? matFullscreenExit : matFullscreen" @click="maximized = !maximized">
           <q-tooltip>{{ maximized ? '退出全螢幕' : '全螢幕' }}</q-tooltip>
         </q-btn>
-        <q-btn v-close-popup dense flat icon="close" round />
+        <q-btn v-close-popup dense flat :icon="matClose" round />
       </q-card-section>
       <q-card-section class="row q-col-gutter-md">
         <div class="col-12 col-md-4">
@@ -48,7 +48,7 @@
               v-if="canRevert && selected"
               color="brown"
               dense
-              icon="restore"
+              :icon="matRestore"
               label="還原至此版本"
               no-caps
               @click="confirmRevert = true"
@@ -91,6 +91,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matClose, matFullscreen, matFullscreenExit, matRestore } from '@quasar/extras/material-icons';
 import { computed, ref, watch } from 'vue';
 import { Dark, Loading } from 'quasar';
 import { CodeDiff } from 'v-code-diff';

@@ -2,7 +2,7 @@
   <q-no-ssr>
     <q-header class="bg-primary text-white no-print" elevated height-hint="98">
       <q-toolbar>
-        <q-btn aria-label="收合側選單" dense flat icon="menu" round @click="toggleLeftDrawer" />
+        <q-btn aria-label="收合側選單" dense flat :icon="matMenu" round @click="toggleLeftDrawer" />
 
         <q-toolbar-title>
           <q-avatar>
@@ -12,10 +12,10 @@
           <span v-else class="q-pl-sm">建中班聯會法律與公文系統</span>
         </q-toolbar-title>
 
-        <q-btn v-if="$q.screen.gt.xs" :icon="Dark.isActive ? 'dark_mode' : 'nights_stay'" flat @click="toggleDark" aria-label="切換暗色模式" />
-        <q-btn v-if="$q.screen.gt.xs" flat icon="fullscreen" @click="toggleFullscreen" aria-label="切換全螢幕" />
-        <q-btn v-if="$q.screen.gt.xs && !loggedIn" align="right" dense flat icon="login" @click="login()">登入</q-btn>
-        <q-btn v-if="$q.screen.gt.xs && loggedIn" align="right" dense flat icon="logout" @click="logout()">登出</q-btn>
+        <q-btn v-if="$q.screen.gt.xs" :icon="Dark.isActive ? matDarkMode : matNightsStay" flat @click="toggleDark" aria-label="切換暗色模式" />
+        <q-btn v-if="$q.screen.gt.xs" flat :icon="matFullscreen" @click="toggleFullscreen" aria-label="切換全螢幕" />
+        <q-btn v-if="$q.screen.gt.xs && !loggedIn" align="right" dense flat :icon="matLogin" @click="login()">登入</q-btn>
+        <q-btn v-if="$q.screen.gt.xs && loggedIn" align="right" dense flat :icon="matLogout" @click="logout()">登出</q-btn>
       </q-toolbar>
     </q-header>
     <q-drawer v-model="leftDrawerOpen" bordered show-if-above side="left" style="overflow: hidden">
@@ -42,7 +42,7 @@
         <q-space />
         <q-item v-if="!loggedIn" clickable @click="login()">
           <q-item-section avatar>
-            <q-icon name="login" />
+            <q-icon :name="matLogin" />
           </q-item-section>
 
           <q-item-section>
@@ -64,7 +64,7 @@
         </q-item>
         <q-item v-if="loggedIn" clickable @click="logout()">
           <q-item-section avatar>
-            <q-icon name="logout" />
+            <q-icon :name="matLogout" />
           </q-item-section>
 
           <q-item-section>
@@ -77,6 +77,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matBadge, matBalance, matDarkMode, matDescription, matDraw, matEdit, matFullscreen, matGavel, matInfo, matLogin, matLogout, matMenu, matNightsStay } from '@quasar/extras/material-icons';
 import { computed, onMounted, ref } from 'vue';
 import { init, loggedInUserClaims, login, logout, useCurrentUser } from 'src/ts/auth.ts';
 import { Dark, LocalStorage } from 'quasar';
@@ -96,20 +97,20 @@ onMounted(() => {
 });
 const leftDrawerOpen = ref(false);
 const endpoints: Endpoint[] = [
-  { name: '檢視法令', url: '/legislation', icon: 'gavel', requireAuth: false },
-  { name: '檢視公文', url: '/document', icon: 'description', requireAuth: false },
-  { name: '編輯法令', url: '/manage/legislation', icon: 'edit', requireAuth: true },
-  { name: '編輯公文', url: '/manage/document', icon: 'draw', requireAuth: true },
-  { name: '評委文書', url: '/document/judicial', icon: 'balance', requireAuth: false },
+  { name: '檢視法令', url: '/legislation', icon: matGavel, requireAuth: false },
+  { name: '檢視公文', url: '/document', icon: matDescription, requireAuth: false },
+  { name: '編輯法令', url: '/manage/legislation', icon: matEdit, requireAuth: true },
+  { name: '編輯公文', url: '/manage/document', icon: matDraw, requireAuth: true },
+  { name: '評委文書', url: '/document/judicial', icon: matBalance, requireAuth: false },
   {
     name: '管理帳號',
     url: '/manage/accounts',
-    icon: 'badge',
+    icon: matBadge,
     requireAuth: true,
     requireRole: [DocumentSpecificIdentity.Chairman, DocumentSpecificIdentity.Speaker, DocumentSpecificIdentity.JudicialCommitteeChairman],
   },
-  { name: '聲請平台', url: 'https://script.google.com/macros/s/AKfycbx_cfNnV_ZzRh9hBFnX_2XBlILjnVsIO7dUomrCAF1-fHuCHTq2njYi-b-pQT2yC5G2/exec', icon: 'gavel', external: true, requireAuth: false },
-  { name: '關於與使用條款', url: '/about', icon: 'info', requireAuth: false },
+  { name: '聲請平台', url: 'https://script.google.com/macros/s/AKfycbx_cfNnV_ZzRh9hBFnX_2XBlILjnVsIO7dUomrCAF1-fHuCHTq2njYi-b-pQT2yC5G2/exec', icon: matGavel, external: true, requireAuth: false },
+  { name: '關於與使用條款', url: '/about', icon: matInfo, requireAuth: false },
 ];
 const selected = ref('Account Information');
 const loggedInUser = useCurrentUser();

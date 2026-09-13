@@ -5,24 +5,24 @@
       <h1 class="text-h4 q-mt-none flex-center text-center">
         (編輯中)
         {{ legislation.name }}
-        <q-btn dense flat icon="link" size="20px" @click="copyLink()"></q-btn>
-        <q-btn dense flat icon="edit" size="20px" @click="edit()"></q-btn>
-        <q-btn color="negative" dense flat icon="delete" size="20px" @click="remove()"></q-btn>
+        <q-btn dense flat :icon="matLink" size="20px" @click="copyLink()"></q-btn>
+        <q-btn dense flat :icon="matEdit" size="20px" @click="edit()"></q-btn>
+        <q-btn color="negative" dense flat :icon="matDelete" size="20px" @click="remove()"></q-btn>
       </h1>
       <div v-if="legislation.preface">{{ legislation.preface }}</div>
       <div>立法沿革</div>
-      <q-btn color="positive" flat icon="add" label="新增立法沿革" @click="addHistory"></q-btn>
+      <q-btn color="positive" flat :icon="matAdd" label="新增立法沿革" @click="addHistory"></q-btn>
       <table>
         <tr v-for="history of legislation.history.sort((a, b) => a.amendedAt.valueOf() - b.amendedAt.valueOf())" :key="history.amendedAt.valueOf()">
           <th>{{ new Date(history.amendedAt).toLocaleDateString() }}</th>
           <th>{{ history.brief }}</th>
           <th class="no-print">
-            <q-btn dense flat icon="edit" size="10px" @click="editHistory(history)" />
-            <q-btn color="negative" dense flat icon="delete" size="10px" @click="removeHistory(history)" />
+            <q-btn dense flat :icon="matEdit" size="10px" @click="editHistory(history)" />
+            <q-btn color="negative" dense flat :icon="matDelete" size="10px" @click="removeHistory(history)" />
           </th>
         </tr>
       </table>
-      <q-btn color="positive" flat icon="add" label="新增內容" @click="addContent()"></q-btn>
+      <q-btn color="positive" flat :icon="matAdd" label="新增內容" @click="addContent()"></q-btn>
       <q-toggle v-model="draggable.content" label="拖曳排序" />
       <VueDraggable
         ref="el"
@@ -33,20 +33,20 @@
         @update="rearrange"
       >
         <div v-for="content of legislation.content" :id="content.index.toString()" :key="content.index" class="row">
-          <q-icon v-if="draggable.content" class="col self-center q-mr-sm" name="drag_indicator" style="max-width: 10px">
+          <q-icon v-if="draggable.content" class="col self-center q-mr-sm" :name="matDragIndicator" style="max-width: 10px">
             <q-tooltip>拖曳以重新排序</q-tooltip>
           </q-icon>
           <LegislationContent :content="content" class="col" />
-          <q-btn flat icon="downloading" size="10px" @click="addContent(content.index)">
+          <q-btn flat :icon="matDownloading" size="10px" @click="addContent(content.index)">
             <q-tooltip>向下新增一項內容</q-tooltip>
           </q-btn>
-          <q-btn flat icon="edit" size="10px" @click="editContent(content)" />
-          <q-btn color="negative" flat icon="delete" size="10px" @click="removeContent(content)" />
+          <q-btn flat :icon="matEdit" size="10px" @click="editContent(content)" />
+          <q-btn color="negative" flat :icon="matDelete" size="10px" @click="removeContent(content)" />
         </div>
       </VueDraggable>
       <div>
         <div class="text-h5">附帶決議</div>
-        <q-btn color="positive" flat icon="add" label="新增項目" @click="addAddendum"></q-btn>
+        <q-btn color="positive" flat :icon="matAdd" label="新增項目" @click="addAddendum"></q-btn>
         <div
           v-for="addendum of legislation.addendum?.sort((a, b) => a.createdAt.valueOf() - b.createdAt.valueOf())"
           :key="addendum.createdAt.valueOf()"
@@ -56,7 +56,7 @@
       </div>
       <div>
         <div class="text-h5">附件</div>
-        <q-btn color="positive" flat icon="add" label="新增附件" @click="addAttachment"></q-btn>
+        <q-btn color="positive" flat :icon="matAdd" label="新增附件" @click="addAttachment"></q-btn>
         <q-toggle v-model="draggable.attachment" label="拖曳排序" />
         <VueDraggable
           v-if="legislation.attachments"
@@ -68,12 +68,12 @@
           @update="rearrangeAttachment"
         >
           <div v-for="(attachment, index) of legislation.attachments" :key="attachment.description + attachment.urls.toString()" class="row">
-            <q-icon v-if="draggable.attachment" class="col self-center q-mr-sm" name="drag_indicator" style="max-width: 10px">
+            <q-icon v-if="draggable.attachment" class="col self-center q-mr-sm" :name="matDragIndicator" style="max-width: 10px">
               <q-tooltip>拖曳以重新排序</q-tooltip>
             </q-icon>
             <AttachmentDisplay :attachment="attachment" :order="index + 1" class="col" />
-            <q-btn flat icon="edit" size="10px" @click="editAttachment(attachment)" />
-            <q-btn color="negative" flat icon="delete" size="10px" @click="removeAttachment(attachment)" />
+            <q-btn flat :icon="matEdit" size="10px" @click="editAttachment(attachment)" />
+            <q-btn color="negative" flat :icon="matDelete" size="10px" @click="removeAttachment(attachment)" />
           </div>
         </VueDraggable>
       </div>
@@ -120,13 +120,13 @@
               <q-item-section>{{ r.title }}</q-item-section>
               <q-item-section side>
                 <div>
-                  <q-btn flat dense icon="edit" size="10px" @click="editResolution(i)" />
-                  <q-btn flat dense icon="delete" size="10px" color="negative" @click="removeResolution(i)" />
+                  <q-btn flat dense :icon="matEdit" size="10px" @click="editResolution(i)" />
+                  <q-btn flat dense :icon="matDelete" size="10px" color="negative" @click="removeResolution(i)" />
                 </div>
               </q-item-section>
             </q-item>
           </q-list>
-          <q-btn flat dense icon="add" label="新增決議文" color="positive" @click="addResolution" />
+          <q-btn flat dense :icon="matAdd" label="新增決議文" color="positive" @click="addResolution" />
         </div>
       </q-card-section>
       <q-card-actions align="right">
@@ -185,6 +185,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matAdd, matDelete, matDownloading, matDragIndicator, matEdit, matLink } from '@quasar/extras/material-icons';
 import { useRoute, useRouter } from 'vue-router';
 import type { LegislationCategory, LegislationHistory, ResolutionUrl } from 'src/ts/models.ts';
 import * as models from 'src/ts/models.ts';

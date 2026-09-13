@@ -15,25 +15,25 @@
     <div v-if="legislation" style="max-width: min(1170px, 97vw); margin: 0 auto">
       <h1 class="text-h4 q-mt-none flex-center text-center">
         {{ legislation.name }} 修正草案編輯
-        <q-btn class="no-print" dense flat icon="link" size="20px" @click="copyLink()" />
+        <q-btn class="no-print" dense flat :icon="matLink" size="20px" @click="copyLink()" />
       </h1>
 
       <q-stepper ref="stepper" v-model="step" animated header-nav class="q-mt-lg">
-        <q-step :name="1" icon="list" title="草案列表" :done="step > 1">
+        <q-step :name="1" :icon="matList" title="草案列表" :done="step > 1">
           <div class="q-pa-md">
             <div class="row items-center q-mb-md">
               <div class="text-h6 col">已儲存的修正草案</div>
-              <q-btn class="q-mr-sm" color="primary" label="新增草案" icon="add" @click="promptNewDraft" />
-              <q-btn color="secondary" outline label="匯入草案" icon="upload" @click="triggerImport" />
+              <q-btn class="q-mr-sm" color="primary" label="新增草案" :icon="matAdd" @click="promptNewDraft" />
+              <q-btn color="secondary" outline label="匯入草案" :icon="matUpload" @click="triggerImport" />
               <input type="file" ref="fileInput" accept=".ckla" style="display: none" @change="onImportFile" />
             </div>
 
             <div v-if="amendmentStore.drafts.length === 0" class="text-center q-pa-xl text-grey-7">
-              <q-icon name="description" size="48px" class="q-mb-md" />
+              <q-icon :name="matDescription" size="48px" class="q-mb-md" />
               <div>目前沒有已儲存的草案。</div>
               <div class="row q-gutter-md justify-center q-mt-md">
                 <q-btn color="primary" outline label="立即建立一份新草案" @click="promptNewDraft" />
-                <q-btn color="secondary" outline label="匯入草案檔 (.ckla)" icon="upload" @click="triggerImport" />
+                <q-btn color="secondary" outline label="匯入草案檔 (.ckla)" :icon="matUpload" @click="triggerImport" />
               </div>
             </div>
 
@@ -49,11 +49,11 @@
                 </q-item-section>
                 <q-item-section side>
                   <div class="row q-gutter-sm items-center">
-                    <q-btn flat round color="secondary" icon="border_color" size="sm" @click="promptRenameDraft(draft.id, draft.name)">
+                    <q-btn flat round color="secondary" :icon="matBorderColor" size="sm" @click="promptRenameDraft(draft.id, draft.name)">
                       <q-tooltip>重新命名</q-tooltip>
                     </q-btn>
                     <q-btn outline color="primary" label="繼續編輯" @click="openDraft(draft.id)" />
-                    <q-btn flat round color="negative" icon="delete" size="sm" @click="confirmDeleteDraft(draft.id)">
+                    <q-btn flat round color="negative" :icon="matDelete" size="sm" @click="confirmDeleteDraft(draft.id)">
                       <q-tooltip>刪除草案</q-tooltip>
                     </q-btn>
                   </div>
@@ -63,10 +63,10 @@
           </div>
         </q-step>
 
-        <q-step :name="2" icon="edit" title="編輯草案" :done="step > 2" :disable="!amendmentStore.activeDraftId">
+        <q-step :name="2" :icon="matEdit" title="編輯草案" :done="step > 2" :disable="!amendmentStore.activeDraftId">
           <div v-if="amendmentStore.amendmentType === 'partial'">
             <div class="q-mb-md">本草案為部分修正。您可以修改、刪除、及拖曳變更順序。</div>
-            <q-btn color="positive" flat icon="add" label="新增內容" @click="addPartialContent()"></q-btn>
+            <q-btn color="positive" flat :icon="matAdd" label="新增內容" @click="addPartialContent()"></q-btn>
             <q-toggle v-model="draggable.partial" label="拖曳排序" />
             <VueDraggable
               v-if="amendmentStore.partialContent"
@@ -78,7 +78,7 @@
               @update="rearrangePartial"
             >
               <div v-for="(draftInfo, index) in amendmentStore.partialContent" :key="draftInfo.id" class="row items-start border-bottom q-pb-md">
-                <q-icon v-if="draggable.partial" class="col-auto q-mr-sm q-mt-sm" name="drag_indicator" style="cursor: grab" />
+                <q-icon v-if="draggable.partial" class="col-auto q-mr-sm q-mt-sm" :name="matDragIndicator" style="cursor: grab" />
                 <div class="col">
                   <!-- Toolbar for this item -->
                   <div class="row items-center q-mb-sm">
@@ -105,33 +105,33 @@
                     <q-space />
 
                     <!-- Actions -->
-                    <q-btn flat icon="downloading" size="10px" @click="addPartialContent(index)">
+                    <q-btn flat :icon="matDownloading" size="10px" @click="addPartialContent(index)">
                       <q-tooltip>向下新增一項內容</q-tooltip>
                     </q-btn>
 
                     <template v-if="draftInfo.status === 'unchanged'">
-                      <q-btn flat color="primary" icon="edit" size="10px" @click="editPartialContent(index)">
+                      <q-btn flat color="primary" :icon="matEdit" size="10px" @click="editPartialContent(index)">
                         <q-tooltip>修改內容</q-tooltip>
                       </q-btn>
-                      <q-btn flat color="negative" icon="delete" size="10px" @click="markPartialDeleted(index)">
+                      <q-btn flat color="negative" :icon="matDelete" size="10px" @click="markPartialDeleted(index)">
                         <q-tooltip>標示為刪除</q-tooltip>
                       </q-btn>
                     </template>
 
                     <template v-if="draftInfo.status === 'modified'">
-                      <q-btn flat color="primary" icon="edit" size="10px" @click="editPartialContent(index)" />
-                      <q-btn flat color="info" icon="restore" size="10px" @click="restorePartial(index)">
+                      <q-btn flat color="primary" :icon="matEdit" size="10px" @click="editPartialContent(index)" />
+                      <q-btn flat color="info" :icon="matRestore" size="10px" @click="restorePartial(index)">
                         <q-tooltip>復原修改</q-tooltip>
                       </q-btn>
                     </template>
 
                     <template v-if="draftInfo.status === 'deleted'">
-                      <q-btn flat color="info" icon="restore" size="10px" @click="restorePartial(index)" label="取消刪除" />
+                      <q-btn flat color="info" :icon="matRestore" size="10px" @click="restorePartial(index)" label="取消刪除" />
                     </template>
 
                     <template v-if="draftInfo.status === 'added'">
-                      <q-btn flat color="primary" icon="edit" size="10px" @click="editPartialContent(index)" />
-                      <q-btn color="negative" flat icon="delete" size="10px" @click="removePartial(index)" />
+                      <q-btn flat color="primary" :icon="matEdit" size="10px" @click="editPartialContent(index)" />
+                      <q-btn color="negative" flat :icon="matDelete" size="10px" @click="removePartial(index)" />
                     </template>
                   </div>
 
@@ -169,7 +169,7 @@
 
           <div v-else-if="amendmentStore.amendmentType === 'full'">
             <div class="q-mb-md">本草案為全文修正。請拖曳或編輯內容區塊。</div>
-            <q-btn color="positive" flat icon="add" label="新增內容" @click="addContent()"></q-btn>
+            <q-btn color="positive" flat :icon="matAdd" label="新增內容" @click="addContent()"></q-btn>
             <q-toggle v-model="draggable.content" label="拖曳排序" />
             <VueDraggable
               v-if="amendmentStore.fullContent"
@@ -186,24 +186,24 @@
                 :key="content.index"
                 class="row items-center border-bottom q-pb-sm"
               >
-                <q-icon v-if="draggable.content" class="col-auto q-mr-sm" name="drag_indicator" style="cursor: grab" />
+                <q-icon v-if="draggable.content" class="col-auto q-mr-sm" :name="matDragIndicator" style="cursor: grab" />
                 <LegislationContent :content="content" class="col" />
-                <q-btn flat icon="downloading" size="10px" @click="addContent(index)">
+                <q-btn flat :icon="matDownloading" size="10px" @click="addContent(index)">
                   <q-tooltip>向下新增一項內容</q-tooltip>
                 </q-btn>
-                <q-btn flat icon="edit" size="10px" @click="editContent(index)" />
-                <q-btn color="negative" flat icon="delete" size="10px" @click="removeContent(index)" />
+                <q-btn flat :icon="matEdit" size="10px" @click="editContent(index)" />
+                <q-btn color="negative" flat :icon="matDelete" size="10px" @click="removeContent(index)" />
               </div>
             </VueDraggable>
           </div>
         </q-step>
-        <q-step :name="3" icon="print" title="提交與匯出" :disable="!amendmentStore.activeDraftId">
+        <q-step :name="3" :icon="matPrint" title="提交與匯出" :disable="!amendmentStore.activeDraftId">
           <div class="text-center q-pa-lg">
             <div class="text-h6 q-mb-xl">您已完成草案編輯！請選擇下一步：</div>
             <div class="row q-gutter-md justify-center">
-              <q-btn v-if="!!useCurrentUser()" color="positive" icon="send" label="進入草案送出程序" @click="goToSubmitPage" size="lg" />
-              <q-btn color="primary" icon="download" label="匯出草案檔 (.ckla)" @click="exportJson" size="lg" outline />
-              <q-btn color="secondary" icon="print" label="列印對照表 (PDF)" @click="printPdf" size="lg" outline />
+              <q-btn v-if="!!useCurrentUser()" color="positive" :icon="matSend" label="進入草案送出程序" @click="goToSubmitPage" size="lg" />
+              <q-btn color="primary" :icon="matDownload" label="匯出草案檔 (.ckla)" @click="exportJson" size="lg" outline />
+              <q-btn color="secondary" :icon="matPrint" label="列印對照表 (PDF)" @click="printPdf" size="lg" outline />
             </div>
             <div class="q-mt-xl text-caption">若您使用列印，請在瀏覽器列印對話框中選擇「另存為 PDF」。</div>
           </div>
@@ -253,6 +253,7 @@
 </template>
 
 <script setup lang="ts">
+import { matAdd, matBorderColor, matDelete, matDescription, matDownload, matDownloading, matDragIndicator, matEdit, matLink, matList, matPrint, matRestore, matSend, matUpload } from '@quasar/extras/material-icons';
 import { computed, ref, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { copyLink, translateNumber, translateNumberToChinese } from 'src/ts/utils.ts';

@@ -1,9 +1,10 @@
 <template>
-  <q-btn class="q-ma-md" color="positive" icon="add" label="起草公文" @click="add" />
+  <q-btn class="q-ma-md" color="positive" :icon="matAdd" label="起草公文" @click="add" />
   <DocumentsPageV2 manage />
   <DocumentDialog v-model="adding" :action="action" @canceled="action = null" @submit="submit" />
 </template>
 <script lang="ts" setup>
+import { matAdd } from '@quasar/extras/material-icons';
 import DocumentDialog from 'components/DocumentDialog.vue';
 import { reactive, ref } from 'vue';
 import type * as models from '../../../ts/models';

@@ -9,7 +9,7 @@
           </div>
         </div>
         <div class="col-auto">
-          <q-btn v-close-popup dense flat icon="close" round />
+          <q-btn v-close-popup dense flat :icon="matClose" round />
         </div>
       </q-card-section>
       <q-card-section v-if="selectedHistory" class="q-pt-none">
@@ -43,6 +43,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matClose } from '@quasar/extras/material-icons';
 import { computed, ref, watch } from 'vue';
 import { Dark } from 'quasar';
 import { CodeDiff } from 'v-code-diff';

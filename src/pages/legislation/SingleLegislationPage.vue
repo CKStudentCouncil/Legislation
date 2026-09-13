@@ -6,22 +6,22 @@
         <span v-if="legislation.frozenBy">(失效) </span>
         {{ legislation.name }}
         <q-no-ssr style="display: inline">
-          <q-btn aria-label="複製連結" class="no-print" dense flat icon="link" size="20px" @click="copyLink()" />
-          <q-btn aria-label="列印" class="no-print" dense flat icon="print" size="20px" @click="handlePrint">
+          <q-btn aria-label="複製連結" class="no-print" dense flat :icon="matLink" size="20px" @click="copyLink()" />
+          <q-btn aria-label="列印" class="no-print" dense flat :icon="matPrint" size="20px" @click="handlePrint">
             <q-tooltip>列印</q-tooltip>
           </q-btn>
-          <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat icon="unfold_less" size="20px" @click="collapseAll">
+          <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat :icon="matUnfoldLess" size="20px" @click="collapseAll">
             <q-tooltip>折疊所有條文</q-tooltip>
           </q-btn>
-          <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat icon="unfold_more" size="20px" @click="expandAll">
+          <q-btn v-if="Object.entries(expanded).length > 0" class="no-print" dense flat :icon="matUnfoldMore" size="20px" @click="expandAll">
             <q-tooltip>展開所有條文</q-tooltip>
           </q-btn>
         </q-no-ssr>
       </h1>
       <div v-if="legislation.frozenBy" class="text-h6">
-        <q-icon class="q-mr-xs" name="warning" size="32px" />
+        <q-icon class="q-mr-xs" :name="matWarning" size="32px" />
         本法令部分或全文已遭凍結或失效，詳見
-        <q-btn :href="legislation.frozenBy" class="no-print" dense icon="link" label="相關連結" target="_blank" />
+        <q-btn :href="legislation.frozenBy" class="no-print" dense :icon="matLink" label="相關連結" target="_blank" />
       </div>
       <div v-if="legislation.preface" class="text-h6 text-bold">{{ legislation.preface }}</div>
       <div v-if="legislation.history.length > 0">
@@ -43,7 +43,7 @@
                     v-if="history.contentId"
                     dense
                     flat
-                    icon="compare_arrows"
+                    :icon="matCompareArrows"
                     size="10px"
                     @click="openHistoryDiff(history)"
                     aria-label="檢視修正差異"
@@ -54,14 +54,14 @@
                     v-if="history.contentId"
                     dense
                     flat
-                    icon="merge_type"
+                    :icon="matMergeType"
                     size="10px"
                     @click="openHistoryDiff(history, 'current')"
                     aria-label="比較目前版本"
                   >
                     <q-tooltip>比較目前版本</q-tooltip>
                   </q-btn>
-                  <q-btn v-if="history.link" :href="history.link" dense flat icon="open_in_new" size="10px" aria-label="檢視發布公文">
+                  <q-btn v-if="history.link" :href="history.link" dense flat :icon="matOpenInNew" size="10px" aria-label="檢視發布公文">
                     <q-tooltip>檢視發布公文</q-tooltip>
                   </q-btn>
                 </div>
@@ -125,6 +125,7 @@
 </template>
 
 <script lang="ts" setup>
+import { matCompareArrows, matLink, matMergeType, matOpenInNew, matPrint, matUnfoldLess, matUnfoldMore, matWarning } from '@quasar/extras/material-icons';
 import { useRoute } from 'vue-router';
 import { ContentType } from 'src/ts/models.ts';
 import type { LegislationHistory } from 'src/ts/models.ts';
