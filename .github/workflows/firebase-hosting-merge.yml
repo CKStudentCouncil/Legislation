@@ -72,6 +72,12 @@ jobs:
       - run: yarn --cwd src-ssr install --frozen-lockfile
       - run: yarn spa-build
       - run: yarn gcp-build
+      # Belt and braces. @sentry/vite-plugin already deletes the maps it generated (even
+      # when the upload fails), so this normally removes nothing — but it makes "no source
+      # maps on the CDN" a property of the deploy rather than of one plugin's cleanup,
+      # which matters the next time someone flips build.sourcemap on to debug something.
+      # Runs before the shuffle below, which would otherwise copy them into dist/spa.
+      - run: find dist -name '*.js.map' -delete
       - run: mkdir dist/spa/ssr-assets
       - run: mv ./dist/ssr/client/ssr-assets/* ./dist/spa/ssr-assets
       - run: mv ./dist/spa/index.html ./dist/spa/main.html # This is to prevent Google from serving the root route with a non-SSR page

@@ -158,6 +158,14 @@ export default defineConfig((ctx) => {
               ...(sentryRelease ? { release: { name: sentryRelease } } : {}),
               sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.js.map'] },
               telemetry: false,
+              // The plugin throws by default, which would abort the build — so a Sentry
+              // outage, an expired token or a rate limit would take down the deploy of a
+              // release that is otherwise perfectly fine. The site shipping matters more
+              // than its stack traces being readable, so warn and carry on. Verified: the
+              // maps are still deleted on a failed upload, so this cannot leak them.
+              errorHandler: (err: Error) => {
+                console.warn('[sentry] source map upload failed, continuing build:', err.message);
+              },
             }),
           ];
         }
