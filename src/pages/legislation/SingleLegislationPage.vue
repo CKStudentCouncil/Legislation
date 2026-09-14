@@ -136,7 +136,7 @@ import { copyLink, getMeta } from 'src/ts/utils.ts';
 import { legislationJsonLd, ldJsonScript } from 'src/ts/structured-data.ts';
 import LegislationAddendum from 'components/legislation/LegislationAddendum.vue';
 import LegislationHistoryDiffDialog from 'components/legislation/LegislationHistoryDiffDialog.vue';
-import { useVueToPrint } from 'vue-to-print';
+import { usePrint } from 'src/ts/print.ts';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import { Dark, useMeta } from 'quasar';
 import { useLegislationStore } from 'stores/legislation.ts';
@@ -190,24 +190,12 @@ watch(
   { once: true },
 );
 
-const { handlePrint } = useVueToPrint({
+const { handlePrint } = usePrint({
   content: content,
-  documentTitle: legislation.value?.name ?? '',
-  removeAfterPrint: true,
+  documentTitle: () => legislation.value?.name ?? '',
   pageStyle: '@page { margin: 0.5in 0.5in 0.5in 0.5in !important; }',
-  onBeforeGetContent: () => {
-    return new Promise((resolve) => {
-      printing.value = true;
-      setTimeout(() => {
-        resolve();
-      }, 300);
-    });
-  },
-  onAfterPrint: () => {
-    setTimeout(() => {
-      printing.value = false;
-    }, 300);
-  },
+  onBeforePrint: () => (printing.value = true),
+  onAfterPrint: () => (printing.value = false),
 });
 
 function collapseAll() {

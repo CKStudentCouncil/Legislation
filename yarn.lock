@@ -8018,11 +8018,6 @@ vue-router@^5.3.1:
     unplugin "^3.3.0"
     unplugin-utils "^0.3.2"
 
-vue-to-print@^1.5.1:
-  version "1.5.1"
-  resolved "https://registry.yarnpkg.com/vue-to-print/-/vue-to-print-1.5.1.tgz#eb500f4e17d8bda9bdb36d2359e9833908c15a18"
-  integrity sha512-Z8LeXBmw9J5zQrtcqNQeoFNprgs6ituih682SAOv06ExZljvIjt2CEAW7N1XAjLpgzx9LKMrl500G2ZeGugLUg==
-
 vue-tsc@^3.3.11:
   version "3.3.11"
   resolved "https://registry.yarnpkg.com/vue-tsc/-/vue-tsc-3.3.11.tgz#26e7df7b6c1d66793d68caaa4ab96caa28002d9c"

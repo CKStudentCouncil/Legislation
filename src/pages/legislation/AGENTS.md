@@ -221,7 +221,7 @@ A new legislation document ID is generated as `{idPrefix}` + zero-padded counter
   - `compare_arrows` button → opens `LegislationHistoryDiffDialog` in `previous` mode (diff against the prior snapshot)
   - `merge_type` button → opens dialog in `current` mode (diff against live content)
   - `open_in_new` button → opens `history.link` (link to publishing document) if present
-- Print support via `vue-to-print` (`useVueToPrint`).
+- Print support via `usePrint` (`src/ts/print.ts`), which isolates the element in the live document rather than cloning it into an iframe.
 - Hash/query navigation: scrolls to a specific clause on load if `#index` or `?c=index` is present.
 
 **Key function:**

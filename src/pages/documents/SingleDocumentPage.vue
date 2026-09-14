@@ -36,7 +36,7 @@
 <script lang="ts" setup>
 import { matPrint, matShare, matZoomIn, matZoomOut } from '@quasar/extras/material-icons';
 import { useRoute } from 'vue-router';
-import { useVueToPrint } from 'vue-to-print';
+import { usePrint } from 'src/ts/print.ts';
 import { onMounted, onServerPrefetch, ref, useSSRContext } from 'vue';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
@@ -56,24 +56,12 @@ const content = ref();
 const size = ref(100); // %
 const embed = ref(true);
 
-const { handlePrint } = useVueToPrint({
+const { handlePrint } = usePrint({
   content: content,
   documentTitle: (route.params.id as string) ?? '',
-  removeAfterPrint: true,
   pageStyle: '@page { margin: 0.5in 0.5in 0.5in 0.5in !important; }',
-  onBeforeGetContent: () => {
-    return new Promise((resolve) => {
-      embed.value = false;
-      setTimeout(() => {
-        resolve();
-      }, 300);
-    });
-  },
-  onAfterPrint: () => {
-    setTimeout(() => {
-      embed.value = true;
-    }, 300);
-  },
+  onBeforePrint: () => (embed.value = false),
+  onAfterPrint: () => (embed.value = true),
 });
 
 onMounted(() => {

@@ -267,7 +267,7 @@ import type { AmendmentType, DraftContent, DraftImportPayload } from 'src/pages/
 import { VueDraggable } from 'vue-draggable-plus';
 import { Dialog, exportFile } from 'quasar';
 import InlineDiffRenderer from 'components/legislation/InlineDiffRenderer.vue';
-import { useVueToPrint } from 'vue-to-print';
+import { usePrint } from 'src/ts/print.ts';
 import { useDocument } from 'vuefire';
 import { useCurrentUser } from 'src/ts/auth';
 
@@ -285,27 +285,15 @@ const printing = ref(false);
 const printContent = ref();
 const fileInput = ref<HTMLInputElement | null>(null);
 
-const { handlePrint: printPdf } = useVueToPrint({
+const { handlePrint: printPdf } = usePrint({
   content: printContent,
   documentTitle: () => {
     const draftName = amendmentStore.drafts.find((d) => d.id === amendmentStore.activeDraftId)?.name || '未命名草案';
     return `${legislation.value?.name || '草案'}_${draftName}`;
   },
-  removeAfterPrint: true,
   pageStyle: '@page { margin: 2cm !important; }',
-  onBeforeGetContent: () => {
-    return new Promise((resolve) => {
-      printing.value = true;
-      setTimeout(() => {
-        resolve();
-      }, 300);
-    });
-  },
-  onAfterPrint: () => {
-    setTimeout(() => {
-      printing.value = false;
-    }, 300);
-  },
+  onBeforePrint: () => (printing.value = true),
+  onAfterPrint: () => (printing.value = false),
 });
 
 // Holds pending import data when redirecting to a different legislation
