@@ -17,7 +17,7 @@
     "postinstall": "quasar prepare"
   },
   "dependencies": {
-    "@quasar/extras": "^2.0.2",
+    "@quasar/extras": "^2.0.4",
     "@sentry/vue": "^10.74.0",
     "@types/sanitize-html": "^2.16.1",
     "algoliasearch": "^5.56.0",
