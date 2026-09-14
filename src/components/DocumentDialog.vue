@@ -133,7 +133,9 @@ const parentValue = computed({
 
 const types = computed(() =>
   Object.values(models.DocumentType.VALUES).filter(
-    (t) => parentValue.value.fromSpecific.generic.firebase === DocumentGeneralIdentity.JudicialCommittee.firebase || !t.judicialCommitteeOnly,
+    // fromSpecific rehydrates to undefined for identities that are no longer registered in
+    // DocumentSpecificIdentity.VALUES, so this must survive an unresolvable sender.
+    (t) => parentValue.value.fromSpecific?.generic?.firebase === DocumentGeneralIdentity.JudicialCommittee.firebase || !t.judicialCommitteeOnly,
   ),
 );
 

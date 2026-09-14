@@ -533,15 +533,20 @@ export class DocumentType {
   ) {}
 }
 
+// Returns a shallow copy: this runs inside documentConverter.toFirestore on whatever object was
+// handed to setDoc, which is usually the live reactive document still bound to an open dialog.
+// Downgrading its enum instances to their `firebase` strings in place used to re-render that
+// dialog mid-save against `'Speaker'.generic.firebase` and crash it.
 export function convertDocumentToFirebase(data: Document) {
-  data.confidentiality = data.confidentiality.firebase as any;
-  data.fromSpecific = data.fromSpecific.firebase as any;
-  data.toSpecific = data.toSpecific.map((toSpecific) => toSpecific.firebase as any);
-  if (data.secretarySpecific) data.secretarySpecific = data.secretarySpecific.firebase as any;
-  data.type = data.type.firebase as any;
-  data.ccSpecific = data.ccSpecific.map((ccSpecific) => ccSpecific.firebase as any);
-  if (data.viewers) data.viewers = data.viewers.map((viewer) => viewer.firebase as any);
-  return data;
+  const converted = { ...data } as any;
+  converted.confidentiality = data.confidentiality.firebase;
+  converted.fromSpecific = data.fromSpecific.firebase;
+  converted.toSpecific = data.toSpecific.map((toSpecific) => toSpecific.firebase);
+  if (data.secretarySpecific) converted.secretarySpecific = data.secretarySpecific.firebase;
+  converted.type = data.type.firebase;
+  converted.ccSpecific = data.ccSpecific.map((ccSpecific) => ccSpecific.firebase);
+  if (data.viewers) converted.viewers = data.viewers.map((viewer) => viewer.firebase);
+  return converted as Document;
 }
 
 export function convertContentToFirebase(data: LegislationContent) {
