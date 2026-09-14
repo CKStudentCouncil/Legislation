@@ -36,3 +36,7 @@ yarn-error.log*
 # local .env files
 .env
 .env.local*
+
+# Source TTFs for scripts/build-kai-webfont.py. ~105 MB of 全字庫正楷體; the woff2 slices it
+# generates into public/fonts/tw-kai/ are what ships. Re-download from data.gov.tw if you need them.
+/fonts-src

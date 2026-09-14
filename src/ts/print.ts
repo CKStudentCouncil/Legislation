@@ -40,8 +40,9 @@ const FINISH_TIMEOUT = 30_000;
 
 /** Marks content that should print in the official 標楷體; see `.official-font-when-printing` in app.scss. */
 const OFFICIAL_FONT_CLASS = 'official-font-when-printing';
-const KAI_WEBFONT_FAMILY = 'LXGW WenKai TC';
-const KAI_WEBFONT_HREF = 'https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap';
+/** 全字庫正楷體, sliced into woff2 subsets by scripts/build-kai-webfont.py and served from public/. */
+const KAI_WEBFONT_FAMILY = 'TW-Kai';
+const KAI_WEBFONT_HREF = '/fonts/tw-kai.css';
 const KAI_WEBFONT_LINK_ID = 'print-kai-font';
 /** The locally installed Kai faces at the head of the stack in app.scss, in the same order. */
 const LOCAL_KAI_FACES = ['標楷體2', '標楷體', 'BiauKai', 'DFKai-sb', 'TW-Kai', 'Kaiti TC'];
@@ -153,10 +154,10 @@ function hasLocalKaiFont() {
 
 /**
  * Every Kai face in the official stack is a locally installed desktop font, so phones fall back to
- * a generic serif. When the content asks for that stack and the device has no Kai of its own, pull
- * one from Google Fonts — only then, and only the unicode subsets the printed text actually needs,
- * so readers who already have 標楷體 never download anything. Never blocks: if the font has not
- * arrived in time we print with the fallback, and it is cached for the next attempt.
+ * a generic serif. When the content asks for that stack and the device has no Kai of its own, load
+ * 全字庫正楷體 — only then, and only the unicode subsets the printed text actually needs, so readers
+ * who already have 標楷體 never download anything. Never blocks: if the font has not arrived in
+ * time we print with the fallback, and it is cached for the next attempt.
  */
 async function loadOfficialFont(target: HTMLElement) {
   if (!document.fonts) {
