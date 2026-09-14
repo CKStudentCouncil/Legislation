@@ -38,6 +38,16 @@ const TEARDOWN_DELAY = 300;
 /** Last resort if the browser reports neither `afterprint` nor a print media change. */
 const FINISH_TIMEOUT = 30_000;
 
+/** Marks content that should print in the official 標楷體; see `.official-font-when-printing` in app.scss. */
+const OFFICIAL_FONT_CLASS = 'official-font-when-printing';
+const KAI_WEBFONT_FAMILY = 'LXGW WenKai TC';
+const KAI_WEBFONT_HREF = 'https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC&display=swap';
+const KAI_WEBFONT_LINK_ID = 'print-kai-font';
+/** The locally installed Kai faces at the head of the stack in app.scss, in the same order. */
+const LOCAL_KAI_FACES = ['標楷體2', '標楷體', 'BiauKai', 'DFKai-sb', 'TW-Kai', 'Kaiti TC'];
+/** Spend at most this long on the font: the tap's user activation is only good for about five seconds. */
+const FONT_TIMEOUT = 2500;
+
 /** Exactly the classes this module added, so teardown removes nothing it does not own. */
 let applied: [Element, string][] = [];
 
@@ -118,6 +128,72 @@ function setPageStyle(css?: string) {
   }
 }
 
+function measureProbe(fontFamily: string) {
+  const span = document.createElement('span');
+  // Latin, because CJK glyphs are square in every font and so measure the same whichever one wins.
+  span.textContent = 'mmmmmmmmmmlliWWW';
+  span.style.cssText = `position:absolute;top:-9999px;left:-9999px;visibility:hidden;white-space:nowrap;font-size:96px;font-family:${fontFamily}`;
+  document.body.appendChild(span);
+  const width = span.getBoundingClientRect().width;
+  span.remove();
+  return width;
+}
+
+let localKai: boolean | undefined;
+
+/** True if the device has a Kai face of its own, i.e. if downloading one would be wasted bytes. */
+function hasLocalKaiFont() {
+  if (localKai === undefined) {
+    const generics = ['monospace', 'serif', 'sans-serif'] as const;
+    const baselines = generics.map(measureProbe);
+    localKai = LOCAL_KAI_FACES.some((face) => generics.some((generic, i) => measureProbe(`'${face}',${generic}`) !== baselines[i]));
+  }
+  return localKai;
+}
+
+/**
+ * Every Kai face in the official stack is a locally installed desktop font, so phones fall back to
+ * a generic serif. When the content asks for that stack and the device has no Kai of its own, pull
+ * one from Google Fonts — only then, and only the unicode subsets the printed text actually needs,
+ * so readers who already have 標楷體 never download anything. Never blocks: if the font has not
+ * arrived in time we print with the fallback, and it is cached for the next attempt.
+ */
+async function loadOfficialFont(target: HTMLElement) {
+  if (!document.fonts) {
+    return;
+  }
+  if (!target.classList.contains(OFFICIAL_FONT_CLASS) && !target.querySelector(`.${OFFICIAL_FONT_CLASS}`)) {
+    return;
+  }
+  if (hasLocalKaiFont()) {
+    return;
+  }
+
+  let link = document.getElementById(KAI_WEBFONT_LINK_ID) as HTMLLinkElement | null;
+  if (!link) {
+    link = document.createElement('link');
+    link.id = KAI_WEBFONT_LINK_ID;
+    link.rel = 'stylesheet';
+    link.href = KAI_WEBFONT_HREF;
+    document.head.appendChild(link);
+  }
+
+  const sheet = link;
+  const ready = (async () => {
+    if (!sheet.sheet) {
+      // The @font-face rules have to be parsed before document.fonts can match the family.
+      await new Promise<void>((resolve) => {
+        sheet.addEventListener('load', () => resolve(), { once: true });
+        sheet.addEventListener('error', () => resolve(), { once: true });
+      });
+    }
+    const characters = Array.from(new Set((target.textContent ?? '').replace(/\s/g, ''))).join('');
+    await document.fonts.load(`400 16px '${KAI_WEBFONT_FAMILY}'`, characters);
+  })();
+
+  await Promise.race([ready.catch(() => undefined), new Promise((resolve) => setTimeout(resolve, FONT_TIMEOUT))]);
+}
+
 /**
  * Resolves once the browser has let go of the document. `afterprint` is the reliable signal on
  * desktop; Safari fires it early and some mobile browsers never fire it at all, so the `print`
@@ -181,6 +257,7 @@ export function usePrint(options: PrintOptions) {
       // Let the print-only rendering (expanded clauses, de-embedded attachments) commit
       // before the browser paginates. Kept to a tick so the tap's user activation survives.
       await nextTick();
+      await loadOfficialFont(element);
 
       const title = toValue(options.documentTitle);
       if (title) {
