@@ -70,10 +70,18 @@ export function useAuth(): Promise<Auth> {
   //
   // The promise is cached because initializeAuth() throws `auth/already-initialized` if
   // it is called twice with options (getAuth() was idempotent; this is not).
-  authPromise ??= import('firebase/auth').then(({ initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence }) =>
-    initializeAuth(firebaseApp, {
-      persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence],
-    }),
-  );
+  authPromise ??= import('firebase/auth')
+    .then(({ initializeAuth, indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence }) =>
+      initializeAuth(firebaseApp, {
+        persistence: [indexedDBLocalPersistence, browserLocalPersistence, browserSessionPersistence],
+      }),
+    )
+    .catch((error: unknown) => {
+      // Drop a rejection out of the cache. The memo lives as long as the page, so a chunk
+      // request lost to a flaky connection would otherwise leave every later caller —
+      // login() included — rejecting with that same stale error for the rest of the visit.
+      authPromise = null;
+      throw error;
+    });
   return authPromise;
 }

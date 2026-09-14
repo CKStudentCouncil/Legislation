@@ -80,6 +80,8 @@
 import { matBadge, matBalance, matDarkMode, matDescription, matDraw, matEdit, matFullscreen, matGavel, matInfo, matLogin, matLogout, matMenu, matNightsStay } from '@quasar/extras/material-icons';
 import { computed, onMounted, ref } from 'vue';
 import { init, loggedInUserClaims, login, logout, useCurrentUser } from 'src/ts/auth.ts';
+import { isModuleLoadError, recoverFromModuleLoadError } from 'boot/chunk-recovery.ts';
+import { captureError } from 'boot/sentry.ts';
 import { Dark, LocalStorage } from 'quasar';
 import { DocumentSpecificIdentity } from '../ts/models.ts';
 
@@ -93,7 +95,16 @@ type Endpoint = {
 };
 
 onMounted(() => {
-  void init();
+  // firebase/auth is the one lazy import every visitor triggers, on every page, whether or
+  // not they ever sign in — and it is one of the few the build leaves as a bare import(),
+  // so the vite:preloadError handler in boot/chunk-recovery.ts never sees it. Left floating
+  // it abandons the header signed-out and files an unhandled rejection with no stack, which
+  // is what Sentry kept receiving. Recover from a lost chunk; report anything else, which is
+  // a real failure of initializeAuth() and would not be helped by loading the page again.
+  init().catch((error: unknown) => {
+    if (isModuleLoadError(error) && recoverFromModuleLoadError()) return;
+    captureError(error, '無法載入登入狀態');
+  });
 });
 const leftDrawerOpen = ref(false);
 const endpoints: Endpoint[] = [

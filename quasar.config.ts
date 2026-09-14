@@ -37,8 +37,9 @@ export default defineConfig((ctx) => {
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
     // 'sentry' first: it installs the Vue error handler, so anything the later boot files
-    // throw is already being reported by the time they run.
-    boot: ['sentry', 'vuefire'],
+    // throw is already being reported by the time they run. 'chunk-recovery' next, so that a
+    // chunk lost by a later boot file, or by the first route, already has somewhere to land.
+    boot: ['sentry', 'chunk-recovery', 'vuefire'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],

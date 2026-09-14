@@ -22,19 +22,27 @@ let initPromise: Promise<void> | null = null;
 // every mount stacks another onAuthStateChanged listener and updateCustomClaims()
 // (a getIdTokenResult() round-trip) runs once per copy on every auth change.
 export function init(): Promise<void> {
-  initPromise ??= getAuthInstance().then((auth) => {
-    // onAuthStateChanged fires with the current state as soon as it is registered, so
-    // that first callback is what populates loggedInUserClaims — no eager call needed.
-    auth.onAuthStateChanged((user) => {
-      loggedInUser.value = user;
-      void updateCustomClaims();
-      if (user) {
-        console.log('Logged In.');
-      } else {
-        console.log('Logged Out.');
-      }
+  initPromise ??= getAuthInstance()
+    .then((auth) => {
+      // onAuthStateChanged fires with the current state as soon as it is registered, so
+      // that first callback is what populates loggedInUserClaims — no eager call needed.
+      auth.onAuthStateChanged((user) => {
+        loggedInUser.value = user;
+        void updateCustomClaims();
+        if (user) {
+          console.log('Logged In.');
+        } else {
+          console.log('Logged Out.');
+        }
+      });
+    })
+    .catch((error: unknown) => {
+      // Idempotent must not mean "permanently broken": caching the rejection would leave
+      // the header stuck signed-out with no way back short of a manual reload. The next
+      // mount retries instead.
+      initPromise = null;
+      throw error;
     });
-  });
   return initPromise;
 }
 

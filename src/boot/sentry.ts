@@ -1,6 +1,7 @@
 import { defineBoot } from '#q-app';
 import { browserTracingIntegration, captureException, init, replayIntegration, setUser, withScope } from '@sentry/vue';
 import type { User } from 'firebase/auth';
+import { isRecovering } from 'boot/chunk-recovery.ts';
 
 /**
  * Sentry for the browser half of the app.
@@ -55,6 +56,12 @@ export default defineBoot(({ app, router }) => {
     replaysSessionSampleRate: REPLAY_SESSION_SAMPLE_RATE,
     replaysOnErrorSampleRate: REPLAY_ON_ERROR_SAMPLE_RATE,
     initialScope: { tags: { runtime: 'browser' } },
+    // A chunk that failed to load is handled by reloading the page (see boot/chunk-recovery.ts).
+    // Once that reload is committed the page is being thrown away, and everything still
+    // arriving — the module rejection itself, and whatever the code that was waiting on it
+    // does with the `undefined` it got instead — describes that one failed request rather
+    // than a bug. The recurrence, where the reload did not help, is not suppressed.
+    beforeSend: (event) => (isRecovering() ? null : event),
     // Noise that is never actionable: browser/extension chatter, and the generic network
     // failures Firebase and Algolia raise when the user navigates away mid-request.
     ignoreErrors: [
