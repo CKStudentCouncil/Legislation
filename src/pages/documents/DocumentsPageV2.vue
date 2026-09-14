@@ -135,7 +135,7 @@ import { useDocumentStore } from 'stores/document.ts';
 import { itemListJsonLd, ldJsonScript, SITE } from 'src/ts/structured-data.ts';
 import { getCountFromServer, getDocs, limit, orderBy, query, startAfter, where, or, and } from 'firebase/firestore';
 import type { QueryDocumentSnapshot } from 'firebase/firestore';
-import { isReign, optionalDate } from 'src/ts/checks.ts';
+import { isReign, optionalDate, parseDateInput } from 'src/ts/checks.ts';
 import { useMeta } from 'quasar';
 import { loggedInUser, useCurrentClaims } from 'src/ts/auth.ts';
 import type { LocationQuery, LocationQueryRaw } from 'vue-router';
@@ -324,6 +324,8 @@ const q = computed(() => {
             : []),
         ]
       : [];
+  const beforeDate = parseDateInput(before.value);
+  const afterDate = parseDateInput(after.value, true);
   const filters = [
     props.filterReign || reign.value ? where('reign', '==', props.filterReign ?? reign.value) : null,
     fromGeneric.value && fromSpecific.value.length === 0
@@ -358,8 +360,11 @@ const q = computed(() => {
           toSpecific.value.map((i) => i.firebase),
         )
       : null,
-    before.value ? where('publishedAt', '<=', new Date(before.value)) : null,
-    after.value ? where('publishedAt', '>=', new Date(after.value + ' 23:59:59')) : null,
+    // Both values are free text — typed through `mask="date"` a keystroke at a time, and rehydrated
+    // straight from the URL query — so they are only a date once parseDateInput says so. An Invalid
+    // Date here throws RangeError out of this computed and takes the whole page down.
+    beforeDate ? where('publishedAt', '<=', beforeDate) : null,
+    afterDate ? where('publishedAt', '>=', afterDate) : null,
     type.value || props.filterType ? where('type', '==', type.value?.firebase ?? props.filterType) : null,
     published.value === null ? null : where('published', '==', published.value),
 
