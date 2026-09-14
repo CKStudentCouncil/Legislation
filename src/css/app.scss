@@ -5,9 +5,13 @@
   }
 }
 
+// Traditional-Chinese Kai faces first, then a Traditional serif, then the generic. Every Kai name
+// here is a locally installed desktop font — phones ship none of them, so mobile lands on the serif
+// fallbacks rather than the official 標楷體.
 .official-font-when-printing {
   @media print {
-    font-family: '標楷體2', '標楷體', 'BiauKai', 'DFKai-sb', 'cwTeXKai', Times, serif;
+    font-family:
+      '標楷體2', '標楷體', 'BiauKai', 'DFKai-sb', 'TW-Kai', 'Kaiti TC', 'cwTeXKai', 'Songti TC', 'Noto Serif CJK TC', 'Noto Serif TC', Times, serif;
   }
 }
 
@@ -74,7 +78,13 @@
     background: none !important;
   }
 
+  // The pages cap their on-screen width with `min(1170px, 97vw)`, and `vw` follows the device
+  // viewport rather than the paper. On a phone that pins the printed column to ~380px inside a
+  // ~720px page box and leaves most of the sheet blank, so let it take the full page width.
   html.is-printing .print-root {
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
   }
