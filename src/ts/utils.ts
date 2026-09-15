@@ -169,7 +169,14 @@ export function notifySuccess(message: string): void {
   });
 }
 
-export function notifyError(message: string, e?: any): void {
+/**
+ * `report: false` says the toast is the whole response — the failure is the visitor's browser,
+ * their connection or an access policy answering correctly, and there is no defect of ours for
+ * anyone to fix. It still reaches the console and the GA4 counter, which is where you look to
+ * see whether one of these is becoming common; it just does not open an issue. See
+ * src/ts/firebase-errors.ts for which failures qualify.
+ */
+export function notifyError(message: string, e?: any, options?: { report?: boolean }): void {
   Notify.create({
     message,
     color: 'negative',
@@ -184,6 +191,6 @@ export function notifyError(message: string, e?: any): void {
       stack: e?.stack,
     });
     // GA4 exceptions are a counter; Sentry keeps the stack, the user and the release.
-    captureError(e, message);
+    if (options?.report !== false) captureError(e, message);
   }
 }

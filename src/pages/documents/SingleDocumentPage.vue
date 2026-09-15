@@ -45,7 +45,8 @@ import { useDocumentStore } from 'stores/document.ts';
 import { useMeta } from 'quasar';
 import { DocumentType } from 'src/ts/models.ts';
 import { event } from 'vue-gtag';
-import { getMeta, stripHtml } from 'src/ts/utils.ts';
+import { copyDocLink, getMeta, stripHtml } from 'src/ts/utils.ts';
+import { errorCode } from 'src/ts/firebase-errors.ts';
 import { documentJsonLd, ldJsonScript } from 'src/ts/structured-data.ts';
 import { convertToChineseDay } from 'src/ts/shared-utils.ts';
 
@@ -142,12 +143,32 @@ ${d.fromName ? `會議主席：${d.fromSpecific.translation} ${d.fromName}` : ''
   };
 });
 
-function share() {
-  void navigator.share({
-    title: (route.params.id as string) + '：' + (doc.value?.subject ?? ''),
-    text: (route.params.id as string) + '：' + (doc.value?.subject ?? ''),
-    url: window.location.href,
-  });
+/**
+ * Web Share is not something every browser here has. This site is read a lot from inside the
+ * LINE in-app browser, which on Android exposes no navigator.share at all — so the button did
+ * not merely do nothing, it threw (LEGISLATION-8). Copying the link is the same job by other
+ * means, and is what the rest of the site already offers, so fall back to it.
+ */
+async function share() {
+  const id = route.params.id as string;
+  const title = id + '：' + (doc.value?.subject ?? '');
+  const data = { title, text: title, url: window.location.href };
+
+  // canShare() is the half of the API that says whether *this payload* can go; browsers that
+  // have share() but not canShare() take the payload as given.
+  if (typeof navigator.share !== 'function' || (typeof navigator.canShare === 'function' && !navigator.canShare(data))) {
+    copyDocLink(id);
+    return;
+  }
+
+  try {
+    await navigator.share(data);
+  } catch (e) {
+    // Dismissing the share sheet rejects with AbortError. That is the visitor saying no, not
+    // a failure, and it used to surface as an unhandled rejection.
+    if (errorCode(e) === 'AbortError') return;
+    copyDocLink(id);
+  }
 }
 </script>
 

@@ -71,6 +71,11 @@ export default defineBoot(({ app, router }) => {
       'NetworkError when attempting to fetch resource',
       'Load failed',
       'AbortError',
+      // Firestore's WebChannel transport giving up — the same weather as the three above, just
+      // worded by @firebase/webchannel-wrapper instead of by the browser, and with a stack that
+      // is entirely inside it. Call sites that can say something useful already do (see
+      // isTransientNetworkError); this is the backstop for the ones that cannot.
+      'Connection failed',
       // The visitor closed the Google sign-in popup themselves.
       'auth/popup-closed-by-user',
       'auth/cancelled-popup-request',

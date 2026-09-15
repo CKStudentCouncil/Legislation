@@ -125,6 +125,7 @@
 <script lang="ts" setup>
 import { matEvent, matLink, matVisibility, matWarning } from '@quasar/extras/material-icons';
 import { copyDocLink, getMeta, notifyError } from 'src/ts/utils.ts';
+import { explainQueryError } from 'src/ts/firebase-errors.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import type { Ref } from 'vue';
 import { computed, onMounted, onServerPrefetch, reactive, ref, watch } from 'vue';
@@ -407,11 +408,24 @@ const q = computed(() => {
   if (docId.value?.trim()) {
     const start = docId.value.trim();
     if (start.includes('第')) {
-      filters.push(where('__name__', '==', start));
-      orderBys = [];
+      // A whole 公文字號. Deliberately NOT where('__name__', '==', start): the document ID *is*
+      // the full ID, so Firestore runs that as a single-document get and firestore.rules
+      // evaluates canReadDocument() against a `resource` that is null whenever the ID does not
+      // exist — which denies. A mistyped 字號 therefore came back as "Missing or insufficient
+      // permissions" rather than as no results, red-toasted the reader and filed an issue
+      // (LEGISLATION-7). idPrefix and idNumber hold the same two halves as ordinary fields, so
+      // matching on those keeps this a list query, where a miss is simply an empty result.
+      const at = start.indexOf('第');
+      const prefix = start.slice(0, at);
+      const idNumber = start.slice(at + 1).replace(/號+$/, '');
+      if (prefix) filters.push(where('idPrefix', '==', prefix));
+      if (idNumber) filters.push(where('idNumber', '==', idNumber));
+      // Both halves pin a single document, and equality-only queries need no composite index.
+      orderBys = idNumber ? [] : [orderBy('idNumber', 'asc')];
     } else if (start.includes('字')) {
-      const prefix = start.replace('字', '');
-      filters.push(where('idPrefix', '==', prefix));
+      // Not .replace('字', ''): every stored idPrefix ends in 字 (建班立議錄字, 政通字 …), so
+      // stripping it made this branch match nothing at all.
+      filters.push(where('idPrefix', '==', start));
       orderBys = [orderBy('idNumber', 'asc')];
     } else {
       const end = start.slice(0, -1) + String.fromCharCode(start.charCodeAt(start.length - 1) + 1);
@@ -433,17 +447,27 @@ const paginatedQ = computed(() => {
   return lastVisibleDoc.value ? query(q.value, startAfter(lastVisibleDoc.value), limit(10)) : query(q.value, limit(10));
 });
 const allDocs = reactive({} as { [id: string]: Document });
+// Every keystroke in a filter starts a count query, and nothing cancels the one before it. Without
+// a sequence number a reply that arrives out of order overwrites the newer total — and, worse, a
+// failure from a filter combination the reader has already moved on from still red-toasts them and
+// files an issue against whatever the URL happens to say by then.
+let latestTotalRequest = 0;
 const updateTotal = async () => {
+  const request = ++latestTotalRequest;
   try {
     lastVisibleDoc.value = undefined;
     Object.keys(allDocs).forEach((k) => delete allDocs[k]);
-    totalDocs.value = (await getCountFromServer(q.value)).data().count;
+    const total = (await getCountFromServer(q.value)).data().count;
+    if (request !== latestTotalRequest) return;
+    totalDocs.value = total;
     if (!import.meta.env.QUASAR_SERVER) {
       scroll.value.updateScrollTarget();
       scroll.value.resume();
     }
   } catch (e) {
-    notifyError('無法以此條件搜尋公文', e);
+    if (request !== latestTotalRequest) return;
+    const { message, report } = explainQueryError(e, '無法以此條件搜尋公文');
+    notifyError(message, e, { report });
   }
 };
 watch(q, updateTotal, { deep: true });
@@ -492,13 +516,22 @@ async function loadMore(i: number, done: (stop?: boolean) => void) {
     done(true);
   } else {
     searching.value = true;
-    const docs = await getDocs(paginatedQ.value);
-    docs.forEach((doc) => {
-      allDocs[doc.id] = doc.data() as Document;
-    });
-    lastVisibleDoc.value = docs.docs.at(-1);
-    searching.value = false;
-    done();
+    try {
+      const docs = await getDocs(paginatedQ.value);
+      docs.forEach((doc) => {
+        allDocs[doc.id] = doc.data() as Document;
+      });
+      lastVisibleDoc.value = docs.docs.at(-1);
+      done();
+    } catch (e) {
+      // Left unhandled this rejected out of QInfiniteScroll's handler: searching stayed true and
+      // done() was never called, so the spinner span forever and no later page could load.
+      const { message, report } = explainQueryError(e, '無法載入更多公文');
+      notifyError(message, e, { report });
+      done(true);
+    } finally {
+      searching.value = false;
+    }
   }
 }
 
