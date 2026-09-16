@@ -128,7 +128,7 @@ import { copyDocLink, getMeta, notifyError } from 'src/ts/utils.ts';
 import { explainQueryError } from 'src/ts/firebase-errors.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import type { Ref } from 'vue';
-import { computed, onMounted, onServerPrefetch, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onServerPrefetch, onUnmounted, reactive, ref, watch } from 'vue';
 import type { Document } from 'src/ts/models.ts';
 import { DocumentConfidentiality, DocumentGeneralIdentity, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
 import { documentsCollection } from 'src/ts/model-converters.ts';
@@ -452,20 +452,29 @@ const allDocs = reactive({} as { [id: string]: Document });
 // failure from a filter combination the reader has already moved on from still red-toasts them and
 // files an issue against whatever the URL happens to say by then.
 let latestTotalRequest = 0;
+// A reader who leaves mid-query takes the component with them, and the count still resolves —
+// into an instance Vue has already torn down, whose template ref is null by then. That made
+// scroll.value.updateScrollTarget() throw a TypeError *inside* this try (LEGISLATION-A), and the
+// catch then dressed a bug of ours up as a failed search: a red toast over whatever page the
+// reader had moved on to, filed against a query that had in fact succeeded.
+let unmounted = false;
+onUnmounted(() => {
+  unmounted = true;
+});
 const updateTotal = async () => {
   const request = ++latestTotalRequest;
   try {
     lastVisibleDoc.value = undefined;
     Object.keys(allDocs).forEach((k) => delete allDocs[k]);
     const total = (await getCountFromServer(q.value)).data().count;
-    if (request !== latestTotalRequest) return;
+    if (unmounted || request !== latestTotalRequest) return;
     totalDocs.value = total;
     if (!import.meta.env.QUASAR_SERVER) {
-      scroll.value.updateScrollTarget();
-      scroll.value.resume();
+      scroll.value?.updateScrollTarget();
+      scroll.value?.resume();
     }
   } catch (e) {
-    if (request !== latestTotalRequest) return;
+    if (unmounted || request !== latestTotalRequest) return;
     const { message, report } = explainQueryError(e, '無法以此條件搜尋公文');
     notifyError(message, e, { report });
   }
@@ -524,6 +533,9 @@ async function loadMore(i: number, done: (stop?: boolean) => void) {
       lastVisibleDoc.value = docs.docs.at(-1);
       done();
     } catch (e) {
+      // As in updateTotal: a page that failed after the reader left belongs to a view that no
+      // longer exists, and its toast would land on top of whatever they are reading now.
+      if (unmounted) return;
       // Left unhandled this rejected out of QInfiniteScroll's handler: searching stayed true and
       // done() was never called, so the spinner span forever and no later page could load.
       const { message, report } = explainQueryError(e, '無法載入更多公文');

@@ -49,7 +49,7 @@
 
       <template v-slot:navigation>
         <q-stepper-navigation v-if="step > 0" align="right">
-          <q-btn v-if="step !== 2" :label="step === 3 ? '查詢' : '下一步'" color="primary" @click="next" />
+          <q-btn v-if="step !== 2" color="primary" :label="step === 3 ? '查詢' : '下一步'" :loading="searching" @click="next" />
           <q-btn class="q-ml-sm" color="primary" flat label="返回" @click="previous" />
         </q-stepper-navigation>
       </template>
@@ -60,7 +60,8 @@
 <script lang="ts" setup>
 import { matChecklist, matList, matMenu, matSearch } from '@quasar/extras/material-icons';
 import { computed, ref, watch } from 'vue';
-import { getMeta, stripHtml } from 'src/ts/utils.ts';
+import { getMeta, notifyError, stripHtml } from 'src/ts/utils.ts';
+import { explainQueryError } from 'src/ts/firebase-errors.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { isReign } from 'src/ts/checks.ts';
 import * as models from 'src/ts/models.ts';
@@ -76,6 +77,7 @@ import { useDocumentStore } from 'stores/document.ts';
 const store = useDocumentStore();
 const step = ref(0);
 const stepper = ref();
+const searching = ref(false);
 const findBy = ref<null | 'select' | 'id'>(null);
 const reign = ref<null | string>(null);
 const reignInput = ref();
@@ -134,28 +136,51 @@ function chooseFindBy(type: 'select' | 'id') {
 async function next() {
   switch (step.value) {
     case 1:
+      if (!reignInput.value) return;
       reignInput.value.validate();
       if (reignInput.value.hasError) return;
       loadOptions();
       break;
     case 3: {
-      const primaryId = `${idPrefix.value}第${idNumber.value}號`;
-      const docs = await store.loadLawsuit(primaryId);
-      if (docs && docs.length > 0) {
-        void router.push(`/document/judicial/lawsuit/${primaryId}`);
-      } else {
-        const prefix = courtType.value === '一般法庭' ? '政' : '憲';
-        void router.push(`/document/judicial/lawsuit/${prefix}啟字第${idNumber.value}號`);
+      // An empty 案件號 still built an ID out of nothing and pushed to it — the reader who filed
+      // LEGISLATION-B was sent to /document/judicial/lawsuit/政啟字第號, which can never exist.
+      const caseNumber = String(idNumber.value).trim();
+      if (!idPrefix.value || !caseNumber) {
+        notifyError('請先選擇法庭類型並輸入案件號');
+        return;
       }
-      break;
+      // The lookup is a Firestore round-trip on a phone; without a loading state the button
+      // invites a second tap, and that second call is the one that lands after the first has
+      // navigated away.
+      if (searching.value) return;
+      searching.value = true;
+      const primaryId = `${idPrefix.value}第${caseNumber}號`;
+      try {
+        const docs = await store.loadLawsuit(primaryId);
+        if (docs.length > 0) {
+          void router.push(`/document/judicial/lawsuit/${primaryId}`);
+        } else {
+          const prefix = courtType.value === '一般法庭' ? '政' : '憲';
+          void router.push(`/document/judicial/lawsuit/${prefix}啟字第${caseNumber}號`);
+        }
+      } catch (e) {
+        const { message, report } = explainQueryError(e, '無法查詢此案件號');
+        notifyError(message, e, { report });
+      } finally {
+        searching.value = false;
+      }
+      // Step 3 is the last one and the push above is already taking the reader off this page, so
+      // there is nothing to advance to. Falling through to stepper.value.next() raced that
+      // navigation instead and reached a template ref the teardown had nulled (LEGISLATION-B).
+      return;
     }
   }
-  stepper.value.next();
+  stepper.value?.next();
 }
 
 function previous() {
   q.value = null;
-  stepper.value.previous();
+  stepper.value?.previous();
 }
 
 function loadOptions() {
