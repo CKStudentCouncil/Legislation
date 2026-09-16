@@ -39,7 +39,7 @@ export default defineConfig((ctx) => {
     // 'sentry' first: it installs the Vue error handler, so anything the later boot files
     // throw is already being reported by the time they run. 'chunk-recovery' next, so that a
     // chunk lost by a later boot file, or by the first route, already has somewhere to land.
-    boot: ['sentry', 'chunk-recovery', 'vuefire'],
+    boot: ['sentry', 'chunk-recovery', 'ime-composition', 'vuefire'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],
