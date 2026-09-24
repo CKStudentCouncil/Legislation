@@ -85,6 +85,22 @@ export function explainAuthError(e: unknown): ExplainedError {
 }
 
 /**
+ * Failures of a callable Cloud Function.
+ *
+ * Every callable runs checkRole() first, so 'unauthenticated' and 'permission-denied' mean the
+ * caller is signed out or lacks the role — anyone can type a /manage URL, since no route guard
+ * stops them. The function worked as designed, and functions/src/sentry.ts does not report
+ * these codes from the server side either.
+ */
+export function explainFunctionError(e: unknown, fallback: string): ExplainedError {
+  if (isTransientNetworkError(e)) return { message: NETWORK_MESSAGE, report: false };
+  const code = errorCode(e);
+  if (code === 'functions/unauthenticated') return { message: '請先登入後再試一次', report: false };
+  if (code === 'functions/permission-denied') return { message: '您的帳號沒有執行此操作的權限', report: false };
+  return { message: fallback, report: true };
+}
+
+/**
  * Failures of a Firestore read issued on the reader's behalf.
  *
  * 'permission-denied' stays reportable: after the exact-公文字號 lookup stopped being a
