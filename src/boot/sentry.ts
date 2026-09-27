@@ -79,6 +79,11 @@ export default defineBoot(({ app, router }) => {
       // The visitor closed the Google sign-in popup themselves.
       'auth/popup-closed-by-user',
       'auth/cancelled-popup-request',
+      // Microsoft's link scanner (Outlook Safe Links and friends) opening a shared URL in a
+      // headless CefSharp browser and rejecting a promise of its own host bridge — no stack,
+      // nothing of ours involved. The 公文 emails publishDocument sends are exactly the links
+      // it scans (LEGISLATION-F).
+      'Object Not Found Matching Id:',
     ],
     denyUrls: [/^chrome:\/\//i, /^chrome-extension:\/\//i, /^moz-extension:\/\//i, /^safari-extension:\/\//i],
   });

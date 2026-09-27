@@ -122,3 +122,16 @@ export function explainQueryError(e: unknown, fallback: string): ExplainedError 
   if (code === 'failed-precondition') return { message: '系統尚未支援此篩選組合，已通報班聯會資訊組', report: true };
   return { message: fallback, report: true };
 }
+
+/**
+ * Failures of an Algolia search on the legislation page — not Firebase, but the same weather.
+ *
+ * The Algolia client retries each of its hosts on a timeout or a dropped connection, and only
+ * once it has run out of hosts does it give up with a RetryError ('Unreachable hosts'). That is
+ * the visitor's connection, not the index. Anything else (an ApiError with a status) means the
+ * request itself was refused — a bad key, a missing index — which is ours to fix.
+ */
+export function explainSearchError(e: unknown): ExplainedError {
+  if (errorCode(e) === 'RetryError' || isTransientNetworkError(e)) return { message: NETWORK_MESSAGE, report: false };
+  return { message: '搜尋失敗，請稍後再試', report: true };
+}
