@@ -1,4 +1,4 @@
-import { getMailTemplate, MailTemplateOptions } from './template';
+import { escapeHtml, getMailTemplate, MailTemplateOptions } from './template';
 
 export function amendmentResolvedMail(
   legislationName: string,
@@ -11,16 +11,16 @@ export function amendmentResolvedMail(
   const isApproved = status === 'approved';
 
   const contentLines = [
-    `您針對 <strong>${legislationName}</strong> 提出的修正草案，審查結果為：<strong>${isApproved ? '已核可並公布' : '已退回'}</strong>。`,
+    `您針對 <strong>${escapeHtml(legislationName)}</strong> 提出的修正草案，審查結果為：<strong>${isApproved ? '已核可並公布' : '已退回'}</strong>。`,
   ];
 
   if (reason) {
-    contentLines.push(`審查意見 / 退回理由：<br>${reason.replace(/\n/g, '<br>')}`);
+    contentLines.push(`審查意見 / 退回理由：<br>${escapeHtml(reason).replace(/\n/g, '<br>')}`);
   }
 
   const options: MailTemplateOptions = {
     title: `修正草案審查結果：${isApproved ? '核可' : '退回'}`,
-    greeting: `${petitionerName} 您好，`,
+    greeting: `${escapeHtml(petitionerName)} 您好，`,
     contentLines,
   };
 

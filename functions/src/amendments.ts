@@ -282,7 +282,7 @@ export const resolveAmendmentRequest = onCall(globalFunctionOptions, async (requ
   // Post transaction email dispatch
   const { reqData } = result;
   if (reqData.petitionerEmail) {
-    const docUrl = result.documentId ? `https://law.cksc.tw/document/${result.documentId}` : undefined;
+    const docUrl = result.documentId ? `https://law.cksc.tw/document/${encodeURIComponent(result.documentId)}` : undefined;
     const legUrl = `https://law.cksc.tw/legislation/${reqData.legislationId}`;
     const mailOptions: SendMailOptions = {
       from: '建中班聯會法律與公文系統 <cksc77th@gmail.com>',

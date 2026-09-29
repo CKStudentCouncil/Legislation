@@ -1,4 +1,4 @@
-import { getMailTemplate } from './template';
+import { escapeHtml, getMailTemplate } from './template';
 
 export function amendmentNotificationMail(
   legislationName: string,
@@ -7,9 +7,9 @@ export function amendmentNotificationMail(
   reviewUrl: string,
   reviewerTitle: string,
 ) {
-  const lines = [`系統收到一份針對 <strong>${legislationName}</strong> 的修正草案。`, `提案人：${petitionerName}`];
+  const lines = [`系統收到一份針對 <strong>${escapeHtml(legislationName)}</strong> 的修正草案。`, `提案人：${escapeHtml(petitionerName)}`];
   if (petitionerEmail) {
-    lines.push(`聯絡信箱：${petitionerEmail}`);
+    lines.push(`聯絡信箱：${escapeHtml(petitionerEmail)}`);
   }
 
   return getMailTemplate({
