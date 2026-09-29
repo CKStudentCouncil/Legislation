@@ -47,10 +47,11 @@ jobs:
 
       - name: Restore runtime service-account credential
         # The google-drive-uploader key is read at runtime by functions/src/index.ts
-        # (keyFile: 'src/credential.json'). It is gitignored and never committed — it
-        # lives only as the FUNCTIONS_CREDENTIAL_JSON secret and is materialised here so
-        # it ships with the deployed source. Written via env (not inline) to keep the
-        # secret out of the command line and logs.
+        # (keyFile: 'src/credential.json'). It is gitignored and lives only as the
+        # FUNCTIONS_CREDENTIAL_JSON secret, materialised here so it ships with the
+        # deployed source. (An earlier key was committed in 225191f; it was deleted
+        # in IAM and replaced on 2025-02-10, so the copy in git history is dead.)
+        # Written via env (not inline) to keep the secret out of the command line and logs.
         run: printf '%s' "$FUNCTIONS_CREDENTIAL_JSON" > functions/src/credential.json
         env:
           FUNCTIONS_CREDENTIAL_JSON: ${{ secrets.FUNCTIONS_CREDENTIAL_JSON }}
