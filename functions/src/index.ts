@@ -149,6 +149,12 @@ export const uploadAttachment = onCall(
       throw new HttpsError('permission-denied', 'You must have a council role to upload attachments.');
     }
     const { name, content, mimeType } = request.data;
+    // `content` is caller-controlled JSON. Buffer.from() treats any object with a numeric `length` as an array-like and
+    // allocates that many bytes, so {"length": 500000000} would allocate ~500 MB before the size check below runs.
+    // A base64 string is the only valid payload.
+    if (typeof content !== 'string') {
+      throw new HttpsError('invalid-argument', 'Attachment content must be a base64-encoded string.');
+    }
     const buf = Buffer.from(content, 'base64');
     const fileSize = buf.length;
     if (fileSize > 25 * 1024 * 1024) {
