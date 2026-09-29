@@ -74,6 +74,22 @@ export const recordDocumentHistory = onDocumentWritten({ ...globalFunctionOption
   }
 });
 
+// Mirrors isLegacySteward() in firestore.rules: only council leadership may maintain an unowned (legacy)
+// document, and only one they can already read. Callers check the author/editor/manager tiers themselves,
+// so the read check here only needs the paths that don't go through those tiers.
+const LEGACY_STEWARD_ROLES = ['Chairman', 'Speaker', 'DeputySpeaker', 'JudicialCommitteeChairman'];
+export function isLegacySteward(doc: Record<string, any>, email: string | null | undefined, roles: string[]): boolean {
+  const hasNoAuthor = doc.authorEmail == null || doc.authorEmail === 'legacy';
+  if (!hasNoAuthor || !roles.some((r) => LEGACY_STEWARD_ROLES.includes(r))) return false;
+  const isDeclassified = doc.published === true && doc.declassifyAt != null && doc.declassifyAt.toMillis() <= Date.now();
+  return (
+    doc.confidentiality === 'Public' ||
+    isDeclassified ||
+    (Array.isArray(doc.viewers) && doc.viewers.some((r: string) => roles.includes(r))) ||
+    (Array.isArray(doc.viewerEmails) && email != null && doc.viewerEmails.includes(email))
+  );
+}
+
 // Non-destructive revert (git-revert semantics). Restores a historical snapshot's content/metadata
 // while preserving the live ownership/permission fields; the trigger then records it as a new version.
 export const revertDocument = onCall(globalFunctionOptions, async (request) => {
@@ -95,14 +111,13 @@ export const revertDocument = onCall(globalFunctionOptions, async (request) => {
     if (!docSnap.exists) throw new HttpsError('not-found', 'Document not found.');
     const live = docSnap.data()!;
 
-    // Authorize: caller must be editor-or-above (author, manager, or editor) on the LIVE doc.
+    // Authorize: caller must be editor-or-above (author, manager, or editor) or a legacy steward on the LIVE doc.
     const inList = (arr: any) => Array.isArray(arr) && email != null && arr.includes(email);
     const hasRole = (arr: any) => Array.isArray(arr) && arr.some((r: string) => roles.includes(r));
-    const hasNoAuthor = !live.authorEmail || live.authorEmail === 'legacy';
     const isAuthor = !!live.authorEmail && live.authorEmail === email;
     const isManager = inList(live.managerEmails) || hasRole(live.managerRoles);
     const isEditor = isManager || inList(live.editorEmails) || hasRole(live.editorRoles);
-    if (!(isAuthor || isEditor || hasNoAuthor)) {
+    if (!(isAuthor || isEditor || isLegacySteward(live, email, roles))) {
       throw new HttpsError('permission-denied', 'You do not have permission to revert this document.');
     }
 

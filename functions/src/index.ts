@@ -29,6 +29,7 @@ import { createGzip } from 'zlib';
 import * as https from 'https';
 export { submitAmendmentRequest, resolveAmendmentRequest } from './amendments';
 export { recordDocumentHistory, revertDocument } from './history';
+import { isLegacySteward } from './history';
 import * as utf8 from 'utf8';
 import { DocumentSpecificIdentity, DocumentType, User } from '../../src/ts/models';
 import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils';
@@ -218,13 +219,12 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
   const inList = (arr: unknown) => Array.isArray(arr) && !!callerEmail && arr.includes(callerEmail);
   const hasAnyRole = (arr: unknown) => Array.isArray(arr) && arr.some((r: string) => callerRoles.includes(r));
   const canPublish =
-    !doc.authorEmail ||
-    doc.authorEmail === 'legacy' ||
-    doc.authorEmail === callerEmail ||
+    (!!callerEmail && doc.authorEmail === callerEmail) ||
     inList(doc.editorEmails) ||
     hasAnyRole(doc.editorRoles) ||
     inList(doc.managerEmails) ||
-    hasAnyRole(doc.managerRoles);
+    hasAnyRole(doc.managerRoles) ||
+    isLegacySteward(doc, callerEmail, callerRoles);
   if (!canPublish) {
     throw new HttpsError('permission-denied', 'Not authorized to publish this document.');
   }
@@ -340,12 +340,7 @@ export const notifyDocumentAccess = onCall(globalFunctionOptions, async (request
   const callerRoles = (request.auth.token.roles as string[] | undefined) ?? [];
   const inList = (arr: unknown) => Array.isArray(arr) && !!callerEmail && arr.includes(callerEmail);
   const hasAnyRole = (arr: unknown) => Array.isArray(arr) && arr.some((r: string) => callerRoles.includes(r));
-  const canManage =
-    !doc.authorEmail ||
-    doc.authorEmail === 'legacy' ||
-    doc.authorEmail === callerEmail ||
-    inList(doc.managerEmails) ||
-    hasAnyRole(doc.managerRoles);
+  const canManage = (!!callerEmail && doc.authorEmail === callerEmail) || inList(doc.managerEmails) || hasAnyRole(doc.managerRoles);
   if (!canManage) {
     throw new HttpsError('permission-denied', 'Not authorized to send access notifications for this document.');
   }

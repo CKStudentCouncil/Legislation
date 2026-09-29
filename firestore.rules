@@ -72,6 +72,15 @@ service cloud.firestore {
                (isPublished() && (!isPublic()) && isSignedIn() && (isDeclassified() || isViewer()));
       }
 
+      // An unowned (legacy) document predates per-document ownership. Only council leadership may
+      // maintain one, and only one they can already read. Like any other non-owner, a steward can
+      // neither claim it (ownerUnchanged) nor re-permission it (collaboratorListsUnchanged) in place.
+      function isLegacySteward() {
+        return hasNoAuthor()
+          && (hasRole('Chairman') || hasRole('Speaker') || hasRole('DeputySpeaker') || hasRole('JudicialCommitteeChairman'))
+          && (canReadDocument() || isViewerGrant());
+      }
+
       // Only the owner may change authorEmail; only owner/managers may change the collaborator lists.
       function ownerUnchanged() {
         return request.resource.data.get('authorEmail', '') == resource.data.get('authorEmail', '');
@@ -96,11 +105,11 @@ service cloud.firestore {
         && request.resource.data.authorEmail == request.auth.token.email
         && lastEditedByValid();
       allow update: if isSignedIn()
-        && (isAuthor() || hasNoAuthor() || isEditor())
-        && (isAuthor() || hasNoAuthor() || ownerUnchanged())
-        && (isAuthor() || hasNoAuthor() || isManager() || collaboratorListsUnchanged())
+        && (isAuthor() || isLegacySteward() || isEditor())
+        && (isAuthor() || ownerUnchanged())
+        && (isAuthor() || isManager() || collaboratorListsUnchanged())
         && lastEditedByValid();
-      allow delete: if isSignedIn() && (isAuthor() || hasNoAuthor() || isManager());
+      allow delete: if isSignedIn() && (isAuthor() || isLegacySteward() || isManager());
 
       // Server-recorded edit history. Written ONLY by the recordDocumentHistory trigger
       // (Admin SDK bypasses rules); clients can read it if they may edit the parent doc.
