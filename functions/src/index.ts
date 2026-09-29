@@ -33,6 +33,7 @@ import { isLegacySteward } from './history';
 import * as utf8 from 'utf8';
 import { DocumentSpecificIdentity, DocumentType, User } from '../../src/ts/models';
 import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils';
+export { listDocumentHistory } from './history';
 
 const globalFunctionOptions = { region: 'asia-east1' };
 const ACCOUNT_MANAGER_ROLES = ['Chairman', 'Speaker', 'JudicialCommitteeChairman'];

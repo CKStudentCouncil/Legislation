@@ -113,21 +113,13 @@ service cloud.firestore {
 
       // Server-recorded edit history. Written ONLY by the recordDocumentHistory trigger
       // (Admin SDK bypasses rules); clients can read it if they may edit the parent doc.
+      // They do that through the listDocumentHistory Cloud Function, never with a direct read. History is kept
+      // when its parent is deleted or renamed (the audit trail), so a rule that judged access from whatever
+      // document now sits at documents/{docId} would hand an earlier document's history to whoever re-creates
+      // that ID. Telling the current document's entries from an earlier one's takes the parent's createTime,
+      // which rules cannot read.
       match /history/{versionId} {
-        function parent() {
-          return get(/databases/$(database)/documents/documents/$(docId)).data;
-        }
-        allow read: if isSignedIn() && (
-          ('email' in request.auth.token && (
-            parent().get('authorEmail', '') == request.auth.token.email
-            || parent().get('editorEmails', []).hasAny([request.auth.token.email])
-            || parent().get('managerEmails', []).hasAny([request.auth.token.email])
-          )) ||
-          ('roles' in request.auth.token && (
-            parent().get('editorRoles', []).hasAny(request.auth.token.roles)
-            || parent().get('managerRoles', []).hasAny(request.auth.token.roles)
-          ))
-        );
+        allow read: if false;
         allow write: if false;
       }
     }

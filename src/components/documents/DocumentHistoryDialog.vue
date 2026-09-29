@@ -30,6 +30,9 @@
               </q-item-section>
             </q-item>
           </q-list>
+          <div v-if="!loading && nextBefore !== null" class="text-center q-pt-sm">
+            <q-btn color="primary" dense :disable="loadingMore" flat label="載入更早的版本" :loading="loadingMore" no-caps @click="loadMore" />
+          </div>
         </div>
         <div class="col-12 col-md-8">
           <div class="row items-center q-mb-sm">
@@ -95,8 +98,7 @@ import { matClose, matFullscreen, matFullscreenExit, matRestore } from '@quasar/
 import { computed, ref, watch } from 'vue';
 import { Dark, Loading } from 'quasar';
 import { CodeDiff } from 'v-code-diff';
-import { collection, getDocs, getFirestore, orderBy, query } from 'firebase/firestore';
-import { firebaseApp, useFunctionAsync } from 'src/boot/vuefire.ts';
+import { useFunctionAsync } from 'src/boot/vuefire.ts';
 import { DocumentConfidentiality, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
 import type * as models from 'src/ts/models.ts';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
@@ -125,33 +127,74 @@ const dialogModel = computed({
 });
 
 const versions = ref<HistoryVersion[]>([]);
+// Where the next page of older versions starts, or null when the list is complete.
+const nextBefore = ref<string | null>(null);
 const selected = ref<HistoryVersion | null>(null);
 const loading = ref(false);
+const loadingMore = ref(false);
 const view = ref<'preview' | 'diff'>('preview');
 const confirmRevert = ref(false);
 const maximized = ref(false);
 
+// Counts the loads of the list from its first page, so that older versions requested for a list that has been
+// reloaded since (the dialog reopened, or a revert) are not appended to the new one.
+let generation = 0;
+
+// One page of the list, newest first, starting after the version that `before` names (the newest when it is null).
+// Through the function, not a direct Firestore read: it returns only the entries of the document as it exists
+// now and leaves out history left behind by an earlier document with the same ID. A page arrives as one JSON
+// string (the callable codec cannot be trusted with the entries' contents), with timestamps as epoch
+// milliseconds, and holds only as many entries as fit its size limit: nextBefore is the cursor for the older
+// ones, or null when there are none.
+async function fetchPage(before: string | null): Promise<{ versions: HistoryVersion[]; nextBefore: string | null }> {
+  const fn = await useFunctionAsync('listDocumentHistory');
+  const res = await fn(before === null ? { docId: props.docId } : { docId: props.docId, before });
+  const data = res.data as { versions: string; nextBefore: string | null };
+  const entries = JSON.parse(data.versions) as (Omit<HistoryVersion, 'editedAt'> & { editedAt: number | null })[];
+  return {
+    versions: entries.map((v) => ({ ...v, editedAt: typeof v.editedAt === 'number' ? new Date(v.editedAt) : null })),
+    nextBefore: typeof data.nextBefore === 'string' ? data.nextBefore : null,
+  };
+}
+
 async function load() {
+  generation++;
   loading.value = true;
+  loadingMore.value = false;
   try {
-    const db = getFirestore(firebaseApp);
-    const snap = await getDocs(query(collection(db, 'documents', props.docId, 'history'), orderBy('editedAt', 'desc')));
-    versions.value = snap.docs.map((d) => {
-      const data = d.data();
-      return {
-        versionId: (data.versionId as string) ?? d.id,
-        snapshot: (data.snapshot as Record<string, any>) ?? {},
-        editedAt: data.editedAt?.toMillis ? new Date(data.editedAt.toMillis()) : null,
-        editedBy: (data.editedBy as models.DocumentEditor) ?? null,
-        changeType: (data.changeType as HistoryVersion['changeType']) ?? 'update',
-        parentVersionId: (data.parentVersionId as string) ?? null,
-      };
-    });
+    const page = await fetchPage(null);
+    versions.value = page.versions;
+    nextBefore.value = page.nextBefore;
     selected.value = versions.value[0] ?? null;
   } catch (e) {
     notifyError('載入歷史紀錄失敗', e);
   } finally {
     loading.value = false;
+  }
+}
+
+async function loadMore() {
+  const before = nextBefore.value;
+  if (before === null || loading.value || loadingMore.value) return;
+  const mine = generation;
+  loadingMore.value = true;
+  try {
+    const page = await fetchPage(before);
+    if (mine !== generation) return;
+    const merged = [...versions.value];
+    const known = new Set(merged.map((v) => v.versionId));
+    for (const v of page.versions) {
+      if (!known.has(v.versionId)) {
+        known.add(v.versionId);
+        merged.push(v);
+      }
+    }
+    versions.value = merged;
+    nextBefore.value = page.nextBefore;
+  } catch (e) {
+    if (mine === generation) notifyError('載入歷史紀錄失敗', e);
+  } finally {
+    if (mine === generation) loadingMore.value = false;
   }
 }
 
