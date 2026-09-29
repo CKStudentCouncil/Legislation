@@ -352,7 +352,27 @@ export const notifyDocumentAccess = onCall(globalFunctionOptions, async (request
     ...((doc.editorEmails as string[] | undefined) ?? []),
     ...((doc.managerEmails as string[] | undefined) ?? []),
   ]);
-  const targets = Array.from(new Set(emails as string[])).filter((e) => typeof e === 'string' && granted.has(e));
+  const grantedTargets = Array.from(new Set(emails as string[])).filter((e) => {
+    if (typeof e !== 'string' || !granted.has(e)) return false;
+    // Same test as /^[^\s@]+@[^\s@]+\.[^\s@]+$/, in linear time: that regex's `[^\s@]` also matches '.', so it backtracks
+    // quadratically on input like 'a@' + '.'.repeat(n) + '@', and these strings come from the author's own grant lists. No
+    // whitespace, exactly one '@', a non-empty local part, and a '.' in the domain with a character on each side of it.
+    const at = e.indexOf('@');
+    return at > 0 && at === e.lastIndexOf('@') && !/\s/.test(e) && e.slice(at + 2, -1).includes('.');
+  });
+  // The grant lists are written by the document's author, so an address being listed there says
+  // nothing about whom it belongs to. Also require every recipient to be an existing Firebase Auth
+  // account - the check the collaborators dialog makes via lookupUsersByEmail before it offers an
+  // address, and which is only enforced client-side - so the council mailbox can only ever write to
+  // people who already have an account. (At most 50 addresses here, within getUsers' 100 limit.)
+  const accountEmails = new Set<string>();
+  if (grantedTargets.length > 0) {
+    const found = await admin.auth().getUsers(grantedTargets.map((e) => ({ email: e.toLowerCase() })));
+    for (const user of found.users) {
+      if (user.email) accountEmails.add(user.email.toLowerCase());
+    }
+  }
+  const targets = grantedTargets.filter((e) => accountEmails.has(e.toLowerCase()));
   if (targets.length === 0) {
     return { success: false, error: 'No notifiable grantees.' };
   }
