@@ -132,13 +132,44 @@ service cloud.firestore {
       }
     }
 
+    // The only settings document a client reads is the notification mailing list (emails + roles), on the
+    // /manage/accounts/mailing_list page, so only the council leadership may read it. Every other settings document
+    // (settings/cache, the sitemap ID cache) is read and written by Cloud Functions through the Admin SDK, which
+    // bypasses these rules, so clients get no read on it.
+    match /settings/mailingList {
+      allow read: if isSignedIn() && (
+        hasRole('Chairman') || hasRole('Speaker') || hasRole('DeputySpeaker') || hasRole('JudicialCommitteeChairman')
+      );
+    }
     match /settings/{setting=**} {
-      allow read: if true;
       allow write: if isSignedIn() && ('Chairman' in request.auth.token.roles || 'Speaker' in request.auth.token.roles || 'DeputySpeaker' in request.auth.token.roles);
     }
     match /amendmentRequests/{requestId=**} {
-      allow read: if true;
-      allow update: if isSignedIn() && ('Chairman' in request.auth.token.roles || 'Speaker' in request.auth.token.roles || 'DeputySpeaker' in request.auth.token.roles || 'JudicialCommitteeChairman' in request.auth.token.roles);
+      // A request holds the petitioner's name, email and UID plus the reviewers' in-progress decisions, so it is
+      // readable only by the reviewers (AmendmentReviewPage, one document get). The petitioner never reads it back:
+      // submitAmendmentRequest creates it through the Admin SDK. ElectoralCommitteeChairman is the approver for
+      // VotingCommitteeOrder requests (functions/src/amendments.ts getApproverRoleForCategory).
+      allow read: if isSignedIn() && (
+        hasRole('Chairman') || hasRole('Speaker') || hasRole('DeputySpeaker') || hasRole('JudicialCommitteeChairman') || hasRole('ElectoralCommitteeChairman')
+      );
+      // A request is created, approved/rejected and deleted only by Cloud Functions (Admin SDK, which bypasses these rules). The one client write is the
+      // approver's review page saving its in-progress state (reviewState, which includes the draft document that approval publishes), so only the role
+      // resolveAmendmentRequest requires for the request's category may write it, and only that field. The writer must also be one of the four roles
+      // that could write here before (Chairman, Speaker, DeputySpeaker, JudicialCommitteeChairman): ElectoralCommitteeChairman is deliberately NOT added
+      // to the writers, so it can read a VotingCommitteeOrder request but not save its review state.
+      // isCategoryApprover() holds the mapping from the stored categoryId to the approver role; keep it in step with getApproverRoleForCategory in
+      // functions/src/amendments.ts. An unknown or missing category falls to Chairman, as it does there.
+      function isCategoryApprover() {
+        let category = resource.data.get('categoryId', '');
+        return (category == 'StudentCouncilOrder' && hasRole('Speaker'))
+          || (category == 'JudicialCommitteeOrder' && hasRole('JudicialCommitteeChairman'))
+          || (category == 'VotingCommitteeOrder' && hasRole('ElectoralCommitteeChairman'))
+          || (category != 'StudentCouncilOrder' && category != 'JudicialCommitteeOrder' && category != 'VotingCommitteeOrder' && hasRole('Chairman'));
+      }
+      allow update: if isSignedIn()
+        && isCategoryApprover()
+        && (hasRole('Chairman') || hasRole('Speaker') || hasRole('DeputySpeaker') || hasRole('JudicialCommitteeChairman'))
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reviewState']);
       allow create, delete: if false;
     }
   }

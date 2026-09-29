@@ -461,6 +461,8 @@ export const buildIdCache = onCall(globalFunctionOptions, async (request) => {
   const lawCache = {} as { [id: string]: number };
   for (const doc of documents.docs) {
     const data = doc.data();
+    // Same filter as updateIdCache: settings/cache feeds the public sitemap, so only published, Public documents may be listed.
+    if (!data.published || data.confidentiality !== 'Public') continue;
     docCache[doc.id] = data.publishedAt?.toMillis() ?? data.createdAt.toMillis();
   }
   for (const law of legislation.docs) {
