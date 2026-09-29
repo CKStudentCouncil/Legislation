@@ -8,6 +8,10 @@ service cloud.firestore {
     function hasRole(role) {
       return 'roles' in request.auth.token && role in request.auth.token.roles;
     }
+    // True for a provisioned council member: the account carries at least one role claim.
+    function hasAnyRole() {
+      return 'roles' in request.auth.token && request.auth.token.roles is list && request.auth.token.roles.size() > 0;
+    }
 
     match /legislation/{legislation=**} {
       allow read: if true;
@@ -101,7 +105,10 @@ service cloud.firestore {
       }
 
       allow read: if canReadDocument() || (isSignedIn() && isViewerGrant());
+      // Only provisioned council members (accounts holding at least one role) may create documents,
+      // the same test uploadAttachment applies. An account with no role cannot start a document.
       allow create: if isSignedIn()
+        && hasAnyRole()
         && request.resource.data.authorEmail == request.auth.token.email
         && lastEditedByValid();
       allow update: if isSignedIn()
