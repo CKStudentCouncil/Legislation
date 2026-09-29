@@ -33,7 +33,10 @@ export const useDocumentStore = defineStore('document', {
   getters: {
     getDocument: (state) => {
       return (document: string): models.Document | null => {
-        if (state.document[document]) {
+        // Own entries only: the id comes from the `/document/:id` route, and a key such as `__proto__` or
+        // `constructor` would otherwise resolve through the prototype chain to a built-in shared by every SSR
+        // request, which rehydrate() then writes to. The entry is read first so the lookup stays reactive.
+        if (state.document[document] && Object.prototype.hasOwnProperty.call(state.document, document)) {
           return rehydrate(state.document[document]);
         }
         return null;
@@ -48,7 +51,7 @@ export const useDocumentStore = defineStore('document', {
   },
   actions: {
     async loadDocument(document: string): Promise<models.Document | null> {
-      if (this.document[document]) return this.getDocument(document);
+      if (this.document[document] && Object.prototype.hasOwnProperty.call(this.document, document)) return this.getDocument(document);
       const docu = await getDoc(doc(documentsCollection(), document));
       if (docu.exists()) {
         this.document[document] = docu.data() as models.Document;
