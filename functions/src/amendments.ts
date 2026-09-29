@@ -5,7 +5,7 @@ import { onCall } from './sentry';
 import * as logger from 'firebase-functions/logger';
 import { createTransport } from 'nodemailer';
 import type { SendMailOptions } from 'nodemailer';
-import { DocumentSpecificIdentity, LegislationContent } from '../../src/ts/models';
+import { ContentType, DocumentSpecificIdentity, LegislationContent } from '../../src/ts/models';
 import { amendmentNotificationMail } from './mail/amendment-notification';
 import { amendmentResolvedMail } from './mail/amendment-resolved';
 
@@ -53,6 +53,160 @@ function toFirebaseContent(c: any, index: number): any {
   return content;
 }
 
+const SCRIPT_URL_SCHEMES = ['javascript', 'vbscript', 'data'];
+
+function isRecord(value: unknown): value is Record<string, any> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+// A stored request that stops passing is not the approver's mistake, so it is a failed-precondition rather than an invalid-argument.
+function amendmentError(stored: boolean, message: string): HttpsError {
+  return new HttpsError(stored ? 'failed-precondition' : 'invalid-argument', message);
+}
+
+// A clause type arrives either as a ContentType-shaped object or as its key; only an own key of ContentType.VALUES is accepted.
+function contentTypeKey(type: unknown): string | undefined {
+  const key = isRecord(type) ? type.firebase : type;
+  return typeof key === 'string' && Object.prototype.hasOwnProperty.call(ContentType.VALUES, key) ? key : undefined;
+}
+
+// The plain-object form of a ContentType: what the review UI reads (`type.firebase`) and what Firestore accepts (it rejects class instances).
+function plainContentType(key: string) {
+  const type = (ContentType.VALUES as Record<string, ContentType>)[key];
+  return { firebase: type.firebase, translation: type.translation, arabicOrdinal: type.arabicOrdinal };
+}
+
+// Reads the scheme the way the WHATWG URL parser does: leading C0 controls and spaces are skipped, and tab/CR/LF are ignored anywhere.
+function hasScriptScheme(value: string): boolean {
+  let start = 0;
+  while (start < value.length && value.charCodeAt(start) <= 0x20) start++;
+  const scheme = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(value.slice(start).replace(/[\t\n\r]/g, ''));
+  return scheme !== null && SCRIPT_URL_SCHEMES.includes(scheme[1].toLowerCase());
+}
+
+// The frozenBy/resolutionUrls of a full amendment pass through as sent, minus what can only be an attack: values that are not strings,
+// malformed entries, and script-capable URL schemes.
+function cleanMarkers(raw: Record<string, any>): any {
+  const markers: any = {};
+  if (typeof raw.frozenBy === 'string' && !hasScriptScheme(raw.frozenBy)) markers.frozenBy = raw.frozenBy;
+  if (Array.isArray(raw.resolutionUrls)) {
+    markers.resolutionUrls = raw.resolutionUrls
+      .filter((r: any) => isRecord(r) && typeof r.title === 'string' && typeof r.url === 'string' && !hasScriptScheme(r.url))
+      .map((r: any) => ({ title: r.title, url: r.url }));
+  }
+  return markers;
+}
+
+// Rebuilds a petitioner-supplied clause from the only fields a petition may carry; everything else (index, editor extras, ...) is dropped.
+// Returns undefined when a field is present with the wrong type. Absent (or null) fields stay absent, so a modified clause keeps the live value.
+function cleanClause(raw: unknown, withMarkers: boolean): any {
+  if (!isRecord(raw)) return undefined;
+  const clause: any = {};
+  if (raw.type != null) {
+    const key = contentTypeKey(raw.type);
+    if (key === undefined) return undefined;
+    clause.type = plainContentType(key);
+  }
+  for (const field of ['title', 'subtitle', 'content']) {
+    if (raw[field] == null) continue;
+    if (typeof raw[field] !== 'string') return undefined;
+    clause[field] = raw[field];
+  }
+  if (raw.deleted != null) {
+    if (typeof raw.deleted !== 'boolean') return undefined;
+    clause.deleted = raw.deleted;
+  }
+  if (withMarkers) Object.assign(clause, cleanMarkers(raw));
+  return clause;
+}
+
+// What a reviewer reads in a clause, used to tell whether the live clause is still the one a request was written against.
+function clauseText(clause: Record<string, any>): string {
+  return JSON.stringify([contentTypeKey(clause.type) ?? null, clause.title ?? '', clause.subtitle ?? '', clause.content ?? '']);
+}
+
+// The live clause a modified/deleted change targets: the approval has always looked it up by originalContent.index.
+function targetClauseIndex(change: Record<string, any>): number | undefined {
+  const index = isRecord(change.originalContent) && change.originalContent.index != null ? change.originalContent.index : change.originalIndex;
+  return Number.isInteger(index) ? index : undefined;
+}
+
+function liveClauseView(live: Record<string, any>, typeKey: string): any {
+  const view: any = { type: plainContentType(typeKey), title: live.title ?? '', subtitle: live.subtitle ?? '', deleted: !!live.deleted };
+  if (typeof live.content === 'string') view.content = live.content;
+  return view;
+}
+
+// Rebuilds one partial change for storage. What the reviewer sees as 現行條文 (and for a deleted clause, everything but the comment) comes from
+// the live law, never from the petitioner, and a modified clause keeps the live frozenBy/resolutionUrls because they are never read from it.
+function toReviewChange(raw: Record<string, any>, position: number, liveContent: any[], stored: boolean): any {
+  const where = `change ${position + 1}`;
+  const change: any = {
+    id: typeof raw.id === 'string' ? raw.id : String(position),
+    status: raw.status,
+    comment: typeof raw.comment === 'string' ? raw.comment : '',
+  };
+  const current = cleanClause(raw.current, false);
+
+  if (raw.status === 'added') {
+    if (current?.type === undefined) throw amendmentError(stored, `Invalid clause in ${where}.`);
+    change.current = { ...current, title: current.title ?? '', subtitle: current.subtitle ?? '' };
+    return change;
+  }
+
+  const target = targetClauseIndex(raw);
+  const live = target === undefined ? undefined : liveContent.find((c: any) => c.index === target);
+  if (live === undefined) throw amendmentError(stored, `The clause targeted by ${where} does not exist in the legislation.`);
+  const liveType = contentTypeKey(live.type);
+  if (liveType === undefined) throw amendmentError(stored, `The clause targeted by ${where} has an unknown type.`);
+  if (stored && (!isRecord(raw.originalContent) || clauseText(raw.originalContent) !== clauseText(live))) {
+    throw amendmentError(stored, `The clause targeted by ${where} has changed since the request was written. Reject it and ask for a new draft.`);
+  }
+
+  change.originalIndex = live.index;
+  change.originalContent = { index: live.index, ...liveClauseView(live, liveType) };
+  if (raw.status === 'modified') {
+    if (current === undefined) throw amendmentError(stored, `Invalid clause in ${where}.`);
+    change.current = { ...liveClauseView(live, liveType), ...current };
+  } else {
+    change.current = liveClauseView(live, liveType);
+  }
+  return change;
+}
+
+type ParsedAmendment =
+  | { amendmentType: 'full'; partialContent: null; fullContent: any[] }
+  | { amendmentType: 'partial'; partialContent: any[]; fullContent: null };
+
+// Validates a petition (at submit) or a stored request (at approval, where it also has to still match the live law) and rebuilds it from the
+// fields it may carry. `data` is untrusted either way: a request stored before this check existed is only as good as its submitter.
+function parseAmendmentContent(data: any, liveContent: any[], stored: boolean): ParsedAmendment {
+  if (data.amendmentType === 'full') {
+    if (!Array.isArray(data.fullContent)) throw amendmentError(stored, 'A full amendment needs fullContent.');
+    const fullContent = data.fullContent.map((raw: unknown, i: number) => {
+      const clause = cleanClause(raw, true);
+      if (clause?.type === undefined) throw amendmentError(stored, `Invalid clause at position ${i + 1}.`);
+      return { ...clause, title: clause.title ?? '', subtitle: clause.subtitle ?? '', index: i };
+    });
+    return { amendmentType: 'full', partialContent: null, fullContent };
+  }
+
+  if (data.amendmentType !== 'partial' || !Array.isArray(data.partialContent)) {
+    throw amendmentError(stored, 'The amendment type must be partial or full, with the matching content.');
+  }
+  const partialContent: any[] = [];
+  data.partialContent.forEach((raw: unknown, i: number) => {
+    if (!isRecord(raw)) throw amendmentError(stored, `Invalid change ${i + 1}.`);
+    // The real UI never sends 'unchanged' rows; one in a stored request is skipped rather than acted on.
+    if (stored && raw.status === 'unchanged') return;
+    if (raw.status !== 'added' && raw.status !== 'modified' && raw.status !== 'deleted') {
+      throw amendmentError(stored, `Change ${i + 1} has an unsupported status.`);
+    }
+    partialContent.push(toReviewChange(raw, i, liveContent, stored));
+  });
+  return { amendmentType: 'partial', partialContent, fullContent: null };
+}
+
 function generateHistoryContentId(refDate: Date, existingIds: string[]): string {
   const utc8 = new Date(refDate.getTime() + 8 * 60 * 60 * 1000);
   const year = utc8.getUTCFullYear().toString();
@@ -82,6 +236,9 @@ export const submitAmendmentRequest = onCall(globalFunctionOptions, async (reque
   }
   const legislation = legislationSnap.data()!;
 
+  // Nothing the petitioner sends is stored as sent: the request is rebuilt from validated fields, with the current text taken from the live law.
+  const amendment = parseAmendmentContent(data, legislation.content || [], false);
+
   // Retrieve user details from auth token
   const petitionerName = request.auth.token.name || request.auth.token.email || 'Unknown User';
   const petitionerEmail = request.auth.token.email || undefined;
@@ -93,9 +250,9 @@ export const submitAmendmentRequest = onCall(globalFunctionOptions, async (reque
     legislationId: data.legislationId,
     legislationName: legislation.name,
     categoryId: legislation.category,
-    amendmentType: data.amendmentType,
-    partialContent: data.partialContent || null,
-    fullContent: data.fullContent || null,
+    amendmentType: amendment.amendmentType,
+    partialContent: amendment.partialContent,
+    fullContent: amendment.fullContent,
     petitionerName,
     petitionerEmail,
     petitionerUid,
@@ -170,50 +327,28 @@ export const resolveAmendmentRequest = onCall(globalFunctionOptions, async (requ
       return { status: 'rejected', reqData };
     }
 
-    // Processing approval
+    // Processing approval. The stored request is validated again, so a request stored before these checks existed is covered too, and
+    // it is refused if a targeted live clause is no longer the one the reviewer was shown (the approver can still reject it).
+    const amendment = parseAmendmentContent(reqData, legislationData.content || [], true);
     let newContent: LegislationContent[];
 
-    if (reqData.amendmentType === 'full') {
-      newContent = reqData.fullContent.map((c: any, i: number) => toFirebaseContent(c, i));
+    if (amendment.amendmentType === 'full') {
+      newContent = amendment.fullContent.map((c: any, i: number) => toFirebaseContent(c, i));
     } else {
-      const isSequenceExport = reqData.partialContent.some((c: any) => c.status === 'unchanged');
+      newContent = JSON.parse(JSON.stringify(legislationData.content || [])) as LegislationContent[];
 
-      if (isSequenceExport) {
-        newContent = [];
-        for (const change of reqData.partialContent) {
-          if (change.status === 'added') {
-            newContent.push(change.current);
-          } else if (change.status === 'unchanged') {
-            const orig = legislationData.content.find((c: any) => c.index === change.originalIndex);
-            if (orig) newContent.push(orig);
-          } else if (change.status === 'modified') {
-            const origIndex = change.originalIndex ?? change.originalContent?.index;
-            const orig = legislationData.content.find((c: any) => c.index === origIndex);
-            if (orig) newContent.push({ ...orig, ...change.current });
-          } else if (change.status === 'deleted') {
-            const origIndex = change.originalIndex ?? change.originalContent?.index;
-            const orig = legislationData.content.find((c: any) => c.index === origIndex);
-            if (orig) newContent.push({ ...orig, deleted: true });
+      for (const change of amendment.partialContent) {
+        if (change.status === 'added') {
+          newContent.push(change.current); // Fallback append
+        } else if (change.status === 'deleted') {
+          const targetIndex = newContent.findIndex((c: any) => c.index === change.originalContent.index);
+          if (targetIndex !== -1) {
+            newContent[targetIndex].deleted = true;
           }
-        }
-      } else {
-        newContent = JSON.parse(JSON.stringify(legislationData.content || [])) as LegislationContent[];
-
-        for (const change of reqData.partialContent) {
-          if (change.status === 'unchanged') continue;
-
-          if (change.status === 'added') {
-            newContent.push(change.current); // Fallback append
-          } else if (change.status === 'deleted') {
-            const targetIndex = newContent.findIndex((c: any) => c.index === change.originalContent.index);
-            if (targetIndex !== -1) {
-              newContent[targetIndex].deleted = true;
-            }
-          } else if (change.status === 'modified') {
-            const targetIndex = newContent.findIndex((c: any) => c.index === change.originalContent.index);
-            if (targetIndex !== -1) {
-              newContent[targetIndex] = { ...newContent[targetIndex], ...change.current };
-            }
+        } else if (change.status === 'modified') {
+          const targetIndex = newContent.findIndex((c: any) => c.index === change.originalContent.index);
+          if (targetIndex !== -1) {
+            newContent[targetIndex] = { ...newContent[targetIndex], ...change.current };
           }
         }
       }
