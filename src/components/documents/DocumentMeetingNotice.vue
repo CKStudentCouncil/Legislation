@@ -47,13 +47,33 @@ const readableViewers = computed(() => {
   if (props.doc.confidentiality.firebase !== 'Confidential' || !props.doc.viewers || props.doc.viewers.length === 0) return '';
   return props.doc.viewers.map((v) => v.translation).join('、');
 });
+// Same result as subject.replace(/第.*次/, ''), in linear time: that regex is unanchored, so on a long run of 第 with no 次 it
+// backtracks quadratically (and `subject` is stored, user-supplied text rendered on the public SSR path). It removes everything from
+// the first 第 through the last 次 of the first line (`.` stops at \n, \r, \u2028 and \u2029) that has a 次 after a 第.
+const stripSessionNumber = (s: string) => {
+  let first = -1; // index of the first 第 on the current line
+  let last = -1; // index of the last 次 after it on the current line
+  for (let i = 0; i <= s.length; i++) {
+    const c = i < s.length ? s.charAt(i) : '\n';
+    if (c === '\n' || c === '\r' || c === '\u2028' || c === '\u2029') {
+      if (last >= 0) return s.slice(0, first) + s.slice(last + 1);
+      first = -1;
+      last = -1;
+    } else if (c === '第') {
+      if (first < 0) first = i;
+    } else if (c === '次' && first >= 0) {
+      last = i;
+    }
+  }
+  return s;
+};
 const title = computed(() => {
   if (
     props.doc.fromSpecific.firebase == DocumentSpecificIdentity.Chairman.firebase ||
     props.doc.fromSpecific.firebase == DocumentSpecificIdentity.ViceChairman.firebase
   ) {
     // 跨部門會議
-    return props.doc.subject.replace(/第.*次/, '');
+    return stripSessionNumber(props.doc.subject);
   }
   if (props.doc.fromSpecific.generic.firebase == DocumentGeneralIdentity.ExecutiveDepartment.firebase) {
     return props.doc.fromSpecific.translation;

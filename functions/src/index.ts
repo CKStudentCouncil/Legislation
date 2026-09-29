@@ -413,7 +413,13 @@ export const lookupUsersByEmail = onCall(globalFunctionOptions, async (request) 
       raw
         .filter((e): e is string => typeof e === 'string')
         .map((e) => e.trim().toLowerCase())
-        .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)),
+        .filter((e) => {
+          // Same test as /^[^\s@]+@[^\s@]+\.[^\s@]+$/, in linear time: that regex's `[^\s@]` also matches '.', so it
+          // backtracks quadratically on input like 'a@' + '.'.repeat(n) + '@'. No whitespace, exactly one '@', a
+          // non-empty local part, and a '.' in the domain with at least one character on each side of it.
+          const at = e.indexOf('@');
+          return at > 0 && at === e.lastIndexOf('@') && !/\s/.test(e) && e.slice(at + 2, -1).includes('.');
+        }),
     ),
   );
   const users: Record<string, { exists: boolean; displayName: string | null; photoURL: string | null }> = {};
