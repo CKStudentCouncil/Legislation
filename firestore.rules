@@ -154,9 +154,11 @@ service cloud.firestore {
       );
       // A request is created, approved/rejected and deleted only by Cloud Functions (Admin SDK, which bypasses these rules). The one client write is the
       // approver's review page saving its in-progress state (reviewState, which includes the draft document that approval publishes), so only the role
-      // resolveAmendmentRequest requires for the request's category may write it, and only that field. The writer must also be one of the four roles
-      // that could write here before (Chairman, Speaker, DeputySpeaker, JudicialCommitteeChairman): ElectoralCommitteeChairman is deliberately NOT added
-      // to the writers, so it can read a VotingCommitteeOrder request but not save its review state.
+      // resolveAmendmentRequest requires for the request's category may write it, and only that field. The writer must also hold one of the roles
+      // that could write here before (Chairman, Speaker, DeputySpeaker, JudicialCommitteeChairman) or be ElectoralCommitteeChairman. ElectoralCommitteeChairman
+      // is included on purpose, at the project owner's decision, so that the approver of VotingCommitteeOrder requests can save its review state; this is
+      // the one place the write set is wider than before this patch. It gives that role no other write: isCategoryApprover() makes it the approver only
+      // for VotingCommitteeOrder requests, so it still cannot write a request of any other category.
       // isCategoryApprover() holds the mapping from the stored categoryId to the approver role; keep it in step with getApproverRoleForCategory in
       // functions/src/amendments.ts. An unknown or missing category falls to Chairman, as it does there.
       function isCategoryApprover() {
@@ -168,7 +170,7 @@ service cloud.firestore {
       }
       allow update: if isSignedIn()
         && isCategoryApprover()
-        && (hasRole('Chairman') || hasRole('Speaker') || hasRole('DeputySpeaker') || hasRole('JudicialCommitteeChairman'))
+        && (hasRole('Chairman') || hasRole('Speaker') || hasRole('DeputySpeaker') || hasRole('JudicialCommitteeChairman') || hasRole('ElectoralCommitteeChairman'))
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reviewState']);
       allow create, delete: if false;
     }
