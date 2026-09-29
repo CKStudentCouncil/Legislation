@@ -161,6 +161,7 @@ import { VueDraggable } from 'vue-draggable-plus';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { sanitizeEditorHtml } from 'src/ts/editor-sanitize.ts';
 import { getReign } from 'src/ts/shared-utils.ts';
 import { useDocument } from 'vuefire';
 import { useFunctionAsync } from 'boot/vuefire.ts';
@@ -240,7 +241,7 @@ function edit() {
 }
 
 function editContent() {
-  content.value = (docu.value as any).content;
+  content.value = sanitizeEditorHtml((docu.value as any).content as string);
   editingContent.value = true;
 }
 
