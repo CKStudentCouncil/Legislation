@@ -6,6 +6,7 @@ import { Dialog, Loading } from 'quasar';
 import { create, getEmptyDocument } from 'pages/manage/document/common.ts';
 import { DocumentConfidentiality, DocumentSpecificIdentity, DocumentType } from 'src/ts/models.ts';
 import { notifyError } from 'src/ts/utils.ts';
+import { explainWriteError } from 'src/ts/firebase-errors.ts';
 
 // The only keys a template may set: the document's content and classification. Everything else is ignored, notably the owner (authorEmail),
 // the viewer/editor/manager grants (viewers, viewerEmails, editor*, manager*), the published state and the ID (idNumber). firestore.rules keeps
@@ -113,7 +114,9 @@ async function proceed(content: string) {
     const id = await create(adding, false);
     await router.push(`/manage/document/${id}`);
   } catch (e) {
-    notifyError('起草公文失敗', e);
+    // An account without a council role is refused by firestore.rules, correctly (LEGISLATION-7).
+    const { message, report } = explainWriteError(e, '起草公文失敗');
+    notifyError(message, e, { report });
     return;
   } finally {
     Loading.hide();

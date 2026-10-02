@@ -80,7 +80,27 @@ const AUTH_ERRORS: Record<string, ExplainedError> = {
   'auth/operation-not-allowed': { message: 'Google 登入尚未啟用，請洽班聯會資訊組', report: true },
 };
 
+/**
+ * firebase/auth loads its helper scripts (apis.google.com/js/api.js, which the sign-in popup
+ * needs) with a script tag, and when the tag's `onerror` fires it rejects with a bare
+ * 'auth/internal-error' whose `customData` is that element's error Event. A genuine internal
+ * error (an inconsistent server response, a failed `_assert`) carries `{ appName }` there
+ * instead, so the Event is what tells "the script never arrived" from "Firebase disagreed with
+ * itself".
+ */
+function isScriptLoadFailure(e: unknown): boolean {
+  if (typeof e !== 'object' || e === null) return false;
+  const data = (e as { customData?: unknown }).customData;
+  return typeof data === 'object' && data !== null && (data as { type?: unknown }).type === 'error';
+}
+
 export function explainAuthError(e: unknown): ExplainedError {
+  // A content blocker, a privacy setting or a network (school and corporate ones in particular)
+  // that does not reach apis.google.com: the visitor's side of the connection, not a defect in
+  // ours (LEGISLATION-H).
+  if (errorCode(e) === 'auth/internal-error' && isScriptLoadFailure(e)) {
+    return { message: '無法載入 Google 登入所需的元件，請確認網路連線，並暫時關閉廣告／內容阻擋器後再試一次', report: false };
+  }
   return AUTH_ERRORS[errorCode(e)] ?? { message: '登入失敗，請稍後再試', report: true };
 }
 
@@ -98,6 +118,25 @@ export function explainFunctionError(e: unknown, fallback: string): ExplainedErr
   if (code === 'functions/unauthenticated') return { message: '請先登入後再試一次', report: false };
   if (code === 'functions/permission-denied') return { message: '您的帳號沒有執行此操作的權限', report: false };
   return { message: fallback, report: true };
+}
+
+/**
+ * Failures of drafting a document: the ID allocation (a callable) followed by the Firestore write.
+ *
+ * firestore.rules lets an account create a document only if it carries a council role claim and
+ * names itself as the author, and the 起草公文 buttons are offered to anyone who can type a
+ * /manage URL — there is no route guard. So an account without a role (or a signed-out visitor,
+ * or one whose freshly granted role is not in the token yet) is *expected* to meet
+ * 'permission-denied' here; the rules answered correctly (LEGISLATION-7). Both the doc ID and
+ * the stamped lastEditedBy/authorEmail are built from the same signed-in user the rule checks,
+ * so a denial is not the client and the rules drifting apart, which is why this one — unlike
+ * explainQueryError — is not reported.
+ */
+export function explainWriteError(e: unknown, fallback: string): ExplainedError {
+  if (errorCode(e) === 'permission-denied') {
+    return { message: '您尚未登入，或帳號沒有執行此操作的權限。若剛獲得授權，請重新登入後再試', report: false };
+  }
+  return explainFunctionError(e, fallback);
 }
 
 /**
