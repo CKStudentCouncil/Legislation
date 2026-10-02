@@ -161,6 +161,7 @@ import { VueDraggable } from 'vue-draggable-plus';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { explainWriteError } from 'src/ts/firebase-errors.ts';
 import { sanitizeEditorHtml } from 'src/ts/editor-sanitize.ts';
 import { getReign } from 'src/ts/shared-utils.ts';
 import { useDocument } from 'vuefire';
@@ -286,7 +287,8 @@ async function publish() {
     const publishDocumentFn = await useFunctionAsync('publishDocument');
     await publishDocumentFn({ docId: (docu.value as any).id });
   } catch (e) {
-    notifyError('發布失敗', e);
+    const { message, report } = explainWriteError(e, '發布失敗');
+    notifyError(message, e, { report });
     Loading.hide();
     return;
   }

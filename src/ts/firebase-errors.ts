@@ -44,13 +44,21 @@ function errorMessage(e: unknown): string {
  * Firestore's own transport says so three different ways depending on which half of it gave
  * up: the gRPC status 'unavailable', the WebChannel wrapper's bare `FirebaseError: Connection
  * failed.` (LEGISLATION-5, an iPhone on a flaky mobile connection), and the fetch/XHR wording
- * the browser supplies. None of them is actionable, and on a site that is mostly read on
- * phones all three are ordinary weather.
+ * the browser supplies. A callable Function has a fourth, below. None of them is actionable,
+ * and on a site that is mostly read on phones all of them are ordinary weather.
  */
 export function isTransientNetworkError(e: unknown): boolean {
   const code = errorCode(e);
   if (code === 'unavailable' || code === 'deadline-exceeded' || code === 'cancelled') return true;
   if (code === 'auth/network-request-failed' || code === 'functions/unavailable' || code === 'functions/deadline-exceeded') return true;
+  // The Functions SDK reports a fetch that was rejected with no HTTP response at all as
+  // `internal [0]` (the 0 is the missing status). A handler that throws is not that: the
+  // callable wrapper answers with a proper 500, CORS headers included, which reads
+  // `internal [500]` here and which functions/src/sentry.ts reports from the server side. So
+  // `[0]` is the connection dropping mid-request (LEGISLATION-J, a phone uploading an
+  // attachment) — or an edge refusing the request outright, which carries no CORS headers
+  // either; AttachmentUploader's size cap exists to rule that one out.
+  if (code === 'functions/internal' && /\[0\]$/.test(errorMessage(e))) return true;
   return /Connection failed|Failed to fetch|NetworkError|Load failed|network error/i.test(errorMessage(e));
 }
 

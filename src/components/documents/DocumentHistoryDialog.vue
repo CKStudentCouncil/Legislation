@@ -103,6 +103,7 @@ import { DocumentConfidentiality, DocumentSpecificIdentity, DocumentType } from 
 import type * as models from 'src/ts/models.ts';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { explainFunctionError } from 'src/ts/firebase-errors.ts';
 
 interface HistoryVersion {
   versionId: string;
@@ -268,7 +269,8 @@ async function revert() {
     const fn = await useFunctionAsync('revertDocument');
     await fn({ docId: props.docId, versionId: selected.value.versionId });
   } catch (e) {
-    notifyError('還原失敗', e);
+    const { message, report } = explainFunctionError(e, '還原失敗');
+    notifyError(message, e, { report });
     Loading.hide();
     return;
   }

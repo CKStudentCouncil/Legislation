@@ -3,7 +3,7 @@
     <q-file
       v-model="files"
       :error="error"
-      :max-file-size="1024 * 1024 * 25"
+      :max-file-size="MAX_FILE_BYTES"
       error-message="請按下上傳按鈕再繼續！"
       filled
       label="選擇檔案 (或拖至此，可多選)"
@@ -31,7 +31,15 @@ import { ref } from 'vue';
 import { useFunctionAsync } from 'boot/vuefire.ts';
 import { Loading } from 'quasar';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { explainFunctionError } from 'src/ts/firebase-errors.ts';
 
+// The file travels as a base64 string inside the callable's JSON body, a third larger than the
+// file itself, and Cloud Run refuses any request over 32 MiB at its front door — with a 413 that
+// carries no CORS headers, so the browser surfaces it as a failed fetch and the Functions SDK as
+// a baffling `internal [0]` (LEGISLATION-J). 24 MiB of file is already exactly 32 MiB once
+// encoded, so the old 25 MB promise could never be kept; 20 MiB leaves room for the JSON around
+// it. (uploadAttachment's own 25 MiB check stays as a backstop for callers other than this form.)
+const MAX_FILE_BYTES = 20 * 1024 * 1024;
 const files = ref<File[]>([]);
 const emits = defineEmits<{
   uploaded: [urls: string[]];
@@ -68,7 +76,8 @@ function upload() {
         results.push(url);
         notifySuccess('上傳成功');
       } catch (e) {
-        notifyError('上傳失敗', e);
+        const { message, report } = explainFunctionError(e, '上傳失敗');
+        notifyError(message, e, { report });
       }
       completed++;
     };
@@ -99,7 +108,7 @@ function check() {
 }
 
 function sizeLimitExceeded() {
-  notifyError('單一檔案不得超過25MB，請嘗試壓縮檔案後再繼續');
+  notifyError('單一檔案不得超過20MB，請嘗試壓縮檔案後再繼續');
 }
 
 defineExpose({

@@ -127,6 +127,7 @@ import { DocumentSpecificIdentity } from 'src/ts/models.ts';
 import type * as models from 'src/ts/models.ts';
 import { stamp } from 'pages/manage/document/common.ts';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { explainFunctionError } from 'src/ts/firebase-errors.ts';
 import { useFunctionAsync } from 'src/boot/vuefire.ts';
 import { Loading } from 'quasar';
 
@@ -342,7 +343,10 @@ async function save() {
       await fn({ docId: props.docId, emails: toNotify });
     } catch (e) {
       Loading.hide();
-      notifyError('權限已更新，但寄送通知失敗', e);
+      // Keep this message — the access change did land, which the generic explanation would not
+      // say — and take only the verdict on whether Sentry should hear about it.
+      const { report } = explainFunctionError(e, '');
+      notifyError('權限已更新，但寄送通知失敗', e, { report });
       dialogModel.value = false;
       return;
     }
