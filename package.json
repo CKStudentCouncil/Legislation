@@ -20,7 +20,7 @@
     "@quasar/extras": "^2.0.4",
     "@sentry/vue": "^10.74.0",
     "@types/sanitize-html": "^2.16.1",
-    "algoliasearch": "^5.56.0",
+    "algoliasearch": "^5.59.0",
     "diff": "^9.0.0",
     "firebase": "^12.19.0",
     "html-to-text": "^10.0.1",
