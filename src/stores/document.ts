@@ -3,6 +3,7 @@ import type * as models from 'src/ts/models.ts';
 import { DocumentConfidentiality } from 'src/ts/models.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { documentsCollection } from 'src/ts/model-converters.ts';
+import { readWithRetry } from 'src/ts/firestore-retry.ts';
 import { and, doc, getCountFromServer, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 
 /**
@@ -52,7 +53,9 @@ export const useDocumentStore = defineStore('document', {
   actions: {
     async loadDocument(document: string): Promise<models.Document | null> {
       if (this.document[document] && Object.prototype.hasOwnProperty.call(this.document, document)) return this.getDocument(document);
-      const docu = await getDoc(doc(documentsCollection(), document));
+      // Built before the first await, as in loadLegislation, and retried on the server for LEGISLATION-K.
+      const ref = doc(documentsCollection(), document);
+      const docu = await readWithRetry(() => getDoc(ref));
       if (docu.exists()) {
         this.document[document] = docu.data() as models.Document;
         return this.document[document];
@@ -76,25 +79,25 @@ export const useDocumentStore = defineStore('document', {
         orderBy('published', 'asc'),
         orderBy('createdAt', 'desc'),
       );
-      const [snap, count] = await Promise.all([getDocs(query(base, limit(10))), getCountFromServer(base)]);
+      const [snap, count] = await readWithRetry(() => Promise.all([getDocs(query(base, limit(10))), getCountFromServer(base)]));
       this.publicList = snap.docs.map((d) => d.data() as models.Document);
       this.publicListTotal = count.data().count;
       return this.getPublicList;
     },
     async loadLawsuit(id: string, refresh = false): Promise<models.Document[]> {
       if (!refresh && this.lawsuits[id]) return this.getLawsuit(id)!;
-      const related = await getDocs(
-        query(
-          documentsCollection(),
-          where('prosecutionId', '==', id),
-          where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
-          where('published', '==', true),
-        ),
+      const relatedQuery = query(
+        documentsCollection(),
+        where('prosecutionId', '==', id),
+        where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
+        where('published', '==', true),
       );
+      const prosecutionRef = doc(documentsCollection(), id);
+      const related = await readWithRetry(() => getDocs(relatedQuery));
       const docs = related.docs.map((d) => d.data() as models.Document).filter((d): d is models.Document => !!d);
       // The prosecution document itself (rules-gated: anon SSR only gets it if public).
       try {
-        const prosecution = await getDoc(doc(documentsCollection(), id));
+        const prosecution = await readWithRetry(() => getDoc(prosecutionRef));
         if (prosecution.exists() && prosecution.data()) docs.push(prosecution.data() as models.Document);
       } catch {
         // Access denied (confidential prosecution doc, anonymous request) — skip it.

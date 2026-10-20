@@ -1,11 +1,11 @@
 import { Loading } from 'quasar';
-import type { User } from 'firebase/auth';
+import type { IdTokenResult, User } from 'firebase/auth';
 import type * as models from 'src/ts/models.ts';
 import type { Ref } from 'vue';
 import { reactive, ref } from 'vue';
 import { useAuth, useFunctionAsync } from 'boot/vuefire.ts';
 import { setSentryUser } from 'boot/sentry.ts';
-import { explainAuthError } from 'src/ts/firebase-errors.ts';
+import { explainAuthError, isTransientNetworkError } from 'src/ts/firebase-errors.ts';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
 export const loggedInUser = ref(null) as Ref<User | null>;
@@ -126,7 +126,20 @@ export async function login() {
 
 export async function updateCustomClaims() {
   const auth = await getAuthInstance();
-  const claims = await auth?.currentUser?.getIdTokenResult();
+  let claims: IdTokenResult | undefined;
+  try {
+    claims = await auth?.currentUser?.getIdTokenResult();
+  } catch (error) {
+    // Nothing awaits this — onAuthStateChanged fires it and moves on — so a rejection here surfaced as an
+    // unhandled one. getIdTokenResult() is not a local read: once the cached ID token is an hour old it
+    // goes to securetoken.googleapis.com for a new one, and a phone on a poor connection fails that with
+    // auth/network-request-failed (LEGISLATION-N). That says nothing about our code, and nothing about
+    // the roles either, so leave what we already know in place rather than blanking it. Anything else is
+    // not weather, and is rethrown to be reported as before.
+    if (!isTransientNetworkError(error)) throw error;
+    console.warn('Could not refresh the sign-in token; keeping the roles already loaded.', error);
+    return;
+  }
   if (!claims) {
     loggedInUserClaims.roles = [];
     // Also covers logout: onAuthStateChanged calls this with no current user.
