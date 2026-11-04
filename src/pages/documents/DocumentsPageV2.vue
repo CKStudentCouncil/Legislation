@@ -56,7 +56,7 @@
       <q-select
         v-model="fromGeneric"
         :option-label="(i) => i.translation"
-        :options="Object.values(DocumentGeneralIdentity.VALUES)"
+        :options="filterableGenerics"
         class="col q-pr-sm"
         clearable
         label="發文部門"
@@ -64,7 +64,7 @@
       <q-select
         v-model="fromSpecific"
         :option-label="(i) => i.translation"
-        :options="Object.values(DocumentSpecificIdentity.VALUES).filter((i) => !fromGeneric || i.generic.firebase === fromGeneric.firebase)"
+        :options="fromGeneric ? specificIdentitiesOf(fromGeneric) : Object.values(DocumentSpecificIdentity.VALUES)"
         class="col q-pr-sm"
         label="發文者"
         multiple
@@ -73,7 +73,7 @@
       <q-select
         v-model="toGeneric"
         :option-label="(i) => i.translation"
-        :options="Object.values(DocumentGeneralIdentity.VALUES)"
+        :options="filterableGenerics"
         class="col q-pr-sm"
         clearable
         label="受文部門"
@@ -81,7 +81,7 @@
       <q-select
         v-model="toSpecific"
         :option-label="(i) => i.translation"
-        :options="Object.values(DocumentSpecificIdentity.VALUES).filter((i) => !toGeneric || i.generic.firebase === toGeneric.firebase)"
+        :options="toGeneric ? specificIdentitiesOf(toGeneric) : Object.values(DocumentSpecificIdentity.VALUES)"
         class="col q-pr-sm"
         label="受文者"
         multiple
@@ -234,6 +234,17 @@ function pickSpecificIdentities(values: string[]) {
   return allSpecific.filter((i) => values.includes(i.firebase));
 }
 
+function specificIdentitiesOf(generic: DocumentGeneralIdentity | null | undefined) {
+  return Object.values(DocumentSpecificIdentity.VALUES).filter((i) => i.generic.firebase === generic?.firebase);
+}
+
+// A department filter is expanded into the `in` / `array-contains-any` list of its senders, and
+// Firestore rejects an empty list with "A non-empty array is required" — killing the whole page.
+// SpecialCommittee is exactly that case: it is still a DocumentGeneralIdentity, but every one of its
+// DocumentSpecificIdentity members is commented out of VALUES, so it expands to nothing. Departments
+// with no usable senders are therefore never offered, and are ignored when they arrive via the URL.
+const filterableGenerics = Object.values(DocumentGeneralIdentity.VALUES).filter((g) => specificIdentitiesOf(g).length > 0);
+
 function buildFilterQuery(): LocationQueryRaw {
   const query: LocationQueryRaw = {};
   if (docId.value?.trim()) query.docId = docId.value.trim();
@@ -267,7 +278,7 @@ let syncingFromRoute = false;
 function applyQueryToFilters(query: LocationQuery) {
   syncingFromRoute = true;
   const allType = Object.values(DocumentType.VALUES);
-  const allGeneric = Object.values(DocumentGeneralIdentity.VALUES);
+  const allGeneric = filterableGenerics;
 
   const queryDocId = firstQueryValue(query.docId);
   docId.value = queryDocId ?? null;
@@ -327,38 +338,24 @@ const q = computed(() => {
       : [];
   const beforeDate = parseDateInput(before.value);
   const afterDate = parseDateInput(after.value, true);
+  // Picking senders explicitly overrides the department, which otherwise stands for all of its
+  // senders. Both lists are left out of the query when empty — see filterableGenerics.
+  const fromSenders = fromSpecific.value.length > 0 ? fromSpecific.value : specificIdentitiesOf(fromGeneric.value);
+  const toRecipients = toSpecific.value.length > 0 ? toSpecific.value : specificIdentitiesOf(toGeneric.value);
   const filters = [
     props.filterReign || reign.value ? where('reign', '==', props.filterReign ?? reign.value) : null,
-    fromGeneric.value && fromSpecific.value.length === 0
+    fromSenders.length > 0
       ? where(
           'fromSpecific',
           'in',
-          Object.values(DocumentSpecificIdentity.VALUES)
-            .filter((i) => i.generic.firebase === fromGeneric.value?.firebase)
-            .map((i) => i.firebase),
+          fromSenders.map((i) => i.firebase),
         )
       : null,
-    fromSpecific.value.length > 0
-      ? where(
-          'fromSpecific',
-          'in',
-          fromSpecific.value.map((i) => i.firebase),
-        )
-      : null,
-    toGeneric.value && toSpecific.value.length === 0
+    toRecipients.length > 0
       ? where(
           'toSpecific',
           'array-contains-any',
-          Object.values(DocumentSpecificIdentity.VALUES)
-            .filter((i) => i.generic.firebase === toGeneric.value?.firebase)
-            .map((i) => i.firebase),
-        )
-      : null,
-    toSpecific.value.length > 0
-      ? where(
-          'toSpecific',
-          'array-contains-any',
-          toSpecific.value.map((i) => i.firebase),
+          toRecipients.map((i) => i.firebase),
         )
       : null,
     // Both values are free text — typed through `mask="date"` a keystroke at a time, and rehydrated

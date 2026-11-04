@@ -80,6 +80,7 @@ import { useFunctionAsync } from 'boot/vuefire.ts';
 import type { QTableColumn } from 'quasar';
 import { Dialog, Loading } from 'quasar';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { explainFunctionError } from 'src/ts/firebase-errors.ts';
 import RoleSelect from 'components/RoleSelect.vue';
 
 const columns = [
@@ -100,10 +101,19 @@ const emailRef = ref();
 async function load() {
   loading.value = true;
   accounts.length = 0; // Typescript magic
-  for (const acc of await getAllUsers()) {
-    accounts.push(acc);
+  try {
+    for (const acc of await getAllUsers()) {
+      accounts.push(acc);
+    }
+  } catch (e) {
+    // Called unawaited from setup, so a rejection here used to escape as an unhandled one
+    // (LEGISLATION-D) and leave the table spinning. A signed-out visitor or one without the
+    // account-manager role is told so rather than reported.
+    const { message, report } = explainFunctionError(e, '無法載入帳號列表');
+    notifyError(message, e, { report });
+  } finally {
+    loading.value = false;
   }
-  loading.value = false;
 }
 
 function edit(row: any) {
@@ -139,7 +149,9 @@ async function submit() {
       await addUserFn(targetUser);
     }
   } catch (e) {
-    notifyError('更新失敗', e);
+    Loading.hide();
+    const { message, report } = explainFunctionError(e, '更新失敗');
+    notifyError(message, e, { report });
     return;
   }
   Loading.hide();
@@ -160,7 +172,9 @@ function del(row: any) {
       const deleteUserFn = await useFunctionAsync('deleteUser');
       await deleteUserFn({ uid: row.uid });
     } catch (e) {
-      notifyError('刪除失敗', e);
+      Loading.hide();
+      const { message, report } = explainFunctionError(e, '刪除失敗');
+      notifyError(message, e, { report });
       return;
     }
     Loading.hide();

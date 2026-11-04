@@ -52,7 +52,13 @@ export default defineBoot(({ app }) => {
 });
 
 export async function useFunctionAsync(name: string): Promise<HttpsCallable> {
-  const { getFunctions, httpsCallable } = await import('@firebase/functions');
+  // Every callable identifies its caller by the ID token the Functions SDK attaches, and it can
+  // only attach one if Auth exists and has finished restoring the persisted session. Auth is
+  // created lazily (see useAuth), so a page that calls a function straight from setup on a
+  // fresh load — ManageAccountsPage's user list — raced HeaderSidebar's init() and went out
+  // anonymous, coming back 401 unauthenticated even for a signed-in admin (LEGISLATION-D).
+  const [{ getFunctions, httpsCallable }, auth] = await Promise.all([import('@firebase/functions'), useAuth()]);
+  await auth.authStateReady();
   return httpsCallable(getFunctions(firebaseApp, 'asia-east1'), name);
 }
 

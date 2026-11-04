@@ -61,6 +61,15 @@ export function itemListJsonLd(items: { name: string; url: string }[], list: { n
   };
 }
 
+/** A name that is never blank. `subject` / `name` are free text with no validation behind them, and
+ *  an unnamed record reaches us as `''` (what the converter coerces a malformed value to) or
+ *  `undefined` (the converter drops empty fields, and JSON.stringify then drops the key). Search
+ *  Console treats both as a missing `name` and flags the breadcrumb as a critical issue, so fall
+ *  back to the record's identifier — the same label the document list already uses. */
+function nameOr(name: string | null | undefined, fallback: string): string {
+  return (typeof name === 'string' ? name.trim() : '') || fallback;
+}
+
 function breadcrumbNode(items: { name: string; url: string }[]): Json {
   return {
     '@type': 'BreadcrumbList',
@@ -84,6 +93,7 @@ export function ldJsonScript(obj: unknown): { type: string; innerHTML: string } 
 
 export function legislationJsonLd(l: Legislation, id: string): Json {
   const url = `${SITE}/legislation/${id}`;
+  const name = nameOr(l.name, id);
   const sorted = [...l.history].sort((a, b) => new Date(a.amendedAt).valueOf() - new Date(b.amendedAt).valueOf());
   const published = toIso(sorted[0]?.amendedAt ?? l.createdAt);
   const modified = toIso(sorted[sorted.length - 1]?.amendedAt ?? l.createdAt);
@@ -100,7 +110,7 @@ export function legislationJsonLd(l: Legislation, id: string): Json {
     '@type': 'Legislation',
     '@id': url,
     url,
-    name: l.name,
+    name,
     legislationType: l.category.type.translation, // 憲章 / 法律 / 命令
     about: l.category.translation,
     legislationIdentifier: id,
@@ -122,7 +132,7 @@ export function legislationJsonLd(l: Legislation, id: string): Json {
       breadcrumbNode([
         { name: '首頁', url: `${SITE}/` },
         { name: '法令', url: `${SITE}/legislation` },
-        { name: l.name, url },
+        { name, url },
       ]),
     ],
   };
@@ -130,6 +140,7 @@ export function legislationJsonLd(l: Legislation, id: string): Json {
 
 export function documentJsonLd(doc: Document, id: string): Json {
   const url = `${SITE}/document/${id}`;
+  const subject = nameOr(doc.subject, id);
   const fb = doc.type.firebase;
   const isReport = fb.startsWith('Court') || fb.startsWith('JudicialCommittee');
   const published = toIso(doc.publishedAt ?? doc.createdAt);
@@ -137,8 +148,8 @@ export function documentJsonLd(doc: Document, id: string): Json {
     '@type': isReport ? 'Report' : 'Article',
     '@id': url,
     url,
-    headline: doc.subject,
-    name: doc.subject,
+    headline: subject,
+    name: subject,
     identifier: doc.getFullId(),
     inLanguage: LANG,
     datePublished: published,
@@ -159,13 +170,13 @@ export function documentJsonLd(doc: Document, id: string): Json {
     breadcrumbNode([
       { name: '首頁', url: `${SITE}/` },
       { name: '公文', url: `${SITE}/document` },
-      { name: doc.subject, url },
+      { name: subject, url },
     ]),
   ];
   if (fb === 'MeetingNotice' && doc.meetingTime) {
     graph.push({
       '@type': 'Event',
-      name: doc.subject,
+      name: subject,
       startDate: toIso(doc.meetingTime),
       eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
       ...(doc.location ? { location: { '@type': 'Place', name: doc.location } } : {}),

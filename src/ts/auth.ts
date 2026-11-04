@@ -1,11 +1,11 @@
 import { Loading } from 'quasar';
-import type { User } from 'firebase/auth';
+import type { IdTokenResult, User } from 'firebase/auth';
 import type * as models from 'src/ts/models.ts';
 import type { Ref } from 'vue';
 import { reactive, ref } from 'vue';
 import { useAuth, useFunctionAsync } from 'boot/vuefire.ts';
 import { setSentryUser } from 'boot/sentry.ts';
-import { explainAuthError } from 'src/ts/firebase-errors.ts';
+import { explainAuthError, isTransientNetworkError } from 'src/ts/firebase-errors.ts';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
 export const loggedInUser = ref(null) as Ref<User | null>;
@@ -18,6 +18,48 @@ function getAuthInstance() {
 
 let initPromise: Promise<void> | null = null;
 
+// The uid the auth listener saw last, so a change of user (sign-out, or one account replacing
+// another in the same tab) can be told apart from the first callback after page load.
+let lastUid: string | null = null;
+
+// Whether an anonymous request is certain to be allowed to read this document, judged from what
+// the client cached. In firestore.rules an anonymous request reads a `documents` doc when it is
+// `published` and `Public` (canReadDocument's third branch), or when it is Public with no author
+// (legacy docs). The declassified and viewer branches both need isSignedIn(), so they never apply.
+// Only "published and Public" is kept: a legacy unpublished Public doc is dropped even though
+// anonymous could read it, and is simply fetched again on the next visit. `?.` matters: a
+// confidentiality value the enum no longer knows rehydrates to undefined, and that must count as
+// "not public" rather than throw halfway through clearing the cache.
+function isPublicPublished(d: models.Document): boolean {
+  return d.published === true && d.confidentiality?.firebase === 'Public';
+}
+
+// useDocumentStore().loadDocument()/loadLawsuit() cache whatever the signed-in user's rules let
+// them read and then serve it back without asking Firestore again, so on sign-out the same tab
+// would keep serving Confidential or viewer-only documents to whoever is at the keyboard next.
+// Drop everything an anonymous visitor would not be handed anyway. Public, published documents
+// stay: they are readable without signing in, and SingleDocumentPage's useMeta() reads them from
+// this store, so wiping them would turn a still-rendered public page's title/JSON-LD into
+// '查無此公文' with noindex. A lawsuit thread is dropped whole if any of its documents fails the
+// test (its prosecution document is the one that can be Confidential) and rebuilt under the
+// anonymous rules on the next visit, rather than leaving a partial thread cached as if complete.
+async function clearUserDocuments() {
+  try {
+    // Imported on demand: the store pulls in Firestore, which this entry chunk must not.
+    const { useDocumentStore } = await import('stores/document.ts');
+    useDocumentStore().$patch((state) => {
+      for (const [id, d] of Object.entries(state.document)) {
+        if (!isPublicPublished(d)) delete state.document[id];
+      }
+      for (const [id, thread] of Object.entries(state.lawsuits)) {
+        if (!thread.every(isPublicPublished)) delete state.lawsuits[id];
+      }
+    });
+  } catch (error) {
+    console.error('Failed to clear cached documents.', error);
+  }
+}
+
 // HeaderSidebar calls this from onMounted, and it is remounted every time the route
 // switches between SSRLayout and MainLayout — so this has to be idempotent, otherwise
 // every mount stacks another onAuthStateChanged listener and updateCustomClaims()
@@ -28,6 +70,11 @@ export function init(): Promise<void> {
       // onAuthStateChanged fires with the current state as soon as it is registered, so
       // that first callback is what populates loggedInUserClaims — no eager call needed.
       auth.onAuthStateChanged((user) => {
+        const uid = user?.uid ?? null;
+        // Not on the first callback (lastUid is still null; nothing was cached under another
+        // identity) and not on null -> user (the cache then holds only what anonymous could read).
+        if (lastUid && lastUid !== uid) void clearUserDocuments();
+        lastUid = uid;
         loggedInUser.value = user;
         void updateCustomClaims();
         if (user) {
@@ -79,7 +126,20 @@ export async function login() {
 
 export async function updateCustomClaims() {
   const auth = await getAuthInstance();
-  const claims = await auth?.currentUser?.getIdTokenResult();
+  let claims: IdTokenResult | undefined;
+  try {
+    claims = await auth?.currentUser?.getIdTokenResult();
+  } catch (error) {
+    // Nothing awaits this — onAuthStateChanged fires it and moves on — so a rejection here surfaced as an
+    // unhandled one. getIdTokenResult() is not a local read: once the cached ID token is an hour old it
+    // goes to securetoken.googleapis.com for a new one, and a phone on a poor connection fails that with
+    // auth/network-request-failed (LEGISLATION-N). That says nothing about our code, and nothing about
+    // the roles either, so leave what we already know in place rather than blanking it. Anything else is
+    // not weather, and is rethrown to be reported as before.
+    if (!isTransientNetworkError(error)) throw error;
+    console.warn('Could not refresh the sign-in token; keeping the roles already loaded.', error);
+    return;
+  }
   if (!claims) {
     loggedInUserClaims.roles = [];
     // Also covers logout: onAuthStateChanged calls this with no current user.

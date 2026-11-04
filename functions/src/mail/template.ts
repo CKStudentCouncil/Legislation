@@ -11,6 +11,18 @@ export interface MailTemplateOptions {
   actionMessage?: string;
 }
 
+// getMailTemplate emits its text slots verbatim (the templates carry their own trusted markup in them), so any
+// user-controlled value (document subject/location, display names, e-mail addresses, review comments, ...) must be
+// passed through this before it is interpolated. Safe for element content and for double-quoted attribute values.
+export function escapeHtml(value: unknown): string {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 export function getMailTemplate(options: MailTemplateOptions) {
   const { title, titleLink, greeting, contentLines, actionText, actionLink, actionText2, actionLink2, actionMessage } = options;
 

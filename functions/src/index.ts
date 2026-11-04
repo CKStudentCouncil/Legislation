@@ -29,9 +29,11 @@ import { createGzip } from 'zlib';
 import * as https from 'https';
 export { submitAmendmentRequest, resolveAmendmentRequest } from './amendments';
 export { recordDocumentHistory, revertDocument } from './history';
+import { isLegacySteward } from './history';
 import * as utf8 from 'utf8';
 import { DocumentSpecificIdentity, DocumentType, User } from '../../src/ts/models';
 import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils';
+export { listDocumentHistory } from './history';
 
 const globalFunctionOptions = { region: 'asia-east1' };
 const ACCOUNT_MANAGER_ROLES = ['Chairman', 'Speaker', 'JudicialCommitteeChairman'];
@@ -147,6 +149,12 @@ export const uploadAttachment = onCall(
       throw new HttpsError('permission-denied', 'You must have a council role to upload attachments.');
     }
     const { name, content, mimeType } = request.data;
+    // `content` is caller-controlled JSON. Buffer.from() treats any object with a numeric `length` as an array-like and
+    // allocates that many bytes, so {"length": 500000000} would allocate ~500 MB before the size check below runs.
+    // A base64 string is the only valid payload.
+    if (typeof content !== 'string') {
+      throw new HttpsError('invalid-argument', 'Attachment content must be a base64-encoded string.');
+    }
     const buf = Buffer.from(content, 'base64');
     const fileSize = buf.length;
     if (fileSize > 25 * 1024 * 1024) {
@@ -218,13 +226,12 @@ export const publishDocument = onCall(globalFunctionOptions, async (request) => 
   const inList = (arr: unknown) => Array.isArray(arr) && !!callerEmail && arr.includes(callerEmail);
   const hasAnyRole = (arr: unknown) => Array.isArray(arr) && arr.some((r: string) => callerRoles.includes(r));
   const canPublish =
-    !doc.authorEmail ||
-    doc.authorEmail === 'legacy' ||
-    doc.authorEmail === callerEmail ||
+    (!!callerEmail && doc.authorEmail === callerEmail) ||
     inList(doc.editorEmails) ||
     hasAnyRole(doc.editorRoles) ||
     inList(doc.managerEmails) ||
-    hasAnyRole(doc.managerRoles);
+    hasAnyRole(doc.managerRoles) ||
+    isLegacySteward(doc, callerEmail, callerRoles);
   if (!canPublish) {
     throw new HttpsError('permission-denied', 'Not authorized to publish this document.');
   }
@@ -340,12 +347,7 @@ export const notifyDocumentAccess = onCall(globalFunctionOptions, async (request
   const callerRoles = (request.auth.token.roles as string[] | undefined) ?? [];
   const inList = (arr: unknown) => Array.isArray(arr) && !!callerEmail && arr.includes(callerEmail);
   const hasAnyRole = (arr: unknown) => Array.isArray(arr) && arr.some((r: string) => callerRoles.includes(r));
-  const canManage =
-    !doc.authorEmail ||
-    doc.authorEmail === 'legacy' ||
-    doc.authorEmail === callerEmail ||
-    inList(doc.managerEmails) ||
-    hasAnyRole(doc.managerRoles);
+  const canManage = (!!callerEmail && doc.authorEmail === callerEmail) || inList(doc.managerEmails) || hasAnyRole(doc.managerRoles);
   if (!canManage) {
     throw new HttpsError('permission-denied', 'Not authorized to send access notifications for this document.');
   }
@@ -357,7 +359,27 @@ export const notifyDocumentAccess = onCall(globalFunctionOptions, async (request
     ...((doc.editorEmails as string[] | undefined) ?? []),
     ...((doc.managerEmails as string[] | undefined) ?? []),
   ]);
-  const targets = Array.from(new Set(emails as string[])).filter((e) => typeof e === 'string' && granted.has(e));
+  const grantedTargets = Array.from(new Set(emails as string[])).filter((e) => {
+    if (typeof e !== 'string' || !granted.has(e)) return false;
+    // Same test as /^[^\s@]+@[^\s@]+\.[^\s@]+$/, in linear time: that regex's `[^\s@]` also matches '.', so it backtracks
+    // quadratically on input like 'a@' + '.'.repeat(n) + '@', and these strings come from the author's own grant lists. No
+    // whitespace, exactly one '@', a non-empty local part, and a '.' in the domain with a character on each side of it.
+    const at = e.indexOf('@');
+    return at > 0 && at === e.lastIndexOf('@') && !/\s/.test(e) && e.slice(at + 2, -1).includes('.');
+  });
+  // The grant lists are written by the document's author, so an address being listed there says
+  // nothing about whom it belongs to. Also require every recipient to be an existing Firebase Auth
+  // account - the check the collaborators dialog makes via lookupUsersByEmail before it offers an
+  // address, and which is only enforced client-side - so the council mailbox can only ever write to
+  // people who already have an account. (At most 50 addresses here, within getUsers' 100 limit.)
+  const accountEmails = new Set<string>();
+  if (grantedTargets.length > 0) {
+    const found = await admin.auth().getUsers(grantedTargets.map((e) => ({ email: e.toLowerCase() })));
+    for (const user of found.users) {
+      if (user.email) accountEmails.add(user.email.toLowerCase());
+    }
+  }
+  const targets = grantedTargets.filter((e) => accountEmails.has(e.toLowerCase()));
   if (targets.length === 0) {
     return { success: false, error: 'No notifiable grantees.' };
   }
@@ -397,7 +419,13 @@ export const lookupUsersByEmail = onCall(globalFunctionOptions, async (request) 
       raw
         .filter((e): e is string => typeof e === 'string')
         .map((e) => e.trim().toLowerCase())
-        .filter((e) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)),
+        .filter((e) => {
+          // Same test as /^[^\s@]+@[^\s@]+\.[^\s@]+$/, in linear time: that regex's `[^\s@]` also matches '.', so it
+          // backtracks quadratically on input like 'a@' + '.'.repeat(n) + '@'. No whitespace, exactly one '@', a
+          // non-empty local part, and a '.' in the domain with at least one character on each side of it.
+          const at = e.indexOf('@');
+          return at > 0 && at === e.lastIndexOf('@') && !/\s/.test(e) && e.slice(at + 2, -1).includes('.');
+        }),
     ),
   );
   const users: Record<string, { exists: boolean; displayName: string | null; photoURL: string | null }> = {};
@@ -466,6 +494,8 @@ export const buildIdCache = onCall(globalFunctionOptions, async (request) => {
   const lawCache = {} as { [id: string]: number };
   for (const doc of documents.docs) {
     const data = doc.data();
+    // Same filter as updateIdCache: settings/cache feeds the public sitemap, so only published, Public documents may be listed.
+    if (!data.published || data.confidentiality !== 'Public') continue;
     docCache[doc.id] = data.publishedAt?.toMillis() ?? data.createdAt.toMillis();
   }
   for (const law of legislation.docs) {
