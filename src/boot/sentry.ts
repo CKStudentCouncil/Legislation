@@ -79,6 +79,15 @@ export default defineBoot(({ app, router }) => {
       // The visitor closed the Google sign-in popup themselves.
       'auth/popup-closed-by-user',
       'auth/cancelled-popup-request',
+      // Microsoft's link scanner (Outlook Safe Links and friends) opening a shared URL in a
+      // headless CefSharp browser and rejecting a promise of its own host bridge — no stack,
+      // nothing of ours involved. The 公文 emails publishDocument sends are exactly the links
+      // it scans (LEGISLATION-F).
+      'Object Not Found Matching Id:',
+      // A browser extension's own content script (here DuckDuckGo's iOS app) messaging a tab that
+      // had already closed, rejecting a promise of its own. No stack, nothing of ours involved —
+      // the page it fires on only happens to be ours (LEGISLATION-M).
+      'Invalid call to runtime.sendMessage()',
     ],
     denyUrls: [/^chrome:\/\//i, /^chrome-extension:\/\//i, /^moz-extension:\/\//i, /^safari-extension:\/\//i],
   });

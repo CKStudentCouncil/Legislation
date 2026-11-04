@@ -21,7 +21,7 @@
       <div v-if="legislation.frozenBy" class="text-h6">
         <q-icon class="q-mr-xs" :name="matWarning" size="32px" />
         本法令部分或全文已遭凍結或失效，詳見
-        <q-btn :href="legislation.frozenBy" class="no-print" dense :icon="matLink" label="相關連結" target="_blank" />
+        <q-btn :href="safeUrl(legislation.frozenBy)" class="no-print" dense :icon="matLink" label="相關連結" target="_blank" />
       </div>
       <div v-if="legislation.preface" class="text-h6 text-bold">{{ legislation.preface }}</div>
       <div v-if="legislation.history.length > 0">
@@ -61,7 +61,7 @@
                   >
                     <q-tooltip>比較目前版本</q-tooltip>
                   </q-btn>
-                  <q-btn v-if="history.link" :href="history.link" dense flat :icon="matOpenInNew" size="10px" aria-label="檢視發布公文">
+                  <q-btn v-if="history.link" :href="safeUrl(history.link)" dense flat :icon="matOpenInNew" size="10px" aria-label="檢視發布公文">
                     <q-tooltip>檢視發布公文</q-tooltip>
                   </q-btn>
                 </div>
@@ -133,6 +133,7 @@ import { computed, onMounted, onServerPrefetch, reactive, ref, useSSRContext, wa
 import { event } from 'vue-gtag';
 import LegislationContent from 'components/legislation/LegislationContent.vue';
 import { copyLink, getMeta } from 'src/ts/utils.ts';
+import { safeUrl } from 'src/ts/safe-url.ts';
 import { legislationJsonLd, ldJsonScript } from 'src/ts/structured-data.ts';
 import LegislationAddendum from 'components/legislation/LegislationAddendum.vue';
 import LegislationHistoryDiffDialog from 'components/legislation/LegislationHistoryDiffDialog.vue';

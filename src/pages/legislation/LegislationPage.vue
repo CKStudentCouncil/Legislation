@@ -131,8 +131,9 @@ import { icon } from 'src/ts/icons.ts';
 import { LegislationCategory } from 'src/ts/models.ts';
 import { AIS_SSR_INSTANCE_KEY, createAisRootMixin, searchClient } from 'boot/algolia.ts';
 import { AisConfigure, AisHighlight, AisHits, AisInstantSearchSsr, AisMenu, AisPanel, AisSearchBox } from 'vue-instantsearch/vue3/es';
-import { computed, getCurrentInstance, inject, onBeforeMount, onServerPrefetch, provide, ref, useSSRContext } from 'vue';
-import { copyLawLink, getMeta } from 'src/ts/utils.ts';
+import { computed, getCurrentInstance, inject, onBeforeMount, onBeforeUnmount, onServerPrefetch, onUnmounted, provide, ref, useSSRContext } from 'vue';
+import { copyLawLink, getMeta, notifyError } from 'src/ts/utils.ts';
+import { explainSearchError } from 'src/ts/firebase-errors.ts';
 import { renderToString } from 'vue/server-renderer';
 import { useMeta } from 'quasar';
 import { useRoute } from 'vue-router';
@@ -190,6 +191,37 @@ const components = {
   AisPanel,
   AisHighlight,
 };
+
+if (!import.meta.env.QUASAR_SERVER) {
+  // InstantSearch and its helper are event emitters that *throw* an 'error' event nobody is
+  // listening for, and nothing listened: a failed search, or the analytics script it pulls in failing
+  // to load, surfaced as an uncaught exception instead of anything the reader could see.
+  instantsearch.on('error', (error: unknown) => {
+    // Algolia's automatic insights (switched on from the dashboard, announced in the search
+    // response) injects search-insights.js from a CDN. Content blockers and Safari's tracker
+    // protection refuse it; the search itself is untouched, so there is nothing to tell the
+    // reader and nothing to fix (LEGISLATION-G).
+    if (error instanceof Error && error.message.startsWith('[insights middleware]')) return;
+    const { message, report } = explainSearchError(error);
+    notifyError(message, error, { report });
+  });
+
+  // Leaving the page disposes the instance, which strips every listener off its helper and
+  // drops the helper — but a search still in flight holds on to it and reports its outcome
+  // there. A failure arriving after the reader has moved on (LEGISLATION-E, seen on /document)
+  // then found no listener and threw. The page it belonged to is gone, so give that orphaned
+  // helper — and the instance, whose listener above dispose() also removed — a listener that
+  // lets the failure go quietly. The helper has to be caught before <ais-instant-search-ssr>
+  // disposes it, and a parent's beforeUnmount runs before its children's.
+  let disposedHelper: any = null;
+  onBeforeUnmount(() => {
+    disposedHelper = instantsearch.mainHelper;
+  });
+  onUnmounted(() => {
+    disposedHelper?.on('error', () => {});
+    instantsearch.on('error', () => {});
+  });
+}
 
 onBeforeMount(() => {
   if (Object.values(useAlgoliaStore().getState()).length > 0) {

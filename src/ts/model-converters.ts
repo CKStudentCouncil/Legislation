@@ -14,6 +14,24 @@ import {
   LegislationType,
 } from './models';
 
+// A stored document is whatever its author wrote — firestore.rules do not constrain its shape — so fromFirestore must not assume it. A throw
+// here escapes DocumentSnapshot.data() and fails every list built from it, so one bad record would take down the whole page (and the SSR
+// render of /document). Anything that is not the shape the Document interface promises degrades instead: arrays to [], dates to null,
+// unregistered enum keys to undefined.
+function toDate(value: any): Date | null {
+  return typeof value?.toMillis === 'function' ? new Date(value.toMillis()) : null;
+}
+
+// Only registered keys resolve. VALUES[key] would stringify a non-string key (which throws for a stored map such as { toString: 1 }) and
+// would reach Object.prototype for a key such as 'constructor', a native function that the SSR state serializer then refuses.
+function lookup<T>(values: Record<string, T>, key: unknown): T | undefined {
+  return typeof key === 'string' && Object.prototype.hasOwnProperty.call(values, key) ? values[key] : undefined;
+}
+
+function lookupAll<T>(values: Record<string, T>, keys: unknown): (T | undefined)[] {
+  return Array.isArray(keys) ? keys.map((key) => lookup(values, key)) : [];
+}
+
 export const documentConverter: FirestoreDataConverter<Document | null> = {
   toFirestore(docData: Document) {
     const data = firestoreDefaultConverter.toFirestore(convertDocumentToFirebase(docData) as any);
@@ -41,23 +59,28 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
   fromFirestore(snapshot, options) {
     const data = firestoreDefaultConverter.fromFirestore(snapshot, options);
     if (!data) return null;
-    data.createdAt = new Date(data.createdAt.toMillis());
-    data.publishedAt = data.publishedAt ? new Date(data.publishedAt.toMillis()) : null;
-    data.declassifyAt = data.declassifyAt ? new Date(data.declassifyAt.toMillis()) : null;
-    data.meetingTime = data.meetingTime ? new Date(data.meetingTime.toMillis()) : null;
-    data.confidentiality = DocumentConfidentiality.VALUES[data.confidentiality as keyof typeof DocumentConfidentiality.VALUES];
-    data.fromSpecific = DocumentSpecificIdentity.VALUES[data.fromSpecific];
-    data.toSpecific = data.toSpecific.map((toSpecific: any) => DocumentSpecificIdentity.VALUES[toSpecific]);
-    data.type = DocumentType.VALUES[data.type as keyof typeof DocumentType.VALUES];
-    data.ccSpecific = data.ccSpecific.map((ccSpecific: any) => DocumentSpecificIdentity.VALUES[ccSpecific]);
-    data.viewers = data.viewers ? data.viewers.map((viewer: any) => DocumentSpecificIdentity.VALUES[viewer]) : [];
+    // getFullId(), the list's row key and the page meta all concatenate these, and a stored map such as { toString: 1 } throws when stringified.
+    for (const key of ['idPrefix', 'idNumber', 'subject']) {
+      if (typeof data[key] === 'object' && data[key] !== null) data[key] = '';
+    }
+    // No Timestamp to convert: an epoch date keeps the record listable (and always a valid Date) rather than failing the query.
+    data.createdAt = toDate(data.createdAt) ?? new Date(0);
+    data.publishedAt = toDate(data.publishedAt);
+    data.declassifyAt = toDate(data.declassifyAt);
+    data.meetingTime = toDate(data.meetingTime);
+    data.confidentiality = lookup(DocumentConfidentiality.VALUES, data.confidentiality);
+    data.fromSpecific = lookup(DocumentSpecificIdentity.VALUES, data.fromSpecific);
+    data.toSpecific = lookupAll(DocumentSpecificIdentity.VALUES, data.toSpecific);
+    data.type = lookup(DocumentType.VALUES, data.type);
+    data.ccSpecific = lookupAll(DocumentSpecificIdentity.VALUES, data.ccSpecific);
+    data.viewers = lookupAll(DocumentSpecificIdentity.VALUES, data.viewers);
     data.viewerEmails = data.viewerEmails ?? [];
     data.editorRoles = data.editorRoles ?? [];
     data.editorEmails = data.editorEmails ?? [];
     data.managerRoles = data.managerRoles ?? [];
     data.managerEmails = data.managerEmails ?? [];
-    data.lastEditedAt = data.lastEditedAt ? new Date(data.lastEditedAt.toMillis()) : null;
-    data.secretarySpecific = data.secretarySpecific ? DocumentSpecificIdentity.VALUES[data.secretarySpecific] : null;
+    data.lastEditedAt = toDate(data.lastEditedAt);
+    data.secretarySpecific = data.secretarySpecific ? lookup(DocumentSpecificIdentity.VALUES, data.secretarySpecific) : null;
     data.getFullId = function () {
       return `${this.idPrefix}第${this.idNumber}號`;
     };

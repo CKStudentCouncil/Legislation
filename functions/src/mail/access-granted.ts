@@ -1,19 +1,10 @@
-import { getMailTemplate } from './template';
-
-// Defense-in-depth: the subject is the document's own field (the granter cannot supply a custom
-// message), but it is still user-authored, so escape it before embedding in the HTML email.
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
+import { escapeHtml, getMailTemplate } from './template';
 
 export function accessGrantedMail(id: string, subject: string) {
+  // Defense-in-depth: the subject is the document's own field (the granter cannot supply a custom
+  // message), but it is still user-authored, so escape it before embedding in the HTML email.
   const safeSubject = escapeHtml(subject ?? '');
-  const link = `https://law.cksc.tw/document/${id}`;
+  const link = `https://law.cksc.tw/document/${encodeURIComponent(id)}`;
   return getMailTemplate({
     title: '您已獲授公文存取權限',
     titleLink: link,

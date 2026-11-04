@@ -44,13 +44,21 @@ function errorMessage(e: unknown): string {
  * Firestore's own transport says so three different ways depending on which half of it gave
  * up: the gRPC status 'unavailable', the WebChannel wrapper's bare `FirebaseError: Connection
  * failed.` (LEGISLATION-5, an iPhone on a flaky mobile connection), and the fetch/XHR wording
- * the browser supplies. None of them is actionable, and on a site that is mostly read on
- * phones all three are ordinary weather.
+ * the browser supplies. A callable Function has a fourth, below. None of them is actionable,
+ * and on a site that is mostly read on phones all of them are ordinary weather.
  */
 export function isTransientNetworkError(e: unknown): boolean {
   const code = errorCode(e);
   if (code === 'unavailable' || code === 'deadline-exceeded' || code === 'cancelled') return true;
   if (code === 'auth/network-request-failed' || code === 'functions/unavailable' || code === 'functions/deadline-exceeded') return true;
+  // The Functions SDK reports a fetch that was rejected with no HTTP response at all as
+  // `internal [0]` (the 0 is the missing status). A handler that throws is not that: the
+  // callable wrapper answers with a proper 500, CORS headers included, which reads
+  // `internal [500]` here and which functions/src/sentry.ts reports from the server side. So
+  // `[0]` is the connection dropping mid-request (LEGISLATION-J, a phone uploading an
+  // attachment) — or an edge refusing the request outright, which carries no CORS headers
+  // either; AttachmentUploader's size cap exists to rule that one out.
+  if (code === 'functions/internal' && /\[0\]$/.test(errorMessage(e))) return true;
   return /Connection failed|Failed to fetch|NetworkError|Load failed|network error/i.test(errorMessage(e));
 }
 
@@ -80,7 +88,27 @@ const AUTH_ERRORS: Record<string, ExplainedError> = {
   'auth/operation-not-allowed': { message: 'Google 登入尚未啟用，請洽班聯會資訊組', report: true },
 };
 
+/**
+ * firebase/auth loads its helper scripts (apis.google.com/js/api.js, which the sign-in popup
+ * needs) with a script tag, and when the tag's `onerror` fires it rejects with a bare
+ * 'auth/internal-error' whose `customData` is that element's error Event. A genuine internal
+ * error (an inconsistent server response, a failed `_assert`) carries `{ appName }` there
+ * instead, so the Event is what tells "the script never arrived" from "Firebase disagreed with
+ * itself".
+ */
+function isScriptLoadFailure(e: unknown): boolean {
+  if (typeof e !== 'object' || e === null) return false;
+  const data = (e as { customData?: unknown }).customData;
+  return typeof data === 'object' && data !== null && (data as { type?: unknown }).type === 'error';
+}
+
 export function explainAuthError(e: unknown): ExplainedError {
+  // A content blocker, a privacy setting or a network (school and corporate ones in particular)
+  // that does not reach apis.google.com: the visitor's side of the connection, not a defect in
+  // ours (LEGISLATION-H).
+  if (errorCode(e) === 'auth/internal-error' && isScriptLoadFailure(e)) {
+    return { message: '無法載入 Google 登入所需的元件，請確認網路連線，並暫時關閉廣告／內容阻擋器後再試一次', report: false };
+  }
   return AUTH_ERRORS[errorCode(e)] ?? { message: '登入失敗，請稍後再試', report: true };
 }
 
@@ -98,6 +126,25 @@ export function explainFunctionError(e: unknown, fallback: string): ExplainedErr
   if (code === 'functions/unauthenticated') return { message: '請先登入後再試一次', report: false };
   if (code === 'functions/permission-denied') return { message: '您的帳號沒有執行此操作的權限', report: false };
   return { message: fallback, report: true };
+}
+
+/**
+ * Failures of drafting a document: the ID allocation (a callable) followed by the Firestore write.
+ *
+ * firestore.rules lets an account create a document only if it carries a council role claim and
+ * names itself as the author, and the 起草公文 buttons are offered to anyone who can type a
+ * /manage URL — there is no route guard. So an account without a role (or a signed-out visitor,
+ * or one whose freshly granted role is not in the token yet) is *expected* to meet
+ * 'permission-denied' here; the rules answered correctly (LEGISLATION-7). Both the doc ID and
+ * the stamped lastEditedBy/authorEmail are built from the same signed-in user the rule checks,
+ * so a denial is not the client and the rules drifting apart, which is why this one — unlike
+ * explainQueryError — is not reported.
+ */
+export function explainWriteError(e: unknown, fallback: string): ExplainedError {
+  if (errorCode(e) === 'permission-denied') {
+    return { message: '您尚未登入，或帳號沒有執行此操作的權限。若剛獲得授權，請重新登入後再試', report: false };
+  }
+  return explainFunctionError(e, fallback);
 }
 
 /**
@@ -121,4 +168,17 @@ export function explainQueryError(e: unknown, fallback: string): ExplainedError 
   // A filter combination with no composite index behind it (firestore.indexes.json). Ours to add.
   if (code === 'failed-precondition') return { message: '系統尚未支援此篩選組合，已通報班聯會資訊組', report: true };
   return { message: fallback, report: true };
+}
+
+/**
+ * Failures of an Algolia search on the legislation page — not Firebase, but the same weather.
+ *
+ * The Algolia client retries each of its hosts on a timeout or a dropped connection, and only
+ * once it has run out of hosts does it give up with a RetryError ('Unreachable hosts'). That is
+ * the visitor's connection, not the index. Anything else (an ApiError with a status) means the
+ * request itself was refused — a bad key, a missing index — which is ours to fix.
+ */
+export function explainSearchError(e: unknown): ExplainedError {
+  if (errorCode(e) === 'RetryError' || isTransientNetworkError(e)) return { message: NETWORK_MESSAGE, report: false };
+  return { message: '搜尋失敗，請稍後再試', report: true };
 }

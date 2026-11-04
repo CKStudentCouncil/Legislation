@@ -9,7 +9,7 @@
         <q-btn-dropdown v-if="canEdit" color="warning" :icon="matSettings" label="進階功能">
           <div class="q-gutter-sm col">
             <q-btn class="bg-amber-8 row" :icon="matSchedule" label="發布時間" @click="editPublishedAt()" />
-            <q-btn v-if="canOwnDoc" class="bg-green-8 row" :icon="mat123" label="公文字號" @click="editId()" />
+            <q-btn v-if="canRename" class="bg-green-8 row" :icon="mat123" label="公文字號" @click="editId()" />
           </div>
         </q-btn-dropdown>
         <q-btn v-if="canManageCollaborators" color="teal" :icon="matGroup" label="管理協作者" @click="managingCollaborators = true" />
@@ -161,6 +161,8 @@ import { VueDraggable } from 'vue-draggable-plus';
 import AttachmentDisplay from 'components/AttachmentDisplay.vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { notifyError, notifySuccess } from 'src/ts/utils.ts';
+import { explainWriteError } from 'src/ts/firebase-errors.ts';
+import { sanitizeEditorHtml } from 'src/ts/editor-sanitize.ts';
 import { getReign } from 'src/ts/shared-utils.ts';
 import { useDocument } from 'vuefire';
 import { useFunctionAsync } from 'boot/vuefire.ts';
@@ -196,10 +198,16 @@ const isEditorTier = computed(() => {
   const roles = loggedInUserClaims.roles ?? [];
   return (!!email && (d.editorEmails ?? []).includes(email)) || (d.editorRoles ?? []).some((r) => roles.includes(r));
 });
-const canEdit = computed(() => isAuthor.value || hasNoAuthor.value || isManager.value || isEditorTier.value);
-const canManageCollaborators = computed(() => isAuthor.value || hasNoAuthor.value || isManager.value);
-const canDelete = computed(() => isAuthor.value || hasNoAuthor.value || isManager.value);
-const canOwnDoc = computed(() => isAuthor.value || hasNoAuthor.value); // owner-only actions (rename, transfer)
+// Only council leadership may maintain an unowned (legacy) doc, and only one they can read — which a loaded
+// `docu` already implies. Like any non-owner, they can't claim it or change its collaborators in place.
+const LEGACY_STEWARD_ROLES = ['Chairman', 'Speaker', 'DeputySpeaker', 'JudicialCommitteeChairman'];
+const isLegacySteward = computed(() => hasNoAuthor.value && (loggedInUserClaims.roles ?? []).some((r) => LEGACY_STEWARD_ROLES.includes(r)));
+const canEdit = computed(() => isAuthor.value || isLegacySteward.value || isManager.value || isEditorTier.value);
+const canManageCollaborators = computed(() => isAuthor.value || isManager.value);
+const canDelete = computed(() => isAuthor.value || isLegacySteward.value || isManager.value);
+const canOwnDoc = computed(() => isAuthor.value); // owner-only actions (transfer)
+// A rename creates the doc under its new ID, owned by the caller, then deletes the old one.
+const canRename = computed(() => isAuthor.value || isLegacySteward.value);
 const managingCollaborators = ref(false);
 const showHistory = ref(false);
 
@@ -240,7 +248,7 @@ function edit() {
 }
 
 function editContent() {
-  content.value = (docu.value as any).content;
+  content.value = sanitizeEditorHtml((docu.value as any).content as string);
   editingContent.value = true;
 }
 
@@ -279,7 +287,8 @@ async function publish() {
     const publishDocumentFn = await useFunctionAsync('publishDocument');
     await publishDocumentFn({ docId: (docu.value as any).id });
   } catch (e) {
-    notifyError('發布失敗', e);
+    const { message, report } = explainWriteError(e, '發布失敗');
+    notifyError(message, e, { report });
     Loading.hide();
     return;
   }

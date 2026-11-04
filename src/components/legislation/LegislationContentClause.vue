@@ -4,7 +4,7 @@
     <div v-if="$props.content.frozenBy">
       <q-icon class="q-mr-xs" :name="matWarning" size="20px" />
       本條文部分或全文已遭凍結或失效，詳見
-      <q-btn :href="$props.content.frozenBy" class="no-print" dense :icon="matLink" label="相關連結" target="_blank" />
+      <q-btn :href="safeUrl($props.content.frozenBy)" class="no-print" dense :icon="matLink" label="相關連結" target="_blank" />
     </div>
     <div>
       <div class="text-bold">
@@ -35,7 +35,9 @@
         </q-no-ssr>
         <!-- SSR-crawlable mirror of the resolution links (the dropdown above is client-only). -->
         <span v-if="$props.content.resolutionUrls?.length" class="sr-only">
-          <a v-for="(resolution, i) in $props.content.resolutionUrls" :key="i" :href="resolution.url" rel="noopener">{{ resolution.title }}</a>
+          <a v-for="(resolution, i) in $props.content.resolutionUrls" :key="i" :href="safeUrl(resolution.url)" rel="noopener">{{
+            resolution.title
+          }}</a>
         </span>
       </div>
       <div v-if="showContent">
@@ -70,6 +72,7 @@ import { computed } from 'vue';
 import type { LegislationContent } from 'src/ts/models.ts';
 import { ContentType } from 'src/ts/models.ts';
 import { copyLink } from 'src/ts/utils.ts';
+import { safeUrl } from 'src/ts/safe-url.ts';
 
 const props = defineProps({
   content: {
@@ -92,6 +95,7 @@ const cleanLines = computed(() =>
 );
 
 function openResolutionUrl(url: string) {
+  if (safeUrl(url) === undefined) return;
   window.open(url, '_blank');
 }
 </script>
