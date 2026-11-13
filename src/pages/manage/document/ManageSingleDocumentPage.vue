@@ -230,6 +230,10 @@ const editingIdNumber = ref('');
 async function update() {
   Loading.show();
   try {
+    // The Firestore key is the full ID (idPrefix第idNumber號), so these two fields may only change through submitId(), which moves the
+    // document to its new key. Writing an edited idNumber back under the old key strands the document: every list links to the new ID.
+    editing.idPrefix = docu.value!.idPrefix;
+    editing.idNumber = docu.value!.idNumber;
     Object.assign(editing, stamp());
     await setDoc(doc(documentsCollection(), (docu.value as any).id), editing);
   } catch (e) {
@@ -429,14 +433,12 @@ function editId() {
 
 async function submitId() {
   const oldId = (docu.value as any).id;
-  if (oldId === `${editingIdPrefix.value}第${editingIdNumber.value}號`) {
+  const newId = `${editingIdPrefix.value}第${editingIdNumber.value}號`;
+  if (oldId === newId) {
     notifyError('新公文字號不可與舊公文字號相同');
     return;
   }
   Loading.show();
-  docu.value!.idPrefix = editingIdPrefix.value;
-  docu.value!.idNumber = editingIdNumber.value;
-  const newId = docu.value!.getFullId();
   try {
     try {
       const existingDoc = await getDoc(doc(documentsCollection(), newId));
@@ -452,11 +454,14 @@ async function submitId() {
     }
     // The rename is a create of a new doc; the create rule requires authorEmail == caller.
     // Normal owners already satisfy this; a legacy/unowned doc claims authorship on rename.
-    if (!docu.value!.authorEmail || docu.value!.authorEmail === 'legacy') {
-      docu.value!.authorEmail = loggedInUser.value?.email ?? undefined;
+    // Built on a copy: docu is the live document, and an early return below (ID already taken, write refused) used to leave it
+    // carrying the new number while still stored under the old key, for the next save to persist.
+    const renamed = { ...docu.value!, idPrefix: editingIdPrefix.value, idNumber: editingIdNumber.value };
+    if (!renamed.authorEmail || renamed.authorEmail === 'legacy') {
+      renamed.authorEmail = loggedInUser.value?.email ?? undefined;
     }
-    Object.assign(docu.value!, stamp());
-    await setDoc(doc(documentsCollection(), newId), docu.value);
+    Object.assign(renamed, stamp());
+    await setDoc(doc(documentsCollection(), newId), renamed);
     await router.push(newId);
     await deleteDoc(doc(documentsCollection(), oldId));
   } catch (e) {
