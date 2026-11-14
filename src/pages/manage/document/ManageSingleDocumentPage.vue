@@ -435,7 +435,23 @@ async function submitId() {
   const oldId = (docu.value as any).id;
   const newId = `${editingIdPrefix.value}第${editingIdNumber.value}號`;
   if (oldId === newId) {
-    notifyError('新公文字號不可與舊公文字號相同');
+    // The key already is this ID. If the stored number disagrees with it (a document stranded by the old bug, which every list then links to
+    // the wrong ID), there is nothing to move: realign the fields in place. Only when they already agree is this a no-op rename.
+    if (docu.value!.idPrefix === editingIdPrefix.value && docu.value!.idNumber === editingIdNumber.value) {
+      notifyError('新公文字號不可與舊公文字號相同');
+      return;
+    }
+    Loading.show();
+    try {
+      await updateDoc(doc(documentsCollection(), oldId), { idPrefix: editingIdPrefix.value, idNumber: editingIdNumber.value, ...stamp() });
+    } catch (e) {
+      notifyError('編輯失敗', e);
+      Loading.hide();
+      return;
+    }
+    Loading.hide();
+    notifySuccess('編輯成功');
+    editingId.value = false;
     return;
   }
   Loading.show();
