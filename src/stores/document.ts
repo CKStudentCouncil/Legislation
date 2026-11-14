@@ -77,6 +77,7 @@ export const useDocumentStore = defineStore('document', {
           where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
         ),
         orderBy('published', 'asc'),
+        orderBy('publishedAt', 'desc'),
         orderBy('createdAt', 'desc'),
       );
       const [snap, count] = await readWithRetry(() => Promise.all([getDocs(query(base, limit(10))), getCountFromServer(base)]));

@@ -40,7 +40,10 @@ export const documentConverter: FirestoreDataConverter<Document | null> = {
     if (!data.fromName) delete data.fromName;
     if (!data.secretarySpecific) delete data.secretarySpecific;
     if (!data.secretaryName) delete data.secretaryName;
-    if (!data.published) delete data.publishedAt;
+    // Never left out, only null. The document list sorts on publishedAt, and Firestore drops a document that lacks the field from an
+    // orderBy result altogether, while a null is an ordinary value that sorts (first ascending, last descending) and is still listed.
+    // A draft therefore stores null, and so does a published document that somehow has no date.
+    data.publishedAt = data.published && data.publishedAt ? data.publishedAt : null;
     if (!data.meetingTime) delete data.meetingTime;
     if (!data.prosecutionId) delete data.prosecutionId;
     if (!data.declassifyAt) delete data.declassifyAt;

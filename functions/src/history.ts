@@ -24,12 +24,17 @@ function generateHistoryContentId(refDate: Date, existingIds: string[]): string 
 // Fields that, when changed alone, should NOT create a new history version.
 const IGNORED_FIELDS = new Set(['read', 'lastEditedAt', 'lastEditedBy', 'revertSource']);
 
+// publishedAt is stored as an explicit null on a document without a publish time, because Firestore leaves a document that lacks a field out of
+// an orderBy on it. Older documents simply do not have the field, and backfillDocumentPublishedAt adds the null: no edit, so no version.
+const NULL_WHEN_ABSENT = new Set(['publishedAt']);
+
 function meaningfulChange(before: any, after: any): boolean {
   if (!before) return true;
   const keys = new Set([...Object.keys(before), ...Object.keys(after)]);
   for (const k of keys) {
     if (IGNORED_FIELDS.has(k)) continue;
-    if (JSON.stringify(before[k]) !== JSON.stringify(after[k])) return true;
+    const [b, a] = NULL_WHEN_ABSENT.has(k) ? [before[k] ?? null, after[k] ?? null] : [before[k], after[k]];
+    if (JSON.stringify(b) !== JSON.stringify(a)) return true;
   }
   return false;
 }
@@ -142,6 +147,8 @@ export const revertDocument = onCall(globalFunctionOptions, async (request) => {
       if (f in live) restored[f] = live[f];
       else delete restored[f];
     }
+    // A snapshot from before publishedAt was always stored has no such field, and a document without it drops out of the sorted list.
+    if (restored.publishedAt === undefined) restored.publishedAt = null;
     restored.lastEditedBy = {
       email,
       uid: request.auth?.uid ?? null,
