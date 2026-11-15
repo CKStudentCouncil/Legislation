@@ -98,9 +98,9 @@
           </div>
         </div>
         <q-input
-          v-if="isJudicial && !isProsecution"
+          v-if="isJudicial"
           :model-value="parentValue.prosecutionId"
-          label="啟訴書公文字號或連結"
+          label="一審案號或啟字公文號" 
           @update:model-value="updateProsecutionId"
         />
       </q-card-section>
@@ -157,7 +157,6 @@ const isMeetingRecord = computed(() => parentValue.value.type.firebase == Docume
 const isOrder = computed(() => parentValue.value.type.firebase == DocumentType.Order.firebase);
 const isAnnouncement = computed(() => parentValue.value.type.firebase == DocumentType.Announcement.firebase);
 const isJudicial = computed(() => parentValue.value.type.judicialCommitteeOnly);
-const isProsecution = computed(() => parentValue.value.type.firebase == DocumentType.CourtProsecutions.firebase);
 //TODO: fix/why doesn't the date selector update while the data does?
 const meetingDate = computed(() => date.formatDate(parentValue.value.meetingTime ?? new Date(), 'YYYY-MM-DD'));
 const meetingTime = computed(() => date.formatDate(parentValue.value.meetingTime ?? new Date(), 'HH:mm'));
