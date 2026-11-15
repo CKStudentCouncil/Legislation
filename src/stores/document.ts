@@ -1,6 +1,6 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
 import type * as models from 'src/ts/models.ts';
-import { DocumentConfidentiality } from 'src/ts/models.ts';
+import { DocumentConfidentiality, DocumentType } from 'src/ts/models.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { documentsCollection } from 'src/ts/model-converters.ts';
 import { readWithRetry } from 'src/ts/firestore-retry.ts';
@@ -86,22 +86,46 @@ export const useDocumentStore = defineStore('document', {
     },
     async loadLawsuit(id: string, refresh = false): Promise<models.Document[]> {
       if (!refresh && this.lawsuits[id]) return this.getLawsuit(id)!;
-      const relatedQuery = query(
-        documentsCollection(),
-        where('prosecutionId', '==', id),
-        where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
-        where('published', '==', true),
-      );
-      const prosecutionRef = doc(documentsCollection(), id);
-      const related = await readWithRetry(() => getDocs(relatedQuery));
-      const docs = related.docs.map((d) => d.data() as models.Document).filter((d): d is models.Document => !!d);
-      // The prosecution document itself (rules-gated: anon SSR only gets it if public).
-      try {
-        const prosecution = await readWithRetry(() => getDoc(prosecutionRef));
-        if (prosecution.exists() && prosecution.data()) docs.push(prosecution.data() as models.Document);
-      } catch {
-        // Access denied (confidential prosecution doc, anonymous request) — skip it.
+      // `prosecutionId` is supposed to hold the first-instance case number (確字第…號), but older documents hold the 啟字 document's ID
+      // and some hold a 上字 document's ID, so one case is threaded by up to three kinds of key. `id` may be any of them: climb to the
+      // root (the `prosecutionId` of the document `id` names, if it names one), then fan out through every 啟/上 document found on the
+      // way. Three rounds reach the same thread from a case number, a 啟字 ID or a 上字 ID.
+      const fullId = (d: models.Document) => `${d.idPrefix}第${d.idNumber}號`;
+      const found = new Map<string, models.Document>();
+      const queried = new Set<string>();
+      // The document `id` names, if any (rules-gated: anon SSR only gets it if public). Refs and queries are built before the first
+      // await, as in loadDocument.
+      const ownRef = doc(documentsCollection(), id);
+      const own = readWithRetry(() => getDoc(ownRef))
+        .then((snap) => (snap.exists() ? ((snap.data() as models.Document | undefined) ?? null) : null))
+        // Access denied (confidential document, anonymous request) — carry on without it.
+        .catch(() => null);
+      let pending = [id];
+      for (let round = 0; round < 3 && pending.length > 0; round++) {
+        const keys = pending.slice(0, 30); // Firestore's cap on `in`
+        keys.forEach((k) => queried.add(k));
+        const relatedQuery = query(
+          documentsCollection(),
+          where('prosecutionId', 'in', keys),
+          where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
+          where('published', '==', true),
+        );
+        const [related, ownDoc] = await Promise.all([readWithRetry(() => getDocs(relatedQuery)), round === 0 ? own : null]);
+        const next = new Set<string>();
+        if (ownDoc) {
+          found.set(fullId(ownDoc), ownDoc);
+          if (ownDoc.prosecutionId) next.add(ownDoc.prosecutionId);
+        }
+        for (const snap of related.docs) {
+          const d = snap.data() as models.Document | undefined;
+          if (!d) continue;
+          found.set(fullId(d), d);
+          const type = d.type?.firebase;
+          if (type === DocumentType.CourtProsecutions.firebase || type === DocumentType.CourtAppeals.firebase) next.add(fullId(d));
+        }
+        pending = [...next].filter((k) => !queried.has(k));
       }
+      const docs = [...found.values()];
       docs.sort((a, b) => new Date(a.publishedAt ?? a.createdAt).valueOf() - new Date(b.publishedAt ?? b.createdAt).valueOf());
       this.lawsuits[id] = docs;
       return this.getLawsuit(id)!;

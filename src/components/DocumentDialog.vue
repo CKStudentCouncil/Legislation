@@ -100,7 +100,7 @@
         <q-input
           v-if="isJudicial"
           :model-value="parentValue.prosecutionId"
-          label="一審案號或啟字公文號" 
+          label="一審案號或啟字公文號"
           @update:model-value="updateProsecutionId"
         />
       </q-card-section>
