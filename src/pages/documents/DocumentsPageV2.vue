@@ -400,7 +400,10 @@ const q = computed(() => {
     !props.manage ? where('confidentiality', '==', DocumentConfidentiality.Public.firebase) : null,
   ].filter((i) => !!i) as any[];
 
-  let orderBys = [orderBy('published', 'asc'), orderBy('createdAt', 'desc')];
+  // Drafts first (published=false), then by when each was published, newest first. A draft has no publish time (it is stored as null, see
+  // documentConverter.toFirestore), so among drafts every publishedAt ties and createdAt orders them. The before/after range filters above
+  // are on publishedAt too, so one composite index serves the list with and without a date range.
+  let orderBys = [orderBy('published', 'asc'), orderBy('publishedAt', 'desc'), orderBy('createdAt', 'desc')];
 
   if (docId.value?.trim()) {
     const start = docId.value.trim();

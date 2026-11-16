@@ -509,6 +509,44 @@ export const buildIdCache = onCall(globalFunctionOptions, async (request) => {
   return { success: true };
 });
 
+// The document list sorts on publishedAt, and Firestore leaves a document that has no such field out of an orderBy result, where a null
+// is a value that sorts and is listed. Drafts created through the app were stored without the field (the client converter deleted it),
+// so this gives every document that lacks it an explicit null and touches nothing else. Run it before the list ships.
+//
+// Order matters. Deploy the functions first: a recordDocumentHistory from before NULL_WHEN_ABSENT counts a field going from absent to null as an
+// edit and would archive a spurious version of every document written here. Then run this, then ship the list. A browser still running the
+// previous bundle goes on storing drafts without the field, so run it once more after the list is live; it only touches documents that lack
+// the field, which makes repeating it safe.
+//
+// It only reads unless called with { dryRun: false }. The result counts what it found and lists the published documents that have no
+// publish time at all: those are listed last among the published ones, until 進階功能 > 發布時間 gives each its date.
+//
+// Each write is conditional on the lastUpdateTime that was read. A document published while this runs (its publishedAt was absent when it was
+// read) would otherwise get its fresh date overwritten with null; the precondition fails the call instead, and running it again picks the rest up.
+export const backfillDocumentPublishedAt = onCall({ ...globalFunctionOptions, timeoutSeconds: 540 }, async (request) => {
+  await checkRole(request, 'Chairman');
+  const dryRun = request.data?.dryRun !== false;
+  // select() keeps the read small; a field a document does not have is simply absent from its projection, which is the test.
+  const snapshot = await db.collection('documents').select('published', 'publishedAt').get();
+  const missing = snapshot.docs.filter((d) => !('publishedAt' in d.data()));
+  const publishedWithoutDate = missing.filter((d) => d.data().published === true).map((d) => d.id);
+  if (!dryRun) {
+    // Small batches, because every write fires the history and ID-cache triggers and the latter all update one settings document.
+    for (let i = 0; i < missing.length; i += 20) {
+      const batch = db.batch();
+      for (const d of missing.slice(i, i + 20)) batch.update(d.ref, { publishedAt: null }, { lastUpdateTime: d.updateTime });
+      await batch.commit();
+    }
+  }
+  logger.info('backfillDocumentPublishedAt', {
+    dryRun,
+    scanned: snapshot.size,
+    missing: missing.length,
+    publishedWithoutDate: publishedWithoutDate.length,
+  });
+  return { dryRun, scanned: snapshot.size, missing: missing.length, updated: dryRun ? 0 : missing.length, publishedWithoutDate };
+});
+
 export const sitemap = onRequest(globalFunctionOptions, async (request, response) => {
   response.header('Content-Type', 'application/xml');
   response.header('Content-Encoding', 'gzip');
