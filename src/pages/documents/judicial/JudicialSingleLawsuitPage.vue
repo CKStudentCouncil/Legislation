@@ -78,13 +78,25 @@ watch(step, (v) => {
 
 onMounted(() => {
   // Refresh client-side so authorized users see any docs the anonymous SSR pass couldn't read.
-  const reading = sortedDocs.value[step.value]?.getFullId() ?? wantedDoc;
+  let readerNavigated = false;
+  const stopTrackingStep = watch(
+    step,
+    () => {
+      readerNavigated = true;
+    },
+    { flush: 'sync' },
+  );
   store
     .loadLawsuit(id, true)
     .then(async (docs) => {
+      stopTrackingStep();
+      // Read the selection before replacing its list, so navigation during the request is preserved. Until the reader navigates,
+      // an explicit link still takes priority over the SSR fallback when its document only becomes available in the client refresh.
+      const reading = sortedDocs.value[step.value]?.getFullId();
+      const wantedAt = !readerNavigated && wantedDoc !== null ? docs.findIndex((d) => d.getFullId() === wantedDoc) : -1;
+      const at = wantedAt >= 0 ? wantedAt : docs.findIndex((d) => d.getFullId() === reading);
       sortedDocs.value = docs;
       // The refreshed thread may have grown ahead of the document being read: stay on that document, not on its old position.
-      const at = reading === null ? -1 : docs.findIndex((d) => d.getFullId() === reading);
       if (at >= 0 && at !== step.value) {
         restoring = true;
         step.value = at;
@@ -92,8 +104,9 @@ onMounted(() => {
         restoring = false;
       }
     })
-    .catch((e) => console.error(e));
-  event('view_lawsuit' as any, { id });
+    .catch((e) => console.error(e))
+    .finally(stopTrackingStep);
+  event('view_lawsuit', { id });
 });
 
 function copyStepLink(index: number) {
