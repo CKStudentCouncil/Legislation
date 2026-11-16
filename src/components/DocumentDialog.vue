@@ -100,7 +100,7 @@
         <q-input
           v-if="isJudicial"
           :model-value="parentValue.prosecutionId"
-          label="一審案號或啟字公文號"
+          label="一審案號、啟字或上字公文號"
           @update:model-value="updateProsecutionId"
         />
       </q-card-section>
@@ -210,13 +210,21 @@ function updateDeclassifyTime(tm: string | null) {
 
 function updateProsecutionId(id: any) {
   if (typeof id !== 'string') return;
-  if (id.startsWith('http')) {
-    const matches = decodeURI(id).match(/^.*\/document\/(.*)$/);
-    if (matches == null || matches.length < 2) return;
-    parentValue.value.prosecutionId = matches[1]?.trim();
-  } else {
-    parentValue.value.prosecutionId = id.trim();
+  const value = id.trim();
+  if (!value.startsWith('http')) {
+    parentValue.value.prosecutionId = value;
+    return;
   }
+  // A pasted link is either `/document/<公文字號>` or the lawsuit page's `/document/judicial/lawsuit/<key>?d=…` (複製連結 there): the key
+  // is the one path segment after those, with no query string and no further path, which `loadLawsuit` could not use as a document ID.
+  let path: string;
+  try {
+    path = decodeURIComponent(new URL(value).pathname);
+  } catch {
+    return;
+  }
+  const matches = path.match(/\/document\/(?:judicial\/lawsuit\/)?([^/]+)\/?$/);
+  if (matches?.[1]) parentValue.value.prosecutionId = matches[1].trim();
 }
 </script>
 

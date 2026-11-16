@@ -87,7 +87,7 @@ Roles are `DocumentSpecificIdentity.firebase` strings stored in the Firebase Aut
 
 - `DocumentRenderer.vue` dispatches by `doc.type.firebase` using both exact match and `startsWith('Court')` / `startsWith('JudicialCommittee')` fallbacks — **branch order is load-bearing** (specific `CourtReviewReport1/2/3` must precede the `Court` catch-all). Unregistered types degrade to an error message, not a crash.
 - `DocumentsPage.vue` is **dead code** — routes use `DocumentsPageV2.vue` everywhere.
-- Judicial pages (`/document/judicial/*`) are a view layer over the same `documents` collection; `prosecutionId` is a **soft foreign key** threading a case's documents together. Editing a document's ID is a copy-to-new-doc-then-delete-old operation because the ID is the Firestore key.
+- Judicial pages (`/document/judicial/*`) are a view layer over the same `documents` collection; `prosecutionId` is a **soft foreign key** threading a case's documents together — and it holds one of three kinds of key (the first-instance case number, a 啟字 document's ID, or a 上字 document's ID), so `loadLawsuit` in `stores/document.ts` climbs and fans out over several rounds rather than running one `==` query; it never trusts the stored value's type or length, and a document reached by climbing must be public and published (only the document the URL names is left to the rules). Editing a document's ID is a copy-to-new-doc-then-delete-old operation because the ID is the Firestore key.
 
 ## Error reporting (Sentry)
 

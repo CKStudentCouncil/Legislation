@@ -44,7 +44,9 @@ export interface Document {
   published: boolean;
   publishedAt?: Date | null;
   meetingTime?: Date | null;
-  prosecutionId?: string; // prosecution document ID or case ID in the first instance
+  // The thread this judicial document belongs to: the first-instance case number (確字第…號), or the ID of the 啟字 or 上字 document it
+  // follows (older documents). It is a key rather than a link — no `/`, no query string — and loadLawsuit climbs and fans out through all three.
+  prosecutionId?: string;
   plaintiff: string;
   Defendant: string;
   AbsentMeeting1: string;
