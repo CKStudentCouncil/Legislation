@@ -9,12 +9,15 @@ import { errorCode } from 'src/ts/firebase-errors.ts';
 import { loggedInUser } from 'src/ts/auth.ts';
 import { and, doc, getCountFromServer, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 
+// Keep the Firestore key with each thread entry: legacy ID fields can disagree with it or match another document's fields.
+export type LawsuitDocument = models.Document & { documentId: string };
+
 /**
  * Re-attach the `getFullId` method and turn serialized date strings back into `Date`s.
  * Methods can't survive Firestore <-> Pinia (SSR) serialization, so every getter that
  * hands a Document to the UI must run this first (mirrors the model converter's intent).
  */
-function rehydrate(d: models.Document): models.Document {
+function rehydrate<T extends models.Document>(d: T): T {
   d.createdAt = new Date(d.createdAt);
   d.publishedAt = d.publishedAt ? new Date(d.publishedAt) : null;
   d.meetingTime = d.meetingTime ? new Date(d.meetingTime) : null;
@@ -61,7 +64,7 @@ export const useDocumentStore = defineStore('document', {
     // Total count matching the default public query (the "共 N 件" figure).
     publicListTotal: 0,
     // Per-prosecution document threads for SSR-rendered judicial lawsuit pages.
-    lawsuits: {} as Record<string, models.Document[]>,
+    lawsuits: {} as Record<string, LawsuitDocument[]>,
   }),
   getters: {
     getDocument: (state) => {
@@ -77,7 +80,7 @@ export const useDocumentStore = defineStore('document', {
     },
     getPublicList: (state): models.Document[] => state.publicList.map(rehydrate),
     getLawsuit: (state) => {
-      return (id: string): models.Document[] | null => {
+      return (id: string): LawsuitDocument[] | null => {
         // The entry is read first so the lookup stays reactive.
         return state.lawsuits[id] && hasOwn(state.lawsuits, id) ? state.lawsuits[id].map(rehydrate) : null;
       };
@@ -117,7 +120,7 @@ export const useDocumentStore = defineStore('document', {
       this.publicListTotal = count.data().count;
       return this.getPublicList;
     },
-    async loadLawsuit(id: string, refresh = false): Promise<models.Document[]> {
+    async loadLawsuit(id: string, refresh = false): Promise<LawsuitDocument[]> {
       // Not a case that can exist, and assigned below it would replace the state's prototype instead of adding an entry.
       if (id === '__proto__') return [];
       // Capture the reader before any reads: a request begun anonymously must not become fresh for a user who signs in while it runs.
@@ -136,7 +139,7 @@ export const useDocumentStore = defineStore('document', {
       // which is left to the rules as it always was. A document reached by climbing is held to the same test as one reached by the query,
       // so the thread does not grow drafts or confidential documents that the anonymous server render never showed.
       const col = documentsCollection();
-      const found = new Map<string, models.Document>();
+      const found = new Map<string, LawsuitDocument>();
       const queried = new Set<string>();
       let pending = [id].filter(isLawsuitKey);
       for (let round = 0; round < MAX_LAWSUIT_ROUNDS && pending.length > 0; round++) {
@@ -173,14 +176,14 @@ export const useDocumentStore = defineStore('document', {
           if (!snap?.exists()) continue;
           const d = snap.data() as models.Document;
           if (snap.id !== id && !isPublicPublished(d)) continue;
-          found.set(snap.id, d);
+          found.set(snap.id, { ...d, documentId: snap.id });
           if (isLawsuitKey(d.prosecutionId)) next.add(d.prosecutionId);
         }
         for (const snap of related.flatMap((r) => r.docs)) {
           const d = snap.data() as models.Document;
           // Keyed by the document's key, not getFullId(): `prosecutionId` points at keys, and a document stranded by an ID edit has
           // idPrefix/idNumber that disagree with its key (see firestore.rules), so two of them could otherwise collapse into one.
-          found.set(snap.id, d);
+          found.set(snap.id, { ...d, documentId: snap.id });
           const type = d.type?.firebase;
           if (type === DocumentType.CourtProsecutions.firebase || type === DocumentType.CourtAppeals.firebase) next.add(snap.id);
         }

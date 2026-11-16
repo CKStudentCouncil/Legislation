@@ -9,7 +9,7 @@
       <q-spinner v-if="sortedDocs.length === 0" color="primary" size="40px" />
       <q-step
         v-for="(doc, index) in sortedDocs"
-        :key="doc.createdAt.valueOf()"
+        :key="doc.documentId"
         :caption="doc.subject"
         :icon="icon(doc.type.icon)"
         :name="index"
@@ -21,7 +21,7 @@
           <q-btn v-if="step !== 0" color="primary" flat label="上一頁" @click="previous" />
           <q-btn color="primary" flat :icon="matLink" label="複製連結" @click="copyStepLink(step)" />
           <q-btn
-            :to="`/document/${doc.getFullId()}`"
+            :to="`/document/${encodeURIComponent(doc.documentId)}`"
             color="primary"
             flat
             :icon="matOpenInNew"
@@ -40,10 +40,9 @@ import { matLink, matOpenInNew } from '@quasar/extras/material-icons';
 import { icon } from 'src/ts/icons.ts';
 import { useRoute, useRouter } from 'vue-router';
 import { nextTick, onMounted, onServerPrefetch, ref, watch } from 'vue';
-import type { Document } from 'src/ts/models.ts';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
 import { copyText } from 'src/ts/utils.ts';
-import { useDocumentStore } from 'stores/document.ts';
+import { useDocumentStore, type LawsuitDocument } from 'stores/document.ts';
 import { event } from 'vue-gtag';
 
 const route = useRoute();
@@ -51,13 +50,19 @@ const router = useRouter();
 const store = useDocumentStore();
 const id = route.params.id as string;
 // Seed from serialized store state so the server-rendered thread hydrates without mismatch.
-const sortedDocs = ref<Document[]>(store.getLawsuit(id) ?? []);
-// A link names the document it opens (`?d=<公文字號>`) rather than its position, because the thread grows as documents are published and as
-// signed-in readers are handed more of it, and a position then opens a different document. Links copied earlier carry only `?c=<position>`.
+const sortedDocs = ref<LawsuitDocument[]>(store.getLawsuit(id) ?? []);
+// A link names the Firestore key (`?d=<key>`), which survives reordering and distinguishes legacy documents with the same displayed ID.
+// Older links name the displayed ID or carry only `?c=<position>`.
 const wantedDoc = typeof route.query.d === 'string' ? route.query.d : null;
 
-function stepFor(docs: Document[]): number {
-  const named = wantedDoc === null ? -1 : docs.findIndex((d) => d.getFullId() === wantedDoc);
+function linkedDocumentIndex(docs: LawsuitDocument[]): number {
+  if (wantedDoc === null) return -1;
+  const keyed = docs.findIndex((d) => d.documentId === wantedDoc);
+  return keyed >= 0 ? keyed : docs.findIndex((d) => d.getFullId() === wantedDoc);
+}
+
+function stepFor(docs: LawsuitDocument[]): number {
+  const named = linkedDocumentIndex(docs);
   return named >= 0 ? named : parseInt(route.query.c as string) || 0;
 }
 
@@ -72,7 +77,7 @@ onServerPrefetch(async () => {
 });
 
 watch(step, (v) => {
-  const d = sortedDocs.value[v]?.getFullId();
+  const d = sortedDocs.value[v]?.documentId;
   void router[restoring ? 'replace' : 'push']({ query: d ? { d } : { c: v } });
 });
 
@@ -92,9 +97,9 @@ onMounted(() => {
       stopTrackingStep();
       // Read the selection before replacing its list, so navigation during the request is preserved. Until the reader navigates,
       // an explicit link still takes priority over the SSR fallback when its document only becomes available in the client refresh.
-      const reading = sortedDocs.value[step.value]?.getFullId();
-      const wantedAt = !readerNavigated && wantedDoc !== null ? docs.findIndex((d) => d.getFullId() === wantedDoc) : -1;
-      const at = wantedAt >= 0 ? wantedAt : docs.findIndex((d) => d.getFullId() === reading);
+      const reading = sortedDocs.value[step.value]?.documentId;
+      const wantedAt = !readerNavigated ? linkedDocumentIndex(docs) : -1;
+      const at = wantedAt >= 0 ? wantedAt : docs.findIndex((d) => d.documentId === reading);
       sortedDocs.value = docs;
       // The refreshed thread may have grown ahead of the document being read: stay on that document, not on its old position.
       if (at >= 0 && at !== step.value) {
@@ -110,7 +115,7 @@ onMounted(() => {
 });
 
 function copyStepLink(index: number) {
-  const d = sortedDocs.value[index]?.getFullId();
+  const d = sortedDocs.value[index]?.documentId;
   void copyText(`${location.protocol}//${location.host}${location.pathname}${d ? `?d=${encodeURIComponent(d)}` : ''}`);
 }
 
