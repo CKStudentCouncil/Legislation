@@ -1,4 +1,5 @@
 import { acceptHMRUpdate, defineStore } from 'pinia';
+import chunk from 'lodash/chunk';
 import type * as models from 'src/ts/models.ts';
 import { DocumentConfidentiality, DocumentType } from 'src/ts/models.ts';
 import { getCurrentReign } from 'src/ts/shared-utils.ts';
