@@ -6,6 +6,7 @@ import { getCurrentReign } from 'src/ts/shared-utils.ts';
 import { documentsCollection } from 'src/ts/model-converters.ts';
 import { readWithRetry } from 'src/ts/firestore-retry.ts';
 import { errorCode } from 'src/ts/firebase-errors.ts';
+import { loggedInUser } from 'src/ts/auth.ts';
 import { and, doc, getCountFromServer, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
 
 /**
@@ -36,10 +37,10 @@ const MAX_LAWSUIT_ROUNDS = 6;
 // Longest `prosecutionId` that is followed. Real keys are a 公文字號 or a case number, a dozen characters; the cap only turns away garbage
 // before it becomes a document ID or a query value.
 const MAX_KEY_LENGTH = 200;
-// A thread this browser built less than this long ago is not worth building again: the search page loads it, then the page it navigates
-// to asks for a forced refresh on mount. Client-only on purpose (see loadLawsuit) — the server must never remember across requests.
+// A thread this browser built for the same reader less than this long ago is not worth building again: the search page loads it, then
+// the page it navigates to asks for a forced refresh on mount. Client-only — the server must never remember across requests.
 const LAWSUIT_FRESH_MS = 30_000;
-const lawsuitBuiltInBrowser = new Map<string, number>();
+const lawsuitBuiltInBrowser = new Map<string, { builtAt: number; uid: string | null }>();
 
 // `prosecutionId` is whatever its author wrote (see model-converters.ts), so what comes off a stored document is checked before it is used
 // as a document ID or a query value.
@@ -119,10 +120,12 @@ export const useDocumentStore = defineStore('document', {
     async loadLawsuit(id: string, refresh = false): Promise<models.Document[]> {
       // Not a case that can exist, and assigned below it would replace the state's prototype instead of adding an entry.
       if (id === '__proto__') return [];
-      if (hasOwn(this.lawsuits, id)) {
+      // Capture the reader before any reads: a request begun anonymously must not become fresh for a user who signs in while it runs.
+      const uid = import.meta.env.QUASAR_SERVER ? null : (loggedInUser.value?.uid ?? null);
+      const built = lawsuitBuiltInBrowser.get(id);
+      if (hasOwn(this.lawsuits, id) && (built === undefined || built.uid === uid)) {
         if (!refresh) return this.getLawsuit(id)!;
-        const builtAt = lawsuitBuiltInBrowser.get(id);
-        if (builtAt !== undefined && Date.now() - builtAt < LAWSUIT_FRESH_MS) return this.getLawsuit(id)!;
+        if (built !== undefined && Date.now() - built.builtAt < LAWSUIT_FRESH_MS) return this.getLawsuit(id)!;
       }
       // `prosecutionId` is supposed to hold the first-instance case number (確字第…號), but older documents hold the 啟字 document's ID
       // and some hold a 上字 document's ID, so one case is threaded by up to three kinds of key. `id` may be any of them. Each round
@@ -184,13 +187,15 @@ export const useDocumentStore = defineStore('document', {
         pending = [...next].filter((k) => !queried.has(k));
       }
       if (pending.length > 0) {
-        console.warn(`loadLawsuit(${id}): stopped after ${MAX_LAWSUIT_ROUNDS} rounds with ${pending.length} key(s) unfollowed; the thread is incomplete.`);
+        console.warn(
+          `loadLawsuit(${id}): stopped after ${MAX_LAWSUIT_ROUNDS} rounds with ${pending.length} key(s) unfollowed; the thread is incomplete.`,
+        );
       }
       const docs = [...found.values()];
       docs.sort((a, b) => new Date(a.publishedAt ?? a.createdAt).valueOf() - new Date(b.publishedAt ?? b.createdAt).valueOf());
       this.lawsuits[id] = docs;
       // Client only: this module is shared by every request the server handles.
-      if (!import.meta.env.QUASAR_SERVER) lawsuitBuiltInBrowser.set(id, Date.now());
+      if (!import.meta.env.QUASAR_SERVER) lawsuitBuiltInBrowser.set(id, { builtAt: Date.now(), uid });
       return this.getLawsuit(id)!;
     },
   },
