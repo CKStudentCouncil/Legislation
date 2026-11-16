@@ -6,9 +6,10 @@
         <q-btn v-if="canEdit" color="positive" :icon="matEdit" label="編輯資訊" @click="edit" />
         <q-btn v-if="canEdit" color="primary" :icon="matEdit" label="編輯內文" @click="editContent" />
         <q-btn v-if="canEdit" color="accent" :icon="matAttachment" label="上傳附件" @click="uploadAttachment()" />
-        <q-btn-dropdown v-if="canEdit" color="warning" :icon="matSettings" label="進階功能">
+        <q-btn-dropdown v-if="canEdit && (docu.published || canRename)" color="warning" :icon="matSettings" label="進階功能">
           <div class="q-gutter-sm col">
-            <q-btn class="bg-amber-8 row" :icon="matSchedule" label="發布時間" @click="editPublishedAt()" />
+            <!-- A draft has no publish time, and the list's sort relies on that: publish() sets it, and until then it must stay null. -->
+            <q-btn v-if="docu.published" class="bg-amber-8 row" :icon="matSchedule" label="發布時間" @click="editPublishedAt()" />
             <q-btn v-if="canRename" class="bg-green-8 row" :icon="mat123" label="公文字號" @click="editId()" />
           </div>
         </q-btn-dropdown>
