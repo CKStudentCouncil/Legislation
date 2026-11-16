@@ -88,41 +88,48 @@ export const useDocumentStore = defineStore('document', {
     async loadLawsuit(id: string, refresh = false): Promise<models.Document[]> {
       if (!refresh && this.lawsuits[id]) return this.getLawsuit(id)!;
       // `prosecutionId` is supposed to hold the first-instance case number (確字第…號), but older documents hold the 啟字 document's ID
-      // and some hold a 上字 document's ID, so one case is threaded by up to three kinds of key. `id` may be any of them: climb to the
-      // root (the `prosecutionId` of the document `id` names, if it names one), then fan out through every 啟/上 document found on the
-      // way. Three rounds reach the same thread from a case number, a 啟字 ID or a 上字 ID.
-      const fullId = (d: models.Document) => `${d.idPrefix}第${d.idNumber}號`;
+      // and some hold a 上字 document's ID, so one case is threaded by up to three kinds of key. `id` may be any of them. Each round
+      // fetches the documents the keys name (to climb through their own `prosecutionId`) and every document pointing at one of the
+      // keys (to fan out through the 啟/上 documents among them), so each hop of the climb costs a round — hence four, not three.
       const found = new Map<string, models.Document>();
       const queried = new Set<string>();
-      // The document `id` names, if any (rules-gated: anon SSR only gets it if public). Refs and queries are built before the first
-      // await, as in loadDocument.
-      const ownRef = doc(documentsCollection(), id);
-      const own = readWithRetry(() => getDoc(ownRef))
-        .then((snap) => (snap.exists() ? ((snap.data() as models.Document | undefined) ?? null) : null))
-        // Access denied (confidential document, anonymous request) — carry on without it.
-        .catch(() => null);
       let pending = [id];
-      for (let round = 0; round < 3 && pending.length > 0; round++) {
-        const keys = pending.slice(0, 30); // Firestore's cap on `in`
+      for (let round = 0; round < 4 && pending.length > 0; round++) {
+        const keys = pending;
         keys.forEach((k) => queried.add(k));
-        const relatedQuery = query(
-          documentsCollection(),
-          where('prosecutionId', 'in', keys),
-          where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
-          where('published', '==', true),
+        // Refs and queries are built before the round's first await, as in loadDocument. `in` takes at most 30 values, so a long round
+        // is several queries.
+        const relatedQueries = chunk(keys, 30).map((batch) =>
+          query(
+            documentsCollection(),
+            where('prosecutionId', 'in', batch),
+            where('confidentiality', '==', DocumentConfidentiality.Public.firebase),
+            where('published', '==', true),
+          ),
         );
-        const [related, ownDoc] = await Promise.all([readWithRetry(() => getDocs(relatedQuery)), round === 0 ? own : null]);
+        // The documents the keys themselves name (the 啟字 a 上字 points at, say), which no `prosecutionId` query returns. Rules-gated:
+        // a key that names nothing (a case number) or a document this reader may not see (confidential, anonymous request) is skipped.
+        // A `/` can only come from a mistyped `prosecutionId`, and would make doc() throw.
+        const namedRefs = keys.filter((k) => !found.has(k) && !k.includes('/')).map((k) => doc(documentsCollection(), k));
+        const [related, named] = await Promise.all([
+          Promise.all(relatedQueries.map((q) => readWithRetry(() => getDocs(q)))),
+          Promise.all(namedRefs.map((ref) => readWithRetry(() => getDoc(ref)).catch(() => null))),
+        ]);
         const next = new Set<string>();
-        if (ownDoc) {
-          found.set(fullId(ownDoc), ownDoc);
-          if (ownDoc.prosecutionId) next.add(ownDoc.prosecutionId);
+        for (const snap of named) {
+          const d = snap?.exists() ? (snap.data() as models.Document | undefined) : undefined;
+          if (!snap || !d) continue;
+          found.set(snap.id, d);
+          if (d.prosecutionId) next.add(d.prosecutionId);
         }
-        for (const snap of related.docs) {
+        for (const snap of related.flatMap((r) => r.docs)) {
           const d = snap.data() as models.Document | undefined;
           if (!d) continue;
-          found.set(fullId(d), d);
+          // Keyed by the document's key, not getFullId(): `prosecutionId` points at keys, and a document stranded by an ID edit has
+          // idPrefix/idNumber that disagree with its key (see firestore.rules), so two of them could otherwise collapse into one.
+          found.set(snap.id, d);
           const type = d.type?.firebase;
-          if (type === DocumentType.CourtProsecutions.firebase || type === DocumentType.CourtAppeals.firebase) next.add(fullId(d));
+          if (type === DocumentType.CourtProsecutions.firebase || type === DocumentType.CourtAppeals.firebase) next.add(snap.id);
         }
         pending = [...next].filter((k) => !queried.has(k));
       }
