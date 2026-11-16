@@ -104,18 +104,33 @@ service cloud.firestore {
               && request.resource.data.lastEditedBy.uid == request.auth.uid);
       }
 
+      // A document's key is its full ID, idPrefix第idNumber號, and every list links to the ID those two fields spell. A write must not leave them
+      // disagreeing: that is how a document ends up listed under one ID and stored under another, so its link opens nothing (釋字第二十號) or
+      // someone else's document. An update may still touch a document that already disagrees (one stranded before this rule), provided it leaves
+      // the number alone, so nothing is locked: the fix is to write fields that match the key, or to rename it.
+      function idMatchesKey(data) {
+        return data.get('idPrefix', null) is string && data.get('idNumber', null) is string
+          && data.idPrefix + '第' + data.idNumber + '號' == docId;
+      }
+      function idFieldsUnchanged() {
+        return request.resource.data.get('idPrefix', null) == resource.data.get('idPrefix', null)
+          && request.resource.data.get('idNumber', null) == resource.data.get('idNumber', null);
+      }
+
       allow read: if canReadDocument() || (isSignedIn() && isViewerGrant());
       // Only provisioned council members (accounts holding at least one role) may create documents,
       // the same test uploadAttachment applies. An account with no role cannot start a document.
       allow create: if isSignedIn()
         && hasAnyRole()
         && request.resource.data.authorEmail == request.auth.token.email
-        && lastEditedByValid();
+        && lastEditedByValid()
+        && idMatchesKey(request.resource.data);
       allow update: if isSignedIn()
         && (isAuthor() || isLegacySteward() || isEditor())
         && (isAuthor() || ownerUnchanged())
         && (isAuthor() || isManager() || collaboratorListsUnchanged())
-        && lastEditedByValid();
+        && lastEditedByValid()
+        && (idMatchesKey(request.resource.data) || idFieldsUnchanged());
       allow delete: if isSignedIn() && (isAuthor() || isLegacySteward() || isManager());
 
       // Server-recorded edit history. Written ONLY by the recordDocumentHistory trigger

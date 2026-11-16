@@ -7,7 +7,14 @@
       <q-card-section>
         <q-select v-model="parentValue.type" :disable="action == 'edit'" :option-label="(o) => o.translation" :options="types" label="公文類別" />
         <q-input v-model="parentValue.subject" :label="isMeetingNotice || isMeetingRecord ? '會議名稱' : '主旨'" />
-        <q-input v-if="parentValue.type.firebase.startsWith('JudicialCommittee')" v-model="parentValue.idNumber" label="編號 (數字部分如：三 或 3)" />
+        <!-- The number is part of the document's Firestore key, so on an existing document it can only be changed by renaming (編輯公文字號), not here. -->
+        <q-input
+          v-if="parentValue.type.firebase.startsWith('JudicialCommittee')"
+          v-model="parentValue.idNumber"
+          :disable="action == 'edit'"
+          :hint="action == 'edit' ? '如需更改編號，請使用「編輯公文字號」' : undefined"
+          label="編號 (數字部分如：三 或 3)"
+        />
         <q-select
           v-model="parentValue.fromSpecific"
           :label="isMeetingRecord ? '會議主席' : '發文者'"
