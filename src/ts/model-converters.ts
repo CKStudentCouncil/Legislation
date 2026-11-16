@@ -13,6 +13,7 @@ import {
   LegislationCategory,
   LegislationType,
 } from './models';
+import { hasOwn } from './shared-utils';
 
 // A stored document is whatever its author wrote — firestore.rules do not constrain its shape — so fromFirestore must not assume it. A throw
 // here escapes DocumentSnapshot.data() and fails every list built from it, so one bad record would take down the whole page (and the SSR
@@ -25,7 +26,7 @@ function toDate(value: any): Date | null {
 // Only registered keys resolve. VALUES[key] would stringify a non-string key (which throws for a stored map such as { toString: 1 }) and
 // would reach Object.prototype for a key such as 'constructor', a native function that the SSR state serializer then refuses.
 function lookup<T>(values: Record<string, T>, key: unknown): T | undefined {
-  return typeof key === 'string' && Object.prototype.hasOwnProperty.call(values, key) ? values[key] : undefined;
+  return typeof key === 'string' && hasOwn(values, key) ? values[key] : undefined;
 }
 
 function lookupAll<T>(values: Record<string, T>, keys: unknown): (T | undefined)[] {

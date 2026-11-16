@@ -145,7 +145,7 @@ import { useLegislationStore } from 'stores/legislation.ts';
 const legislation = ref();
 const content = ref();
 const printing = ref(false);
-const expanded = reactive({} as Record<number, boolean>);
+const expanded = reactive<Record<number, boolean>>({});
 const historyDiffDialog = ref(false);
 const selectedHistory = ref<LegislationHistory | null>(null);
 const diffCompareTarget = ref<'previous' | 'current'>('previous');
@@ -166,8 +166,8 @@ onMounted(() => {
     .loadLegislation(route.params.id as string)
     .then((l) => (legislation.value = l))
     .catch((e) => console.error(e));
-  event('view_legislation' as any, {
-    id: route.params.id! as string,
+  event('view_legislation', {
+    id: route.params.id!,
     name: legislation.value?.name,
     category: legislation.value?.category.translation,
     type: legislation.value?.category.type.translation,

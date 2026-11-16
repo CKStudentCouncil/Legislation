@@ -99,7 +99,7 @@ async function proceed(content: string) {
           break;
         case 'meetingTime':
         case 'declassifyAt':
-          parsedValue = new Date(value as any);
+          parsedValue = new Date(value);
           break;
         case 'confidentiality':
           parsedValue = DocumentConfidentiality.VALUES[value];

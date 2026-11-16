@@ -34,6 +34,8 @@ import * as utf8 from 'utf8';
 import { DocumentSpecificIdentity, DocumentType, User } from '../../src/ts/models';
 import { convertToChineseDay, getCurrentReign } from '../../src/ts/shared-utils';
 export { listDocumentHistory } from './history';
+export { threadLawsuit, backfillLawsuitRoots } from './lawsuits';
+import { onlyLawsuitRootChanged } from './lawsuits';
 
 const globalFunctionOptions = { region: 'asia-east1' };
 const ACCOUNT_MANAGER_ROLES = ['Chairman', 'Speaker', 'JudicialCommitteeChairman'];
@@ -628,6 +630,8 @@ function pingIndexNow(path: string): Promise<void> {
 export const updateIdCache = onDocumentWritten({ ...globalFunctionOptions, document: '{type}/{docId}' }, async (event) => {
   const type = event.params.type;
   if (type !== 'documents' && type !== 'legislation') throw new HttpsError('not-found', 'Type not found.');
+  // threadLawsuit re-filing a thread is not a change to the page, so its lastmod and IndexNow stay as they were.
+  if (type === 'documents' && onlyLawsuitRootChanged(event.data?.before.data(), event.data?.after.data())) return;
   const docId = utf8.decode(event.params.docId);
   let del = !event.data?.after.exists; // Check if it's a deletion
   if (type === 'documents' && !del && (!event.data?.after.data()!.published || event.data?.after.data()!.confidentiality !== 'Public'))

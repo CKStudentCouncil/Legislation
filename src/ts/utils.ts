@@ -19,8 +19,10 @@ export function generateHistoryContentId(refDate: Date, existingIds: string[]): 
   return dateStr + counter;
 }
 
-export function copyLink(href?: string | number | null) {
-  void copyText(location.protocol + '//' + location.host + location.pathname + (href ? '?c=' + href.toString() : ''));
+// This page's URL, pointing at one part of it when given one: a clause (`?c=`) by default, or another query parameter such as the lawsuit
+// page's document (`?d=`).
+export function copyLink(href?: string | number | null, param = 'c') {
+  void copyText(location.protocol + '//' + location.host + location.pathname + (href ? `?${param}=${encodeURIComponent(href)}` : ''));
 }
 
 export function copyLawLink(id: string) {

@@ -1,5 +1,6 @@
 import instantsearch from 'instantsearch.js/es';
 import { getInitialResults, waitForResults } from 'instantsearch.js/es/lib/server';
+import { ssrContextKey } from 'vue';
 
 import { createSSRApp, isVue2, isVue3 } from 'vue-instantsearch/vue3/es/src/util/vue-compat/index-vue3';
 import { warn } from 'vue-instantsearch/vue3/es/src/util/warn';
@@ -37,10 +38,18 @@ function defaultCloneComponent(componentInstance: any, { mixins = [] } = {}) {
       // QLayout/QPageContainer provide or <q-page> renders nothing and takes the ais-*
       // widgets down with it. Prototype chain rather than a copy, so the clone cannot
       // write back into the real app's provides.
-      // Expect one dev-only "App already provides property with key Symbol(v-scx)" warning
-      // per render: renderToString() gives the clone its own SSR context, deliberately
-      // shadowing the inherited one. It is dev-stripped in production.
       cloneContext.provides = Object.create(parentInstance.provides ?? parentContext.provides);
+      // renderToString() hands the clone its own SSR context through app.provide(), deliberately
+      // shadowing the inherited one — but provide() warns in dev about any key already reachable
+      // through that prototype chain, so every render logged "App already provides property with
+      // key Symbol(v-scx)". Shadowing is the point here, so write that one key in place quietly.
+      const cloneApp = app;
+      const provide = cloneApp.provide;
+      cloneApp.provide = (key: any, value: any) => {
+        if (key !== ssrContextKey) return provide.call(cloneApp, key, value);
+        cloneContext.provides[key] = value;
+        return cloneApp;
+      };
     } else {
       // Fallback to upstream's behaviour when there is no context to inherit from.
       // Re-installing these on top of an inherited context would only re-register

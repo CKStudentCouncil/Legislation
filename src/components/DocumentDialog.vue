@@ -99,23 +99,26 @@
         </div>
         <q-input
           v-if="isJudicial"
-          :model-value="parentValue.prosecutionId"
-          label="一審案號、啟字或上字公文號"
+          :error="prosecutionError !== null"
+          :error-message="prosecutionError ?? undefined"
+          :model-value="prosecutionText"
+          label="一審案號、啟字或上字公文字號或連結"
           @update:model-value="updateProsecutionId"
         />
       </q-card-section>
       <q-card-actions align="right">
         <q-btn color="negative" flat label="取消" @click="$emit('canceled')" />
-        <q-btn color="positive" flat label="確定" @click="$emit('submit')" />
+        <q-btn color="positive" :disable="isJudicial && prosecutionError !== null" flat label="確定" @click="$emit('submit')" />
       </q-card-actions>
     </q-card>
   </q-dialog>
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 import * as models from '../ts/models';
 import { DocumentConfidentiality, DocumentGeneralIdentity, DocumentSpecificIdentity, DocumentType } from '../ts/models';
+import { canNameDocument, isLawsuitKey } from 'src/ts/shared-utils.ts';
 import ListEditor from 'components/ListEditor.vue';
 import { date } from 'quasar';
 
@@ -208,23 +211,52 @@ function updateDeclassifyTime(tm: string | null) {
   parentValue.value.declassifyAt?.setHours(parseInt(t[0]!), parseInt(t[1]!), 0);
 }
 
-function updateProsecutionId(id: any) {
-  if (typeof id !== 'string') return;
-  const value = id.trim();
-  if (!value.startsWith('http')) {
-    parentValue.value.prosecutionId = value;
-    return;
+// What the 案號 field shows, kept apart from the model: input that cannot be used stays on screen with its error (and 確定 disabled) instead of
+// looking as if it were set, and a pasted link is replaced by the key it was read as, which is what gets saved.
+const prosecutionText = ref('');
+const prosecutionError = ref<string | null>(null);
+watch(
+  () => [props.action, props.modelValue] as const,
+  () => {
+    prosecutionText.value = props.modelValue.prosecutionId ?? '';
+    prosecutionError.value = null;
+  },
+  { immediate: true },
+);
+
+const UNREADABLE_LINK = '無法辨識此連結，請貼上公文頁面或訴訟頁面的連結';
+
+// A thread key from what was typed or pasted. A pasted link is either `/document/<公文字號>` or the lawsuit page's
+// `/document/judicial/lawsuit/<key>` (its 複製連結 adds only a query string): the key is the one path segment after those.
+function parseProsecutionId(text: string): { key: string; fromLink: boolean } | { error: string } {
+  const value = text.trim();
+  if (!/^https?:\/\//i.test(value)) {
+    if (value.includes('/')) return { error: '案號不可含「/」；如要貼上連結，請貼上完整網址' };
+    if (value && !(isLawsuitKey(value) && canNameDocument(value))) return { error: '無效的案號' };
+    return { key: value, fromLink: false };
   }
-  // A pasted link is either `/document/<公文字號>` or the lawsuit page's `/document/judicial/lawsuit/<key>?d=…` (複製連結 there): the key
-  // is the one path segment after those, with no query string and no further path, which `loadLawsuit` could not use as a document ID.
   let path: string;
   try {
     path = decodeURIComponent(new URL(value).pathname);
   } catch {
+    return { error: UNREADABLE_LINK };
+  }
+  const key = path.match(/^\/document\/(?:judicial\/lawsuit\/)?([^/]+)\/?$/)?.[1]?.trim();
+  // `/document/judicial` is the judicial search page, not a document.
+  if (!key || key === 'judicial' || !isLawsuitKey(key) || !canNameDocument(key)) return { error: UNREADABLE_LINK };
+  return { key, fromLink: true };
+}
+
+function updateProsecutionId(input: string | number | null) {
+  prosecutionText.value = String(input ?? '');
+  const parsed = parseProsecutionId(prosecutionText.value);
+  if ('error' in parsed) {
+    prosecutionError.value = parsed.error;
     return;
   }
-  const matches = path.match(/\/document\/(?:judicial\/lawsuit\/)?([^/]+)\/?$/);
-  if (matches?.[1]) parentValue.value.prosecutionId = matches[1].trim();
+  prosecutionError.value = null;
+  parentValue.value.prosecutionId = parsed.key;
+  if (parsed.fromLink) prosecutionText.value = parsed.key;
 }
 </script>
 

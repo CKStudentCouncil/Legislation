@@ -71,8 +71,8 @@ onMounted(() => {
     .loadDocument(route.params.id as string)
     .then((d) => (doc.value = d))
     .catch((e) => console.error(e));
-  event('view_document' as any, {
-    id: route.params.id! as string,
+  event('view_document', {
+    id: route.params.id!,
     subject: doc.value?.subject,
     type: doc.value?.type.translation,
   });

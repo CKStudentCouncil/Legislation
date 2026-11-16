@@ -446,7 +446,7 @@ const scroll = ref();
 const paginatedQ = computed(() => {
   return lastVisibleDoc.value ? query(q.value, startAfter(lastVisibleDoc.value), limit(10)) : query(q.value, limit(10));
 });
-const allDocs = reactive({} as { [id: string]: Document });
+const allDocs = reactive<{ [id: string]: Document }>({});
 // Every keystroke in a filter starts a count query, and nothing cancels the one before it. Without
 // a sequence number a reply that arrives out of order overwrites the newer total — and, worse, a
 // failure from a filter combination the reader has already moved on from still red-toasts them and

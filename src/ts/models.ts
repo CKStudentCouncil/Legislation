@@ -44,9 +44,12 @@ export interface Document {
   published: boolean;
   publishedAt?: Date | null;
   meetingTime?: Date | null;
-  // The thread this judicial document belongs to: the first-instance case number (確字第…號), or the ID of the 啟字 or 上字 document it
-  // follows (older documents). It is a key rather than a link — no `/`, no query string — and loadLawsuit climbs and fans out through all three.
+  // The thread this judicial document belongs to: the first-instance case number (確字第…號), or the ID of the document it follows (a 啟字
+  // or 上字 in older documents). It is a key rather than a link: no `/`, no query string.
   prosecutionId?: string;
+  // Where following prosecutionId from this document ends: the key the whole thread is filed under, whichever kind of key its documents
+  // point at. Maintained only by the threadLawsuit Cloud Function (functions/src/lawsuits.ts); the app reads it and never writes it.
+  lawsuitRoot?: string;
   plaintiff: string;
   Defendant: string;
   AbsentMeeting1: string;

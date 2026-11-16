@@ -6,6 +6,7 @@ import * as logger from 'firebase-functions/logger';
 import { createTransport } from 'nodemailer';
 import type { SendMailOptions } from 'nodemailer';
 import { ContentType, DocumentSpecificIdentity, LegislationContent } from '../../src/ts/models';
+import { hasOwn } from '../../src/ts/shared-utils';
 import { amendmentNotificationMail } from './mail/amendment-notification';
 import { amendmentResolvedMail } from './mail/amendment-resolved';
 
@@ -67,7 +68,7 @@ function amendmentError(stored: boolean, message: string): HttpsError {
 // A clause type arrives either as a ContentType-shaped object or as its key; only an own key of ContentType.VALUES is accepted.
 function contentTypeKey(type: unknown): string | undefined {
   const key = isRecord(type) ? type.firebase : type;
-  return typeof key === 'string' && Object.prototype.hasOwnProperty.call(ContentType.VALUES, key) ? key : undefined;
+  return typeof key === 'string' && hasOwn(ContentType.VALUES, key) ? key : undefined;
 }
 
 // The plain-object form of a ContentType: what the review UI reads (`type.firebase`) and what Firestore accepts (it rejects class instances).

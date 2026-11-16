@@ -2,7 +2,7 @@ import { Loading } from 'quasar';
 import type { IdTokenResult, User } from 'firebase/auth';
 import type * as models from 'src/ts/models.ts';
 import type { Ref } from 'vue';
-import { reactive, ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useAuth, useFunctionAsync } from 'boot/vuefire.ts';
 import { setSentryUser } from 'boot/sentry.ts';
 import { explainAuthError, isTransientNetworkError } from 'src/ts/firebase-errors.ts';
@@ -10,6 +10,15 @@ import { notifyError, notifySuccess } from 'src/ts/utils.ts';
 
 export const loggedInUser = ref(null) as Ref<User | null>;
 export const loggedInUserClaims = reactive({ roles: [] as string[] });
+
+// Whether onAuthStateChanged has answered yet. Until it has, `loggedInUser` is null for a signed-out visitor and for a signed-in one whose
+// session is still being restored alike, and Firestore requests go out anonymous.
+const authSettled = ref(false);
+
+// Whom Firestore requests go out as: the signed-in reader's uid, null when signed out, and undefined until the first auth callback, which
+// on a full page load arrives only after HeaderSidebar (<q-no-ssr>) has mounted and called init(). A page that reads what depends on the
+// reader (the lawsuit thread) waits for it to be defined and reads again whenever it changes.
+export const currentReader = computed<string | null | undefined>(() => (authSettled.value ? (loggedInUser.value?.uid ?? null) : undefined));
 
 // useAuth() memoises the Auth instance itself, so there is nothing to cache here.
 function getAuthInstance() {
@@ -51,8 +60,8 @@ async function clearUserDocuments() {
       for (const [id, d] of Object.entries(state.document)) {
         if (!isPublicPublished(d)) delete state.document[id];
       }
-      for (const [id, thread] of Object.entries(state.lawsuits)) {
-        if (!thread.every(isPublicPublished)) delete state.lawsuits[id];
+      for (const [slot, thread] of Object.entries(state.lawsuits)) {
+        if (!thread.docs.every(isPublicPublished)) delete state.lawsuits[slot];
       }
     });
   } catch (error) {
@@ -76,6 +85,7 @@ export function init(): Promise<void> {
         if (lastUid && lastUid !== uid) void clearUserDocuments();
         lastUid = uid;
         loggedInUser.value = user;
+        authSettled.value = true;
         void updateCustomClaims();
         if (user) {
           console.log('Logged In.');
@@ -120,7 +130,7 @@ export async function login() {
     // throws is their browser or our access policy rather than a bug — a blocked popup, an
     // account the project does not admit — so say which, and keep those out of Sentry.
     const { message, report } = explainAuthError(error);
-    notifyError(message, error as Error, { report });
+    notifyError(message, error, { report });
   }
 }
 

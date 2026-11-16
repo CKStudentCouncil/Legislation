@@ -21,8 +21,9 @@ function generateHistoryContentId(refDate: Date, existingIds: string[]): string 
   return dateStr + counter;
 }
 
-// Fields that, when changed alone, should NOT create a new history version.
-const IGNORED_FIELDS = new Set(['read', 'lastEditedAt', 'lastEditedBy', 'revertSource']);
+// Fields that, when changed alone, should NOT create a new history version. lawsuitRoot is the threadLawsuit trigger's bookkeeping
+// (functions/src/lawsuits.ts), rewritten whenever another document of the thread moves, so it is never an edit of this one.
+const IGNORED_FIELDS = new Set(['read', 'lastEditedAt', 'lastEditedBy', 'revertSource', 'lawsuitRoot']);
 
 // publishedAt is stored as an explicit null on a document without a publish time, because Firestore leaves a document that lacks a field out of
 // an orderBy on it. Older documents simply do not have the field, and backfillDocumentPublishedAt adds the null: no edit, so no version.

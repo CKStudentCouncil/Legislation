@@ -211,6 +211,11 @@ export default defineConfig((ctx) => {
           {
             lintInWorker: true,
             lintOnStart: true,
+            // No .eslintcache: ESLint's file-entry-cache refreshes the stored mtime/size of every file a
+            // long-lived process has seen whenever it saves, keeping the old results — so a file edited
+            // while `yarn dev` runs is recorded as unchanged and its stale errors are replayed (to every
+            // dev server sharing the cache) instead of the file being linted again.
+            cache: false,
             include: ['src/**/*.{ts,js,mjs,cjs,vue}', 'quasar.config.ts', 'eslint.config.js'],
           },
           { server: true, client: false },

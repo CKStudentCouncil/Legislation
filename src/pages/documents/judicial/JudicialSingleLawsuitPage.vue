@@ -19,7 +19,7 @@
         <q-stepper-navigation align="right">
           <q-btn v-if="step !== sortedDocs.length - 1" color="primary" label="下一頁" @click="next" />
           <q-btn v-if="step !== 0" color="primary" flat label="上一頁" @click="previous" />
-          <q-btn color="primary" flat :icon="matLink" label="複製連結" @click="copyStepLink(step)" />
+          <q-btn color="primary" flat :icon="matLink" label="複製連結" @click="copyLink(doc.documentId, 'd')" />
           <q-btn
             :to="`/document/${encodeURIComponent(doc.documentId)}`"
             color="primary"
@@ -39,9 +39,10 @@
 import { matLink, matOpenInNew } from '@quasar/extras/material-icons';
 import { icon } from 'src/ts/icons.ts';
 import { useRoute, useRouter } from 'vue-router';
-import { nextTick, onMounted, onServerPrefetch, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, onServerPrefetch, ref, watch } from 'vue';
 import DocumentRenderer from 'components/documents/DocumentRenderer.vue';
-import { copyText } from 'src/ts/utils.ts';
+import { copyLink } from 'src/ts/utils.ts';
+import { currentReader } from 'src/ts/auth.ts';
 import { useDocumentStore, type LawsuitDocument } from 'stores/document.ts';
 import { event } from 'vue-gtag';
 
@@ -51,73 +52,75 @@ const store = useDocumentStore();
 const id = route.params.id as string;
 // Seed from serialized store state so the server-rendered thread hydrates without mismatch.
 const sortedDocs = ref<LawsuitDocument[]>(store.getLawsuit(id) ?? []);
-// A link names the Firestore key (`?d=<key>`), which survives reordering and distinguishes legacy documents with the same displayed ID.
-// Older links name the displayed ID or carry only `?c=<position>`.
-const wantedDoc = typeof route.query.d === 'string' ? route.query.d : null;
 
-function linkedDocumentIndex(docs: LawsuitDocument[]): number {
-  if (wantedDoc === null) return -1;
-  const keyed = docs.findIndex((d) => d.documentId === wantedDoc);
-  return keyed >= 0 ? keyed : docs.findIndex((d) => d.getFullId() === wantedDoc);
+// Where in `docs` the document the URL names (`?d=<Firestore key>`) is, or -1. A key holds through the thread being reordered or growing.
+function linkedDocument(docs: LawsuitDocument[]): number {
+  const wanted = route.query.d;
+  return typeof wanted === 'string' ? docs.findIndex((d) => d.documentId === wanted) : -1;
 }
 
-function stepFor(docs: LawsuitDocument[]): number {
-  const named = linkedDocumentIndex(docs);
-  return named >= 0 ? named : parseInt(route.query.c as string) || 0;
+// The step `docs` would show for the current URL. Links from before `?d=` carry only a position, `?c=`.
+function stepIn(docs: LawsuitDocument[]): number {
+  const linked = linkedDocument(docs);
+  if (linked >= 0) return linked;
+  const position = parseInt(route.query.c as string);
+  return position >= 0 && position < docs.length ? position : 0;
 }
 
-const step = ref(stepFor(sortedDocs.value));
+// The URL is the step's only home, so Back and Forward move the stepper too.
+const step = computed({
+  get: () => stepIn(sortedDocs.value),
+  set: (index: number) => {
+    const d = sortedDocs.value[index]?.documentId;
+    if (d) void router.push({ query: { d } });
+  },
+});
 const stepper = ref();
-// True while the page moves the step itself (the thread was refreshed under the reader), so the URL is corrected instead of gaining an entry.
-let restoring = false;
+let mounted = false;
 
 onServerPrefetch(async () => {
   sortedDocs.value = await store.loadLawsuit(id);
-  step.value = stepFor(sortedDocs.value);
 });
 
-watch(step, (v) => {
-  const d = sortedDocs.value[v]?.documentId;
-  void router[restoring ? 'replace' : 'push']({ query: d ? { d } : { c: v } });
-});
+// Read the thread again as `reader`, keeping whoever is reading on the document they are on.
+async function refresh(reader: string | null) {
+  let docs: LawsuitDocument[];
+  try {
+    docs = await store.loadLawsuit(id, reader);
+  } catch (e) {
+    console.error(e);
+    return;
+  }
+  // Left the page, or signed in or out, while this was out: there is nothing here to update, or a newer read will.
+  if (!mounted || currentReader.value !== reader) return;
+  // When the URL gives only a position, the new thread may hold another document there (it can grow ahead of the one being read, with
+  // documents this reader may see and the server render could not). Name the document being read first, so the reader stays on it. A
+  // link naming a document of the new thread is left alone: that document only now became readable, and is what the link asked for.
+  const reading = sortedDocs.value[step.value]?.documentId;
+  if (reading && linkedDocument(docs) < 0 && docs[stepIn(docs)]?.documentId !== reading && docs.some((d) => d.documentId === reading)) {
+    await router.replace({ query: { d: reading } });
+  }
+  sortedDocs.value = docs;
+}
 
 onMounted(() => {
-  // Refresh client-side so authorized users see any docs the anonymous SSR pass couldn't read.
-  let readerNavigated = false;
-  const stopTrackingStep = watch(
-    step,
-    () => {
-      readerNavigated = true;
-    },
-    { flush: 'sync' },
-  );
-  store
-    .loadLawsuit(id, true)
-    .then(async (docs) => {
-      stopTrackingStep();
-      // Read the selection before replacing its list, so navigation during the request is preserved. Until the reader navigates,
-      // an explicit link still takes priority over the SSR fallback when its document only becomes available in the client refresh.
-      const reading = sortedDocs.value[step.value]?.documentId;
-      const wantedAt = !readerNavigated ? linkedDocumentIndex(docs) : -1;
-      const at = wantedAt >= 0 ? wantedAt : docs.findIndex((d) => d.documentId === reading);
-      sortedDocs.value = docs;
-      // The refreshed thread may have grown ahead of the document being read: stay on that document, not on its old position.
-      if (at >= 0 && at !== step.value) {
-        restoring = true;
-        step.value = at;
-        await nextTick();
-        restoring = false;
-      }
-    })
-    .catch((e) => console.error(e))
-    .finally(stopTrackingStep);
+  mounted = true;
   event('view_lawsuit', { id });
+  // The server render reads as nobody and may be a CDN copy up to a day old, so once the reader is known the thread is read again under
+  // their rules, which may show them more, and again whenever they sign in or out. The store hands back a thread this browser already
+  // read for the same reader (on the search page, say) without reading it again.
+  watch(
+    currentReader,
+    (reader) => {
+      if (reader !== undefined) void refresh(reader);
+    },
+    { immediate: true },
+  );
 });
 
-function copyStepLink(index: number) {
-  const d = sortedDocs.value[index]?.documentId;
-  void copyText(`${location.protocol}//${location.host}${location.pathname}${d ? `?d=${encodeURIComponent(d)}` : ''}`);
-}
+onBeforeUnmount(() => {
+  mounted = false;
+});
 
 function next() {
   stepper.value.next();

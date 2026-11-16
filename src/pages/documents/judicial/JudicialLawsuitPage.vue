@@ -19,7 +19,7 @@
       <q-step v-if="findBy === 'select'" :header-nav="false" :name="2" class="text-center" :icon="matChecklist" title="選擇啟字公文">
         <q-spinner v-if="!q" color="primary" size="40px" />
         <q-list v-else bordered separator>
-          <q-item v-for="doc of sortedOptions" :key="doc.idNumber" v-ripple :to="`/document/judicial/lawsuit/${doc.getFullId()}`" clickable>
+          <q-item v-for="doc of sortedOptions" :key="doc.id" v-ripple :to="lawsuitLink(doc)" clickable>
             <q-item-section>
               <q-item-label class="text-h6" overline>{{ doc.getFullId() }}</q-item-label>
               <q-item-label class="text-h6">{{ doc.subject }}</q-item-label>
@@ -73,6 +73,8 @@ import orderBy from 'lodash/orderBy';
 import { useRouter } from 'vue-router';
 import { useMeta } from 'quasar';
 import { useDocumentStore } from 'stores/document.ts';
+import { currentReader } from 'src/ts/auth.ts';
+import { isLawsuitKey } from 'src/ts/shared-utils.ts';
 
 const store = useDocumentStore();
 const step = ref(0);
@@ -156,7 +158,8 @@ async function next() {
       searching.value = true;
       const primaryId = `${idPrefix.value}第${caseNumber}號`;
       try {
-        const docs = await store.loadLawsuit(primaryId);
+        // As the reader the lawsuit page will read for, so it can reuse this thread instead of reading it again.
+        const docs = await store.loadLawsuit(primaryId, currentReader.value);
         if (docs.length > 0) {
           void router.push(`/document/judicial/lawsuit/${primaryId}`);
         } else {
@@ -176,6 +179,14 @@ async function next() {
     }
   }
   stepper.value?.next();
+}
+
+// A 啟字 links to the key its thread is filed under (its case number, or its own ID when nothing comes before it), which the lawsuit page
+// reads in one query, and failing that to its own Firestore key. Never getFullId(): a document stranded by an ID edit has idPrefix/idNumber
+// that disagree with its key.
+function lawsuitLink(doc: models.Document & { id: string }): string {
+  const key = isLawsuitKey(doc.lawsuitRoot) ? doc.lawsuitRoot : doc.id;
+  return `/document/judicial/lawsuit/${encodeURIComponent(key)}`;
 }
 
 function previous() {
