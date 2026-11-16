@@ -1995,10 +1995,10 @@ googleapis-common@^9.0.0:
     qs "^6.7.0"
     url-template "^2.0.8"
 
-googleapis@^181.0.0:
-  version "181.0.0"
-  resolved "https://registry.yarnpkg.com/googleapis/-/googleapis-181.0.0.tgz#dc46e545b322ee897d2f4296023c4035e1606b91"
-  integrity sha512-fCzsqaVjA5FrA9DdXn4WlnmnLUvqjWx0JGZzcHbSC9iMfb8PK1lTxsvYpnaRf0j4b6usfKlW+YHSKjHnkgqmjQ==
+googleapis@^190.0.0:
+  version "190.0.0"
+  resolved "https://registry.yarnpkg.com/googleapis/-/googleapis-190.0.0.tgz#f2df733957c3972b79e3038c4346b277726a9298"
+  integrity sha512-/1dTKpv9epj6RPMsrlKdyNtby1flh+d39rCWYCU+6bY4RHgZUPYB+B9cRKYsBqqTWyfBkHum0NCthIWJROcUjw==
   dependencies:
     google-auth-library "^11.0.0"
     googleapis-common "^9.0.0"
