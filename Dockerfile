@@ -1,4 +1,4 @@
-FROM node:22-alpine
+FROM node:24-alpine
 # Neither the Dockerfile nor Quasar's generated server set this, so Cloud Run was running
 # Vue in development mode: dev-only assertions and warnings active on every render.
 # Dependencies are installed by `yarn gcp-build` before the image is built, so this only
