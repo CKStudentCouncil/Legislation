@@ -56,12 +56,13 @@ jobs:
           path: node_modules
       - uses: actions/setup-node@v4
         with:
-          # Pinned to 22.22.x, NOT 22.23+. Newer Node patches trip a node-fetch@2
+          # Pinned to 24.16.x. firebase 13 (@firebase/ai) requires Node >= 24.12, and the
+          # runtime image is node:24-alpine. Newer Node patches may trip a node-fetch@2
           # gzip bug (nodejs/node#63989) that makes firebase-tools' OAuth token
           # exchange fail with "Premature close", which the CLI mislabels
           # "Failed to authenticate, have you run firebase login?". Maintainer
           # workaround (firebase-tools#10692): use Node 22.22.x or 24.16.x.
-          node-version: '22.22.x'
+          node-version: '24.16.x'
           cache: 'npm'
       - run: yarn install --frozen-lockfile
       # /src-ssr is its own package since @quasar/app-vite v3, and Quasar only runs

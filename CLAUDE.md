@@ -32,7 +32,7 @@ A single Firebase Hosting site (`cksc-law`, domain `law.cksc.tw`) fronts **both*
 - The second hosting site, `cksc-legislation`, only 301-redirects to `law.cksc.tw` (legacy domain). `.firebaserc` default project is `cksc-legislation`.
 
 CI (`.github/workflows/`):
-- `firebase-hosting-merge.yml` — push to `main` (ignores `functions/**`): builds SPA + SSR, shuffles SSR assets into `dist/spa/ssr-assets`, deploys `dist/spa` to Hosting *and* builds/pushes the SSR Docker image (`Dockerfile`: `node:22-alpine`, runs `dist/ssr/index.js`) to Cloud Run.
+- `firebase-hosting-merge.yml` — push to `main` (ignores `functions/**`): builds SPA + SSR, shuffles SSR assets into `dist/spa/ssr-assets`, deploys `dist/spa` to Hosting *and* builds/pushes the SSR Docker image (`Dockerfile`: `node:24-alpine`, runs `dist/ssr/index.js`) to Cloud Run.
 - `firebase-hosting-pull-request.yml` — PRs: build-only smoke test, no preview deploy.
 - `firebase-functions-pull-request.yml` — PRs touching `functions/**` **or `src/ts/models.ts` or `src/ts/shared-utils.ts`** (see shared contract below). Functions deploy is **manual** (`firebase deploy --only functions`).
 
