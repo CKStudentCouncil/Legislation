@@ -1996,12 +1996,12 @@
     "@sentry/replay" "10.74.0"
     "@sentry/replay-canvas" "10.74.0"
 
-"@sentry/bundler-plugins@11.14.0":
-  version "11.14.0"
-  resolved "https://registry.yarnpkg.com/@sentry/bundler-plugins/-/bundler-plugins-11.14.0.tgz#f0d895196fbfeb063b24d49f96d9a5b17be84a70"
-  integrity sha512-Afi4P+OLJP/fRjbt3h4r8ujBC9KulU9RB1pBhe8PgGHddo5hpXdn2eoDQMHPTnADqNONqqCP1DzbGwFmxVQkXA==
+"@sentry/bundler-plugins@11.15.0":
+  version "11.15.0"
+  resolved "https://registry.yarnpkg.com/@sentry/bundler-plugins/-/bundler-plugins-11.15.0.tgz#af3d896d1042bef987301608092857889d1702d0"
+  integrity sha512-SyqRR0H8DbVNQRaUNDy9mCQSqCVlYKxbmXkSErCOIUjfNWujsyVK5fnl5aIIYbDrj1Vy1TX8gAkmyPfMbMD/QQ==
   dependencies:
-    "@sentry/core" "11.14.0"
+    "@sentry/core" "11.15.0"
     dotenv "^17.4.2"
     glob "^14.0.3"
     magic-string "~0.30.8 || ^1.0.0"
@@ -2025,10 +2025,10 @@
   dependencies:
     "@sentry/conventions" "^0.16.0"
 
-"@sentry/core@11.14.0":
-  version "11.14.0"
-  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-11.14.0.tgz#deae98e26135780f11b4ec70c48950ddb4093e8f"
-  integrity sha512-toRRdaZnm0anz/4gEkzyZC0yTCvR4R7U+024WQfjCwgklIFaYo9mjIBoElU8MJ1Sske0/RyvA0zltHfra6PvsQ==
+"@sentry/core@11.15.0":
+  version "11.15.0"
+  resolved "https://registry.yarnpkg.com/@sentry/core/-/core-11.15.0.tgz#d481a76df378ee00021a3202e9c0345a4d8fffc9"
+  integrity sha512-zsprEOu/voisojJFnDIhPd+GhycAli/aqjV752eQHiNOrAwAvigCadsSh2ND5e1AEycvSmZTxOOhCNjWzSZ4Ng==
   dependencies:
     "@sentry/conventions" "^0.33.0"
 
@@ -2055,12 +2055,12 @@
     "@sentry/browser-utils" "10.74.0"
     "@sentry/core" "10.74.0"
 
-"@sentry/vite-plugin@^11.14.0":
-  version "11.14.0"
-  resolved "https://registry.yarnpkg.com/@sentry/vite-plugin/-/vite-plugin-11.14.0.tgz#7bc6a36d986517275cac1024b63cce4c519c2c1c"
-  integrity sha512-hX0fIQy9nMnFk5aIN72Z/uU8HzHFBefCXQ65lmO89Oyl0SUCW/6TxNn0deTZySDih+ov6O5FLIH1MauJdt+PxA==
+"@sentry/vite-plugin@^11.15.0":
+  version "11.15.0"
+  resolved "https://registry.yarnpkg.com/@sentry/vite-plugin/-/vite-plugin-11.15.0.tgz#c0bfd70516dd47def0eb865b0319afa149bb1b19"
+  integrity sha512-D98/xSIaLz7LwwFNrFiovIyoqx557pWjC9o0+2J15tFokYLsK5aQb9sXNLkNyexxxgkz33dbdcuGGvDEhdk5uQ==
   dependencies:
-    "@sentry/bundler-plugins" "11.14.0"
+    "@sentry/bundler-plugins" "11.15.0"
 
 "@sentry/vue@^10.74.0":
   version "10.74.0"
