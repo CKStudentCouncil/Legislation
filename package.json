@@ -41,7 +41,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@quasar/app-vite": "^3.10.4",
-    "@sentry/vite-plugin": "^11.14.0",
+    "@sentry/vite-plugin": "^11.15.0",
     "@types/diff": "^8.0.0",
     "@types/html-to-text": "^9.0.4",
     "@types/lodash": "^4.17.27",
